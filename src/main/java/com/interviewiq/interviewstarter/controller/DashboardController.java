@@ -2,7 +2,9 @@ package com.interviewiq.interviewstarter.controller;
 
 import com.interviewiq.interviewstarter.dto.DashboardResponse;
 import com.interviewiq.interviewstarter.dto.DashboardResponse;
+import com.interviewiq.interviewstarter.security.CustomUserDetails;
 import com.interviewiq.interviewstarter.service.DashboardService;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -29,8 +31,14 @@ public class DashboardController {
 
     /** Full dashboard payload consumed by dashboard.html. */
     @GetMapping("/api/dashboard")
-    public DashboardResponse getDashboard() {
-        return dashboardService.buildDashboard();
+    public DashboardResponse getDashboard(Authentication authentication) {
+
+        CustomUserDetails userDetails =
+                (CustomUserDetails) authentication.getPrincipal();
+
+        Long userId = userDetails.getUserId();
+
+        return dashboardService.buildDashboard(userId);
     }
 }
 

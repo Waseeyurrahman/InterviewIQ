@@ -4,6 +4,7 @@ package com.interviewiq.interviewstarter.controller;
 import com.interviewiq.interviewstarter.entity.Question;
 import com.interviewiq.interviewstarter.service.InterviewService;
 import com.interviewiq.interviewstarter.service.QuestionService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +22,7 @@ public class QuestionController {
         this.questionService = questionService;
     }
 
+    @PreAuthorize("@interviewSecurity.isOwner(#interviewId, authentication)")
     @GetMapping("/{interviewId}")
     public List<Question> getQuestions(@PathVariable Long interviewId){
         return questionService.getQuestionsForInterview(interviewId);

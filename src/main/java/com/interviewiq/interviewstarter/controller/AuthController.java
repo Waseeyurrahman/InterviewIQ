@@ -1,6 +1,10 @@
 package com.interviewiq.interviewstarter.controller;
 
 import com.interviewiq.interviewstarter.dto.AuthDtos.*;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,27 +15,35 @@ import com.interviewiq.interviewstarter.service.AuthSerivce;
 @RequestMapping("/auth")
 public class AuthController {
 
-        private final AuthSerivce authservice;
+    private final AuthSerivce authservice;
 
-        public AuthController(AuthSerivce authService){
-            this.authservice = authService;
-        }
+    public AuthController(AuthSerivce authService){
+        this.authservice = authService;
+    }
 
-        @PostMapping("/register")
-        public ApiResponse register(@RequestBody RegisterRequest request){
-                String message = authservice.register(request.getName(), request.getEmail(), request.getPassword());
-                boolean success = message.equals("User registered successfully");
-                return new ApiResponse(success, message);
-        }
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse> register(@Valid  @RequestBody RegisterRequest request){
+        String message = authservice.register(request.getName(), request.getEmail(), request.getPassword());
+        if( message.equals("User registered successfully")){
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(new ApiResponse(true,message));
+        };
+        return  ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ApiResponse(false,message));
+    }
 
-        @PostMapping("/login")
-        public ApiResponse login(@RequestBody LoginRequest request){
-                boolean ok = authservice.login(request.getEmail(), request.getPassword());
-                if(ok){
-                        return new ApiResponse(true, "Login successful");
-                }else{
-                        return new ApiResponse(false, "Invalid email or password");
-                }
-        }
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request){
+        String token = authservice.login(
+                request.getEmail(),
+                request.getPassword()
+        );
+        return  ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new LoginResponse(token));
+
+    }
 
 }

@@ -1,6 +1,9 @@
 package com.interviewiq.interviewstarter.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.interviewiq.interviewstarter.dto.DashboardResponse;
+import com.interviewiq.interviewstarter.entity.Evaluation;
 import com.interviewiq.interviewstarter.entity.Interview;
 import com.interviewiq.interviewstarter.repository.AnswerRepository;
 import com.interviewiq.interviewstarter.repository.EvaluationRepository;
@@ -10,30 +13,34 @@ import org.springframework.stereotype.Service;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @Service
 public class DashboardService {
     private final InterviewRepository interviewRepository;
     private final EvaluationRepository evaluationRepository;
+    private final ObjectMapper objectMapper;
 
-    public DashboardService(InterviewRepository interviewRepository,EvaluationRepository evaluationRepository){
+    public DashboardService(InterviewRepository interviewRepository,EvaluationRepository evaluationRepository,ObjectMapper objectMapper){
         this.interviewRepository = interviewRepository;
         this.evaluationRepository = evaluationRepository;
+        this.objectMapper = objectMapper;
     }
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    public DashboardResponse buildDashboard()
+    public DashboardResponse buildDashboard(Long userId)
     {
-        List<Interview> finished = interviewRepository.findAll().stream().filter(interviewre -> interviewre.getFinalScore()!=null).toList();
+        List<Interview> finished = interviewRepository
+                .findByUserId(userId)
+                .stream()
+                .filter(interview -> interview.getFinalScore() != null)
+                .toList();
         if(finished.isEmpty()){
-            return demoDashboard();
+            return emptyDashboard();
         }
 
         int average = (int) Math.round(finished.stream().mapToInt(Interview::getFinalScore).average().orElse(0));
@@ -46,9 +53,9 @@ public class DashboardService {
                 .totalPracticeTime(formatMin(totalMinutes))
                 .bestScore(best)
                 .scoreTrend(buildingTrend(finished))
-                .weakAreas(buildWeakAreas(finished))
+                .weakAreas(buildWeakAreas(userId))
                 .recentInterviews(buildRecent(finished))
-                .strengths(buildStrengths(average))
+                .strengths(buildStrengths(userId))
                 .build();
     }
 
@@ -59,44 +66,94 @@ public class DashboardService {
         int h = totalMinutes/60, m = totalMinutes%60;
         return h==0? m+"m":h+"h"+m+"m";
     }
-    private List<DashboardResponse.TrendPoint> buildingTrend(List<Interview> finished){
-        LocalDate today = LocalDate.now();
+    private List<DashboardResponse.TrendPoint> buildingTrend(
+            List<Interview> finished) {
 
-        Map<LocalDate,List<Integer>> byDay = finished.stream().collect(Collectors.groupingBy(
-                iv -> iv.getCompletedAt() ==null? today:iv.getCompletedAt().toLocalDate(),
-                Collectors.mapping(Interview::getFinalScore,Collectors.toList())
-        ));
+        Map<LocalDate, List<Integer>> byDay =
+                finished.stream()
+                        .filter(iv -> iv.getCompletedAt() != null)
+                        .collect(Collectors.groupingBy(
+                                iv -> iv.getCompletedAt().toLocalDate(),
+                                Collectors.mapping(
+                                        Interview::getFinalScore,
+                                        Collectors.toList()
+                                )
+                        ));
 
-        return IntStream.rangeClosed(0,6).boxed()
-                .sorted(Comparator.reverseOrder())
-                .map(offset -> {
-                    LocalDate d = today.minusDays(offset);
-                    List<Integer> scores = byDay.getOrDefault(d,List.of());
-                    int dayAverage = scores.isEmpty()? 0 :
-                            (int) scores.stream().mapToInt(Integer::intValue).average().orElse(0);
-                    return new DashboardResponse.TrendPoint(d.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) , dayAverage);
+        return byDay.entrySet()
+                .stream()
+                .map(entry -> {
+
+                    LocalDate date = entry.getKey();
+
+                    int averageScore =
+                            (int) Math.round(
+                                    entry.getValue()
+                                            .stream()
+                                            .mapToInt(Integer::intValue)
+                                            .average()
+                                            .orElse(0)
+                            );
+
+                    return new DashboardResponse.TrendPoint(
+                            date.format(DATE_FMT),
+                            averageScore
+                    );
                 })
+                .sorted(
+                        Comparator.comparing(
+                                DashboardResponse.TrendPoint::getDate
+                        )
+                )
                 .toList();
-
     }
 
 
-    public List<DashboardResponse.NamedValue> buildWeakAreas(List<Interview> finished){
+    private List<DashboardResponse.Weakness> buildWeakAreas(Long userId) {
 
-        Map<String, List<Integer>> byRole = finished.stream().collect(Collectors.groupingBy(
-                iv -> iv.getRole() == null ? "Generalrole" : iv.getRole(),Collectors.mapping(Interview::getFinalScore,Collectors.toList())
-        ));
+        List<Evaluation> evaluations =
+                evaluationRepository
+                        .findByAnswerQuestionInterviewUserId(userId);
 
-        return byRole.entrySet().stream()
-                .map(e -> {
-                    int roleAvg = (int) e.getValue().stream().mapToInt(Integer::intValue).average().orElse(0);
-                    return new DashboardResponse.NamedValue(e.getKey(), Math.max(5,100 - roleAvg));
-                })
-                .sorted(Comparator.comparingInt(DashboardResponse.NamedValue::getValue).reversed())
-                .limit(4)
+        return evaluations.stream()
+                .map(Evaluation::getWeaknesses)
+                .filter(Objects::nonNull)
+                .filter(weaknesses -> !weaknesses.isBlank())
+                .flatMap(weaknesses -> parseWeaknesses(weaknesses, objectMapper))
+                .filter(Objects::nonNull)
+                .filter(weakness -> !weakness.isBlank())
+                .distinct()
+                .limit(5)
+                .map(DashboardResponse.Weakness::new)
                 .toList();
-
     }
+    private Stream<String> parseWeaknesses(
+            String weaknesses,
+            ObjectMapper objectMapper) {
+
+        try {
+
+            List<String> weaknessList =
+                    objectMapper.readValue(
+                            weaknesses,
+                            new TypeReference<List<String>>() {}
+                    );
+
+            return weaknessList.stream();
+
+        } catch (Exception e) {
+
+            System.err.println(
+                    "[DashboardService] Failed to parse weaknesses: "
+                            + e.getMessage()
+            );
+
+            return Stream.empty();
+        }
+    }
+
+
+
 
     private List<DashboardResponse.RecentInterviews> buildRecent(List<Interview> finished){
         return finished.stream()
@@ -122,64 +179,146 @@ public class DashboardService {
     }
 
 
-    private List<DashboardResponse.NamedValue> buildStrengths(int avgScore) {
-        int base = Math.max(40, avgScore); // never look embarrassingly empty
+    private List<DashboardResponse.NamedValue> buildStrengths(Long userId) {
+
+        List<Evaluation> evaluations =
+                evaluationRepository
+                        .findByAnswerQuestionInterviewUserId(userId);
+
+        if (evaluations.isEmpty()) {
+            return List.of();
+        }
+
+        // Technical Depth = average evaluation score
+        int technicalDepth = (int) Math.round(
+                evaluations.stream()
+                        .mapToInt(Evaluation::getScore)
+                        .average()
+                        .orElse(0)
+        );
+
+        // Relevance = average only of evaluations
+        // where relevance was actually available
+        double relevanceAverage =
+                evaluations.stream()
+                        .mapToInt(e -> relevanceScore(e.getRelevance()))
+                        .filter(score -> score >= 0)
+                        .average()
+                        .orElse(0);
+
+        int relevance = (int) Math.round(relevanceAverage);
+
+        // Technical Accuracy = average only where available
+        double accuracyAverage =
+                evaluations.stream()
+                        .mapToInt(e ->
+                                technicalAccuracyScore(
+                                        e.getTechnicalAccuracy()
+                                )
+                        )
+                        .filter(score -> score >= 0)
+                        .average()
+                        .orElse(0);
+
+        int technicalAccuracy = (int) Math.round(accuracyAverage);
+
+        // Communication
+        // Start from evaluation score and apply a small filler-word penalty.
+        double communicationAverage =
+                evaluations.stream()
+                        .mapToInt(e -> {
+
+                            int score = e.getScore();
+
+                            int fillerWords =
+                                    e.getFillerWords() == null
+                                            ? 0
+                                            : e.getFillerWords();
+
+                            return Math.max(
+                                    0,
+                                    score - (fillerWords * 2)
+                            );
+                        })
+                        .average()
+                        .orElse(0);
+
+        int communication = (int) Math.round(communicationAverage);
+
         return List.of(
-                new DashboardResponse.NamedValue("Problem Solving", clamp(base + 5)),
-                new DashboardResponse.NamedValue("Communication",   clamp(base - 5)),
-                new DashboardResponse.NamedValue("Confidence",      clamp(base - 10)),
-                new DashboardResponse.NamedValue("Technical Depth", clamp(base))
+
+                new DashboardResponse.NamedValue(
+                        "Technical Depth",
+                        clamp(technicalDepth)
+                ),
+
+                new DashboardResponse.NamedValue(
+                        "Technical Accuracy",
+                        clamp(technicalAccuracy)
+                ),
+
+                new DashboardResponse.NamedValue(
+                        "Relevance",
+                        clamp(relevance)
+                ),
+
+                new DashboardResponse.NamedValue(
+                        "Communication",
+                        clamp(communication)
+                )
         );
     }
 
+    private int relevanceScore(String relevance) {
 
-    private int clamp(int v) { return Math.max(0, Math.min(100, v)); }
+        if (relevance == null || relevance.isBlank()) {
+            return -1; // ignore missing value
+        }
 
+        return switch (relevance.toLowerCase().trim()) {
 
+            case "high", "excellent", "strong" -> 100;
 
-    private DashboardResponse demoDashboard() {
-        LocalDate today = LocalDate.now();
-        int[] sample = {60, 65, 72, 68, 80, 85, 78};
+            case "medium", "moderate", "good" -> 75;
 
-        // Build 7-day fake trend (oldest -> today).
-        List<DashboardResponse.TrendPoint> trend = IntStream.range(0, 7)
-                .mapToObj(i -> new DashboardResponse.TrendPoint(today.minusDays(6 - i).format(DATE_FMT), sample[i]))
-                .toList();
+            case "low", "poor", "weak" -> 40;
 
+            default -> -1;
+        };
+    }
+
+    private int technicalAccuracyScore(String technicalAccuracy) {
+
+        if (technicalAccuracy == null || technicalAccuracy.isBlank()) {
+            return -1; // ignore missing value
+        }
+
+        return switch (technicalAccuracy.toLowerCase().trim()) {
+
+            case "high", "excellent", "strong", "accurate" -> 100;
+
+            case "medium", "moderate", "good" -> 75;
+
+            case "low", "poor", "weak", "inaccurate" -> 40;
+
+            default -> -1;
+        };
+    }
+
+    private int clamp(int value) {
+        return Math.max(0, Math.min(100, value));
+    }
+
+    private DashboardResponse emptyDashboard() {
         return DashboardResponse.builder()
-                .totalInterviews(12L)
-                .averageScore(78)
-                .bestScore(92)
-                .totalPracticeTime("8h 45m")
-                .scoreTrend(trend)
-                .weakAreas(List.of(
-                        new DashboardResponse.NamedValue("DSA", 40),
-                        new DashboardResponse.NamedValue("System Design", 25),
-                        new DashboardResponse.NamedValue("API", 20),
-                        new DashboardResponse.NamedValue("Others", 15)))
-                .recentInterviews(List.of(
-                        demoRow("Backend Developer",  "Medium", today.minusDays(2),  85, "Completed"),
-                        demoRow("Frontend Developer", "Easy",   today.minusDays(4),  78, "Completed"),
-                        demoRow("Java Developer",     "Hard",   today.minusDays(7),  62, "Needs Review"),
-                        demoRow("HR Interview",       "Easy",   today.minusDays(10), 92, "Completed"),
-                        demoRow("DevOps Engineer",    "Medium", today.minusDays(13), 71, "Practiced")))
-                .strengths(List.of(
-                        new DashboardResponse.NamedValue("Problem Solving", 80),
-                        new DashboardResponse.NamedValue("Communication", 70),
-                        new DashboardResponse.NamedValue("Confidence", 65),
-                        new DashboardResponse.NamedValue("Technical Depth", 74)))
+                .totalInterviews(0)
+                .averageScore(0)
+                .bestScore(0)
+                .totalPracticeTime("0m")
+                .scoreTrend(List.of())
+                .weakAreas(List.of())
+                .recentInterviews(List.of())
+                .strengths(List.of())
                 .build();
     }
-
-    /** Tiny factory to keep demoDashboard() readable. */
-    private DashboardResponse.RecentInterviews demoRow(String role, String level, LocalDate date, int score, String status) {
-        return DashboardResponse.RecentInterviews.builder()
-                .role(role).level(level)
-                .date(date.format(DATE_FMT))
-                .score(score).status(status)
-                .build();
-    }
-
-
-
 }

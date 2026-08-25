@@ -19,7 +19,7 @@ public class DashboardResponse{
     private String totalPracticeTime;
 
     private List<TrendPoint> scoreTrend;
-    private List<NamedValue> weakAreas;
+    private List<Weakness> weakAreas;
     private List<RecentInterviews> recentInterviews;
     private List<NamedValue>     strengths;
 
@@ -37,6 +37,13 @@ public class DashboardResponse{
     public static class NamedValue{
         private String name;
         private int value;
+    }
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Weakness {
+
+        private String text;
     }
 
     @Data

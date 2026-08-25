@@ -1,52 +1,75 @@
 package com.interviewiq.interviewstarter.controller;
 
-import com.interviewiq.interviewstarter.dto.AnswerDtos;
 import com.interviewiq.interviewstarter.dto.Evaluationsdtos;
-import com.interviewiq.interviewstarter.entity.Answer;
-import com.interviewiq.interviewstarter.service.AnswerService;
+import com.interviewiq.interviewstarter.exception.ForbiddenException;
+import com.interviewiq.interviewstarter.security.InterviewSecurity;
 import com.interviewiq.interviewstarter.service.EvaluationService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
+@RequestMapping("/interviews")
 public class EvaluationController {
 
-    private final AnswerService answerService;
     private final EvaluationService evaluationService;
+    private final InterviewSecurity interviewSecurity;
 
-    public EvaluationController(AnswerService answerService, EvaluationService evaluationService) {
-        this.answerService = answerService;
+    public EvaluationController(
+            EvaluationService evaluationService,
+            InterviewSecurity interviewSecurity) {
+
         this.evaluationService = evaluationService;
+        this.interviewSecurity = interviewSecurity;
     }
 
-    @PostMapping("/evaluate-answer")
-    public Evaluationsdtos.EvaluateAnswersResponse evaluate(@RequestBody Evaluationsdtos.EvaluateAnswersRequest req){
-        List<EvaluationService.QA> pairs = new ArrayList<>();
+    @PostMapping("/{interviewId}/evaluate")
+    public Evaluationsdtos.EvaluateAnswersResponse evaluate(
+            @PathVariable Long interviewId,
+            Authentication authentication) {
 
-        if(req.getAnswers()!=null){
-            List<Answer> toSave = new ArrayList<>();
-            for(AnswerDtos.SubmitAnswerItem item: req.getAnswers()){
-                Answer a = new Answer();
-                a.setAnswerText(item.getAnswerText());
-                a.setQuestionId(item.getQuestionId());
-                toSave.add(a);
-            }
-            List<Answer> saved = answerService.saveAll(toSave);
+        // Verify that the authenticated user owns this interview
+        if (!interviewSecurity.isOwner(
+                interviewId,
+                authentication)) {
 
-            for(int i=0;i<req.getAnswers().size();i++){
-                AnswerDtos.SubmitAnswerItem item = req.getAnswers().get(i);
-                Long answerid = saved.get(i).getId();
-                pairs.add(new EvaluationService.QA(item.getQuestionText(),item.getAnswerText(),answerid));
-            }
+            throw new ForbiddenException(
+                    "You are not allowed to evaluate this interview"
+            );
         }
 
-        EvaluationService.OverallResult r = evaluationService.evaluateAnswerPairs(pairs);
+        EvaluationService.OverallResult result =
+                evaluationService.evaluateInterview(interviewId);
 
-        return new Evaluationsdtos.EvaluateAnswersResponse(true,r.score,r.fillerWords,r.confidence,r.relevance,r.strengths,r.weaknesses,r.recommendations);
+        return new Evaluationsdtos.EvaluateAnswersResponse(
+                true,
+                result.aiAvailable,
+                result.score,
+                result.fillerWords,
+                result.confidence,
+                result.relevance,
+                result.strengths,
+                result.weaknesses,
+                result.recommendations
+        );
+    }
+    @GetMapping("/{interviewId}/evaluation")
+    public List<Evaluationsdtos.EvaluationItemResponse>
+    getEvaluation(
+            @PathVariable Long interviewId,
+            Authentication authentication) {
 
+        if (!interviewSecurity.isOwner(
+                interviewId,
+                authentication)) {
+
+            throw new ForbiddenException(
+                    "You are not allowed to view this evaluation"
+            );
+        }
+
+        return evaluationService
+                .getInterviewEvaluationDetails(interviewId);
     }
 }

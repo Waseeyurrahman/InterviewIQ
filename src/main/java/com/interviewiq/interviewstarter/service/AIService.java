@@ -1,452 +1,963 @@
 package com.interviewiq.interviewstarter.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.*;
-import java.util.regex.*;
+import java.util.ArrayList;
+import java.util.List;
 
-/* ============================================================================
- *  AIService
- * ============================================================================
- *
- *  WHAT THIS CLASS DOES (in one paragraph):
- *  ----------------------------------------
- *  We send text (a question + a candidate's answer, OR a request like
- *  "give me 5 Java questions") to Google's Gemini AI over the internet using
- *  HTTP. Gemini sends back a JSON string. We pull the useful bits out of that
- *  JSON and return a normal Java object the rest of our app can use.
- *
- *  THE BIG PICTURE (data flow):
- *  ----------------------------
- *      Java method call
- *           │
- *           ▼
- *      buildPrompt(...)                ← write English instructions for AI
- *           │
- *           ▼
- *      callGemini(prompt)              ← HTTP POST to Google's server
- *           │  (returns a big JSON string)
- *           ▼
- *      parseEvaluation(...)            ← pull score / strengths / etc.
- *           │
- *           ▼
- *      AIEvaluation object             ← returned to caller
- *
- *  WHY REGEX INSTEAD OF A JSON LIBRARY?
- *  ------------------------------------
- *  A real project would use Jackson (com.fasterxml.jackson) to parse JSON.
- *  We use regex here so beginners don't have to learn a new library on day 1.
- *  The shape of Gemini's JSON is very predictable, so simple regex works.
- *
- *  HOW TO SET THE API KEY:
- *  -----------------------
- *  In src/main/resources/application.yaml:
- *      ai:
- *        gemini:
- *          api-key: YOUR_KEY_HERE
- *  Get a free key at: https://aistudio.google.com/app/apikey
- *
- *  If the key is missing, every public method here returns null and the
- *  caller falls back to manual rule-based scoring. The app still works.
- * ============================================================================ */
 @Service
 public class AIService {
 
-    /* The base URL of Google's Gemini API. We append "?key=YOUR_API_KEY" to it.
-     * Example final URL:
-     *   https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyABC123
-     *
-     * NOTE: "gemini-1.5-flash" was retired by Google. Use a current model such as
-     *   - gemini-2.0-flash       (fast, free tier, good default)
-     *   - gemini-2.5-flash       (newer, slightly smarter)
-     *   - gemini-2.5-pro         (most capable, slower / lower quota)
-     * You can list available models any time at:
-     *   https://generativelanguage.googleapis.com/v1beta/models?key=YOUR_API_KEY
-     */
-    private static final String GEMINI_URL =
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=";
+//    private static final String GEMINI_URL =
+//            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=";
+private static final String GEMINI_BASE_URL =
+        "https://generativelanguage.googleapis.com/v1beta/models/";
 
-    /* @Value tells Spring: "look up this property in application.yaml and inject it here."
-     * The ":" at the end means: if the property is missing, default to "" (empty string).
-     * So if the student forgets to set the key, apiKey is "" — not null — and we handle that. */
+    @Value("${ai.gemini.model}")
+    private String model;
+
+    private int geminiCallCount = 0;
+
     @Value("${ai.gemini.api-key:}")
     private String apiKey;
 
-    /* RestTemplate is Spring's classic HTTP client. Think of it as "Java's fetch()".
-     * We use it to POST our prompt to Gemini and read the response. */
     private final RestTemplate http = new RestTemplate();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    /* @PostConstruct = "run this method ONCE, right after Spring builds the object."
-     * We use it just to print whether the key was loaded. */
-    @jakarta.annotation.PostConstruct
-    void logKeyStatus() {
-        if (apiKey == null || apiKey.isBlank()) {
-            System.out.println("[AIService] Gemini API key NOT configured — using fallback scoring.");
-        } else {
-            System.out.println("[AIService] Gemini API key loaded (length=" + apiKey.length() + ").");
-        }
-    }
 
-    /* ------------------------------------------------------------------
-     *  AIEvaluation — a plain data holder for what AI sends back.
-     *  Public fields (no getters/setters) keep things simple for beginners.
-     *  Example after a successful call:
-     *      score = 78
-     *      relevance = "high"
-     *      technicalAccuracy = "good"
-     *      strengths = ["Clear explanation", "Mentioned time complexity"]
-     *      weaknesses = ["Did not discuss edge cases"]
-     *      recommendations = ["Practice tree problems"]
-     * ------------------------------------------------------------------ */
+    // ============================================================
+    // AI EVALUATION RESULT
+    // ============================================================
+
     public static class AIEvaluation {
-        public int score;                                       // 0-100
-        public int fillerWords;                                 // count of "um", "uh", etc.
-        public String relevance;                                // low | medium | high
-        public String technicalAccuracy;                        // poor | average | good
-        public List<String> strengths       = new ArrayList<>();
-        public List<String> weaknesses      = new ArrayList<>();
+
+        public int score;
+
+        public int fillerWords;
+
+        public String relevance;
+
+        public String technicalAccuracy;
+
+        public List<String> strengths = new ArrayList<>();
+
+        public List<String> weaknesses = new ArrayList<>();
+
         public List<String> recommendations = new ArrayList<>();
     }
 
-    /* ==================================================================
-     *  PUBLIC METHOD #1 — score one question/answer pair using AI.
-     *  Returns null on ANY problem; caller (EvaluationService) then uses
-     *  its own simple rule-based scoring. This way the app never crashes
-     *  just because the AI is down or the key is missing.
-     * ================================================================== */
-    public AIEvaluation evaluateWithAI(String question, String answer) {
-        // Guard #1: no API key set in application.yaml -> can't call AI.
+
+    // ============================================================
+    // EVALUATE CANDIDATE ANSWER
+    // ============================================================
+
+    public AIEvaluation evaluateWithAI(
+            String question,
+            String answer) {
+
         if (apiKey == null || apiKey.isBlank()) {
+
+            System.err.println(
+                    "[AIService] Gemini API key is missing."
+            );
+
             return null;
         }
 
         try {
-            String prompt = buildPrompt(question, answer);   // step 1: English instructions
-            String aiText = callGemini(prompt);              // step 2: HTTP call
-            return parseEvaluation(aiText);                  // step 3: text -> Java object
+
+            String prompt =
+                    buildEvaluationPrompt(
+                            question,
+                            answer
+                    );
+
+            String aiResponse =
+                    callGemini(prompt);
+
+            AIEvaluation evaluation =
+                    parseEvaluation(aiResponse);
+
+            if (evaluation == null) {
+
+                System.err.println(
+                        "[AIService] Failed to parse AI evaluation."
+                );
+
+                return null;
+            }
+
+            validateEvaluation(evaluation);
+
+            return evaluation;
+
         } catch (Exception e) {
-            // Common reasons: no internet, invalid key, Gemini quota exceeded, weird response.
-            System.err.println("[AIService] Failed: " + e.getMessage());
+
+            System.err.println(
+                    "[AIService] AI evaluation failed: "
+                            + e.getMessage()
+            );
+
             return null;
         }
     }
 
-    /* ==================================================================
-     *  PUBLIC METHOD #2 — ask AI to invent N interview questions.
-     *  Used when starting a new interview if you don't have a hand-written
-     *  question bank for the chosen role/level/difficulty.
-     * ================================================================== */
-    public List<String> generateQuestions(String role,
-                                          String experienceLevel,
-                                          String difficulty,
-                                          int count) {
+    // ============================================================
+// EVALUATE MULTIPLE QUESTION + ANSWER PAIRS
+// ============================================================
+
+    public List<AIEvaluation> evaluateInterviewWithAI(
+            List<String> questions,
+            List<String> answers) {
+
         if (apiKey == null || apiKey.isBlank()) {
+
+            System.err.println(
+                    "[AIService] Gemini API key is missing."
+            );
+
             return null;
         }
+
+        if (questions == null ||
+                answers == null ||
+                questions.size() != answers.size() ||
+                questions.isEmpty()) {
+
+            System.err.println(
+                    "[AIService] Invalid questions/answers."
+            );
+
+            return null;
+        }
+
         try {
-            String prompt = buildQuestionPrompt(role, experienceLevel, difficulty, count);
-            String aiText = callGemini(prompt);
-            return parseQuestionList(aiText);
+
+            String prompt =
+                    buildBatchEvaluationPrompt(
+                            questions,
+                            answers
+                    );
+
+            String aiResponse =
+                    callGemini(prompt);
+
+            return parseBatchEvaluation(aiResponse);
+
         } catch (Exception e) {
-            System.err.println("[AIService] generateQuestions failed: " + e.getMessage());
+
+            System.err.println(
+                    "[AIService] Batch AI evaluation failed: "
+                            + e.getMessage()
+            );
+
             return null;
         }
     }
 
-    /* Build the English instructions we send to the AI for question generation.
-     * Notice we say "Return ONLY a valid JSON array of strings" — that strict
-     * format makes it easy for parseQuestionList() to read the answer. */
-    private String buildQuestionPrompt(String role, String exp, String difficulty, int count) {
-        // Defensive defaults so we never send "null" to the AI.
-        String safeRole = role == null || role.isBlank() ? "Software Engineer" : role;
-        String safeExp  = exp == null || exp.isBlank()   ? "Mid"               : exp;
-        String safeDiff = difficulty == null || difficulty.isBlank() ? "Medium" : difficulty;
-        int n = count <= 0 ? 5 : count;
 
-        return "You are an expert technical interviewer. " +
-                "Generate exactly " + n + " interview questions for a " + safeExp +
-                "-level " + safeRole + " at " + safeDiff + " difficulty.\n\n" +
-                "Rules:\n" +
-                "- Mix conceptual, practical, and scenario-based questions.\n" +
-                "- Each question must be ONE sentence, clear and specific.\n" +
-                "- No numbering, no preamble, no markdown.\n" +
-                "- Return ONLY a valid JSON array of strings, e.g.:\n" +
-                "[\"Question 1?\", \"Question 2?\", \"Question 3?\"]";
-    }
+    // ============================================================
+    // GENERATE INTERVIEW QUESTIONS
+    // ============================================================
 
-    /* Pull a JSON array of strings out of the AI's reply.
-     *
-     * Example AI reply (the "clean" string below):
-     *     ["What is polymorphism?", "Explain ACID properties.", "How does HashMap work?"]
-     *
-     * Sometimes the AI wraps it in markdown like:
-     *     ```json
-     *     ["...", "..."]
-     *     ```
-     * so we strip those backticks first.
-     */
-    private List<String> parseQuestionList(String aiText) {
-        String clean = aiText == null ? "" : aiText.trim();
+    public List<String> generateQuestions(
+            String role,
+            String experienceLevel,
+            String difficulty,
+            int count) {
 
-        // Remove ```json ... ``` fences if present.
-        // replaceFirst with regex: ^``` matches at start; (?:json)? optionally matches "json".
-        if (clean.startsWith("```")) {
-            clean = clean.replaceFirst("^```(?:json)?", "").replaceFirst("```$", "").trim();
+        if (apiKey == null || apiKey.isBlank()) {
+
+            System.err.println(
+                    "[AIService] Gemini API key is missing."
+            );
+
+            return null;
         }
 
-        // Step A: find the [...] block.
-        //   "\\[" matches a literal '['  (in Java strings "\\[" is the 2-char regex \[ )
-        //   "(.*?)" captures everything inside, lazily (the smallest match)
-        //   "\\]" matches a literal ']'
-        //   Pattern.DOTALL makes "." match newlines too.
-        Matcher block = Pattern.compile("\\[(.*?)\\]", Pattern.DOTALL).matcher(clean);
-        if (!block.find()) return null;
+        try {
 
-        // Step B: inside the brackets, find every "double-quoted string".
-        //   "\""             -> a literal double quote
-        //   ((?:\\.|[^"\\])*) -> capture: either an escaped char (\X) or any non-quote/non-backslash char
-        //   "\""             -> closing double quote
-        // This handles strings that contain escaped quotes like "He said \"hi\"".
-        List<String> out = new ArrayList<>();
-        Matcher items = Pattern.compile("\"((?:\\\\.|[^\"\\\\])*)\"").matcher(block.group(1));
-        while (items.find()) {
-            String q = unescapeJson(items.group(1)).trim();
-            if (!q.isEmpty()) out.add(q);
+            String prompt =
+                    buildQuestionPrompt(
+                            role,
+                            experienceLevel,
+                            difficulty,
+                            count
+                    );
+
+            String aiResponse =
+                    callGemini(prompt);
+
+            return parseQuestionList(aiResponse);
+
+        } catch (Exception e) {
+
+            System.err.println(
+                    "[AIService] Question generation failed: "
+                            + e.getMessage()
+            );
+
+            return null;
         }
-        return out.isEmpty() ? null : out;
     }
 
-    /* Build the English instructions we send to AI for answer evaluation.
-     * We strongly tell it to return JSON ONLY — no markdown, no explanations. */
-    private String buildPrompt(String question, String answer) {
-        return "You are an expert technical interviewer. " +
-                "Evaluate the candidate's answer.\n\n" +
-                "Question: " + question + "\n" +
-                "Answer: "   + answer   + "\n\n" +
-                "Evaluate based on:\n" +
-                "1. Relevance to the question\n" +
-                "2. Technical correctness\n" +
-                "3. Clarity\n" +
-                "4. Count filler words in the answer (um, uh, er, like, you know, basically)\n\n" +
-                "Return ONLY valid JSON in this exact format (no markdown, no prose):\n" +
-                "{\n" +
-                "  \"score\": 0,\n" +
-                "  \"fillerWords\": 0,\n" +
-                "  \"relevance\": \"low\",\n" +
-                "  \"technicalAccuracy\": \"poor\",\n" +
-                "  \"strengths\": [\"...\"],\n" +
-                "  \"weaknesses\": [\"...\"],\n" +
-                "  \"recommendations\": [\"...\"]\n" +
-                "}";
+
+    // ============================================================
+    // EVALUATION PROMPT
+    // ============================================================
+
+    private String buildEvaluationPrompt(
+            String question,
+            String answer) {
+
+        return """
+                ROLE:
+                You are an expert technical interviewer evaluating
+                a software engineering candidate.
+
+                OBJECTIVE:
+                Evaluate ONLY the candidate's answer to the question.
+                Do not assume knowledge that the candidate did not demonstrate.
+
+                QUESTION:
+                %s
+
+                CANDIDATE ANSWER:
+                %s
+
+                EVALUATION DIMENSIONS:
+
+                1. RELEVANCE
+                Does the answer directly address the question?
+
+                2. TECHNICAL ACCURACY
+                Are the technical statements correct?
+
+                3. CLARITY
+                Is the explanation understandable, logically structured,
+                and appropriately concise?
+
+                4. COMPLETENESS
+                Did the candidate address the important parts of the question?
+
+                SCORING:
+
+                Return an integer score from 0 to 100.
+
+                90-100 = Excellent
+                75-89  = Good
+                60-74  = Average
+                40-59  = Weak
+                0-39   = Poor
+
+                IMPORTANT SCORING RULES:
+
+                - A short but correct answer can receive a high score.
+                - Do not reward unnecessary verbosity.
+                - Do not penalize the candidate for information that
+                  the question did not require.
+                - Do not invent missing information.
+                - Judge only what the candidate actually said.
+                - Technical errors should reduce the score.
+                - If multiple parts were requested and only some were answered,
+                  reduce the score accordingly.
+                - Minor wording mistakes should not be treated as technical errors.
+
+                FILLER WORDS:
+
+                Count actual filler-word usage.
+
+                Filler words:
+                um
+                uh
+                er
+                like
+                you know
+                basically
+
+                Do NOT count a word when it has normal semantic meaning.
+
+                RELEVANCE:
+
+                Return exactly one:
+
+                low
+                medium
+                high
+
+                TECHNICAL ACCURACY:
+
+                Return exactly one:
+
+                poor
+                average
+                good
+
+                STRENGTHS:
+
+                Give 2-4 specific strengths supported by the answer.
+
+                WEAKNESSES:
+
+                Give 1-4 specific weaknesses supported by the answer.
+
+                RECOMMENDATIONS:
+
+                Give 1-4 actionable recommendations that would help
+                the candidate improve this answer.
+
+                OUTPUT FORMAT:
+
+                Return ONLY valid JSON.
+
+                {
+                  "score": 0,
+                  "fillerWords": 0,
+                  "relevance": "medium",
+                  "technicalAccuracy": "average",
+                  "strengths": [],
+                  "weaknesses": [],
+                  "recommendations": []
+                }
+
+                Do not return Markdown.
+                Do not return ```json.
+                Do not include explanations outside the JSON.
+                """.formatted(
+                question,
+                answer
+        );
     }
 
-    /* ==================================================================
-     *  callGemini — does the actual HTTP POST to Google.
-     *
-     *  WHAT GEMINI EXPECTS (request body):
-     *    {
-     *      "contents": [
-     *        { "parts": [ { "text": "<our prompt here>" } ] }
-     *      ]
-     *    }
-     *
-     *  WHAT GEMINI RETURNS (response body, simplified):
-     *    {
-     *      "candidates": [
-     *        { "content": { "parts": [ { "text": "<AI's answer>" } ] } }
-     *      ]
-     *    }
-     *
-     *  We only care about that inner "text" field — that's the AI's reply.
-     * ================================================================== */
-    private String callGemini(String prompt) throws Exception {
-        // Build the JSON body by hand. We must escape the prompt because the
-        // prompt itself may contain quotes/newlines that would BREAK the JSON.
-        // Example: prompt = ' Say "hi" '
-        //   Without escaping: {"text":" Say "hi" "}  <-- broken JSON
-        //   With escaping:    {"text":" Say \"hi\" "} <-- valid JSON
-        String body = "{\"contents\":[{\"parts\":[{\"text\":\""
-                + escapeJson(prompt) + "\"}]}]}";
+    // ============================================================
+// BATCH EVALUATION PROMPT
+// ============================================================
 
-        // Tell Gemini we're sending JSON.
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+    private String buildBatchEvaluationPrompt(
+            List<String> questions,
+            List<String> answers) {
 
-        HttpEntity<String> req = new HttpEntity<>(body, headers);
+        StringBuilder input = new StringBuilder();
 
-        // POST to: https://...generateContent?key=YOUR_KEY
-        ResponseEntity<String> resp =   http.exchange(
-                GEMINI_URL + apiKey, HttpMethod.POST, req, String.class
+        for (int i = 0; i < questions.size(); i++) {
+
+            input.append("\nQUESTION ")
+                    .append(i + 1)
+                    .append(":\n")
+                    .append(questions.get(i))
+                    .append("\n");
+
+            input.append("CANDIDATE ANSWER ")
+                    .append(i + 1)
+                    .append(":\n")
+                    .append(answers.get(i))
+                    .append("\n");
+
+            input.append("-------------------------\n");
+        }
+
+        return """
+            ROLE:
+            You are an expert technical interviewer evaluating
+            a software engineering candidate.
+
+            TASK:
+            Evaluate every question and answer pair separately.
+
+                IMPORTANT:
+                - Evaluation 1 corresponds to Question 1.
+                - Evaluation 2 corresponds to Question 2.
+                - Continue in the same order.
+                - Do not skip any question.
+                - Do not combine multiple answers into one evaluation.
+                - Evaluate only what the candidate actually said.
+
+            EVALUATION CRITERIA:
+
+            1. RELEVANCE
+            Does the answer directly address the question?
+
+            2. TECHNICAL ACCURACY
+            Are the technical statements correct?
+
+            3. CLARITY
+            Is the explanation understandable and logically structured?
+
+            4. COMPLETENESS
+            Did the candidate address the important parts of the question?
+
+            SCORING:
+
+            90-100 = Excellent
+            75-89  = Good
+            60-74  = Average
+            40-59  = Weak
+            0-39   = Poor
+
+            FILLER WORDS:
+
+            Count actual filler-word usage:
+
+            um
+            uh
+            er
+            like
+            you know
+            basically
+
+            Only count them when they are used as filler words.
+
+            RELEVANCE:
+
+            Use exactly:
+
+            low
+            medium
+            high
+
+            TECHNICAL ACCURACY:
+
+            Use exactly:
+
+            poor
+            average
+            good
+
+            STRENGTHS:
+
+            Provide 2-4 specific strengths.
+
+            WEAKNESSES:
+
+            Provide 1-4 specific weaknesses.
+
+            RECOMMENDATIONS:
+
+            Provide 1-4 actionable recommendations.
+
+            QUESTION AND ANSWER PAIRS:
+
+            %s
+
+            OUTPUT:
+
+            Return ONLY a valid JSON array.
+
+            [
+              {
+                "score": 75,
+                "fillerWords": 0,
+                "relevance": "high",
+                "technicalAccuracy": "good",
+                "strengths": [],
+                "weaknesses": [],
+                "recommendations": []
+              }
+            ]
+
+            The number of objects MUST equal the number of
+            question-answer pairs.
+
+            Do not return Markdown.
+            Do not return ```json.
+            Do not include any text outside the JSON array.
+            """.formatted(
+                input
+        );
+    }
+
+
+    // ============================================================
+    // QUESTION GENERATION PROMPT
+    // ============================================================
+
+    private String buildQuestionPrompt(
+            String role,
+            String experienceLevel,
+            String difficulty,
+            int count) {
+
+        return """
+                ROLE:
+                You are an expert technical interviewer.
+
+                TASK:
+                Generate %d interview questions for the candidate.
+
+                CANDIDATE ROLE:
+                %s
+
+                EXPERIENCE LEVEL:
+                %s
+
+                DIFFICULTY:
+                %s
+
+                REQUIREMENTS:
+
+                - Questions must be relevant to the candidate's role.
+                - Questions must match the requested experience level.
+                - Questions must match the requested difficulty.
+                - Avoid duplicate questions.
+                - Avoid vague questions.
+                - Prefer practical technical interview questions.
+                - Questions should test understanding rather than memorization.
+                - Do not provide answers.
+                - Do not number the questions.
+
+                OUTPUT:
+
+                Return ONLY a valid JSON array of strings.
+
+                Example:
+
+                [
+                  "What is dependency injection in Spring?",
+                  "Explain the difference between HashMap and ConcurrentHashMap.",
+                  "How does JWT authentication work?"
+                ]
+
+                Do not return Markdown.
+                Do not return ```json.
+                Do not include any text outside the JSON array.
+                """.formatted(
+                count,
+                role,
+                experienceLevel,
+                difficulty
+        );
+    }
+
+
+    // ============================================================
+    // CALL GEMINI
+    // ============================================================
+
+
+    private String callGemini(String prompt)
+
+            throws Exception {
+
+        String body =
+                """
+                {
+                  "contents": [
+                    {
+                      "parts": [
+                        {
+                          "text": %s
+                        }
+                      ]
+                    }
+                  ]
+                }
+                """.formatted(
+                        objectMapper.writeValueAsString(prompt)
+                );
+
+        HttpHeaders headers =
+                new HttpHeaders();
+
+        headers.setContentType(
+                MediaType.APPLICATION_JSON
         );
 
-        // The full JSON Gemini sent us, as one big String.
-        String full = resp.getBody();
+        HttpEntity<String> request =
+                new HttpEntity<>(
+                        body,
+                        headers
+                );
 
-        // We want the value of the FIRST "text" field. Regex breakdown:
-        //   "\"text\""        -> the literal word "text" with surrounding quotes
-        //   "\\s*:\\s*"       -> a colon, possibly with whitespace around it
-        //   "\""              -> opening quote of the value
-        //   "((?:\\\\.|[^\"\\\\])*)"  -> capture: zero or more of (escaped char OR any non-quote)
-        //   "\""              -> closing quote
-        Matcher m = Pattern.compile("\"text\"\\s*:\\s*\"((?:\\\\.|[^\"\\\\])*)\"").matcher(full);
-        if (!m.find()) throw new RuntimeException("No 'text' field in Gemini response");
+        try {
 
-        // m.group(1) is still in JSON-escaped form (e.g. \"  \n  \\). Convert back to a normal Java string.
-        return unescapeJson(m.group(1));
+            String url =
+                    GEMINI_BASE_URL
+                            + model
+                            + ":generateContent?key="
+                            + apiKey;
+
+            System.out.println("=== GEMINI REQUEST ===");
+            System.out.println("Model: " + model);
+            System.out.println("URL: " + GEMINI_BASE_URL + model + ":generateContent");
+            System.out.println("Calling Gemini...");
+
+
+            geminiCallCount++;
+
+            System.out.println(
+                    "=== GEMINI API CALL #" + geminiCallCount + " ==="
+            );
+            ResponseEntity<String> response =
+                    http.exchange(
+                            url,
+                            HttpMethod.POST,
+                            request,
+                            String.class
+                    );
+            System.out.println("=== GEMINI RESPONSE RECEIVED ===");
+            if (response.getBody() == null ||
+                    response.getBody().isBlank()) {
+
+                throw new RuntimeException(
+                        "Gemini returned an empty response."
+                );
+            }
+
+            JsonNode root =
+                    objectMapper.readTree(
+                            response.getBody()
+                    );
+
+            JsonNode textNode =
+                    root.path("candidates")
+                            .path(0)
+                            .path("content")
+                            .path("parts")
+                            .path(0)
+                            .path("text");
+
+            if (textNode.isMissingNode() ||
+                    textNode.isNull()) {
+
+                throw new RuntimeException(
+                        "Gemini response does not contain text: "
+                                + response.getBody()
+                );
+            }
+
+            return textNode.asText();
+
+        } catch (HttpStatusCodeException e) {
+
+            System.err.println(
+                    "Gemini HTTP status: "
+                            + e.getStatusCode()
+            );
+
+            System.err.println(
+                    "Gemini response: "
+                            + e.getResponseBodyAsString()
+            );
+
+            throw e;
+        }
     }
 
-    /* ==================================================================
-     *  parseEvaluation — turn the AI's JSON text into our AIEvaluation.
-     *
-     *  Example aiText we might receive:
-     *  {
-     *    "score": 72,
-     *    "relevance": "high",
-     *    "technicalAccuracy": "good",
-     *    "strengths": ["Clear", "Used examples"],
-     *    "weaknesses": ["No edge cases"],
-     *    "recommendations": ["Practice trees"]
-     *  }
-     * ================================================================== */
-    private AIEvaluation parseEvaluation(String aiText) {
-        // Strip ```json fences if the AI ignored our "no markdown" rule.
-        String clean = aiText.trim();
-        if (clean.startsWith("```")) {
-            clean = clean.replaceFirst("^```(?:json)?", "").replaceFirst("```$", "").trim();
+
+    // ============================================================
+    // PARSE EVALUATION
+    // ============================================================
+
+    private AIEvaluation parseEvaluation(
+            String aiText) {
+
+        try {
+
+            String clean =
+                    cleanJsonResponse(aiText);
+
+            JsonNode root =
+                    objectMapper.readTree(clean);
+
+            AIEvaluation evaluation =
+                    new AIEvaluation();
+
+            evaluation.score =
+                    root.path("score").asInt(0);
+
+            evaluation.fillerWords =
+                    root.path("fillerWords").asInt(0);
+
+            evaluation.relevance =
+                    root.path("relevance")
+                            .asText("medium");
+
+            evaluation.technicalAccuracy =
+                    root.path("technicalAccuracy")
+                            .asText("average");
+
+            evaluation.strengths =
+                    readStringList(
+                            root.path("strengths")
+                    );
+
+            evaluation.weaknesses =
+                    readStringList(
+                            root.path("weaknesses")
+                    );
+
+            evaluation.recommendations =
+                    readStringList(
+                            root.path("recommendations")
+                    );
+
+            return evaluation;
+
+        } catch (Exception e) {
+
+            System.err.println(
+                    "[AIService] Evaluation JSON parsing failed."
+            );
+
+            return null;
+        }
+    }
+
+    // ============================================================
+// PARSE BATCH EVALUATIONS
+// ============================================================
+
+    private List<AIEvaluation> parseBatchEvaluation(
+            String aiText) {
+
+        try {
+
+            String clean =
+                    cleanJsonResponse(aiText);
+
+            JsonNode root =
+                    objectMapper.readTree(clean);
+
+            if (!root.isArray()) {
+
+                System.err.println(
+                        "[AIService] Batch response is not an array."
+                );
+
+                return null;
+            }
+
+            List<AIEvaluation> evaluations =
+                    new ArrayList<>();
+
+            for (JsonNode node : root) {
+
+                AIEvaluation evaluation =
+                        new AIEvaluation();
+
+                evaluation.score =
+                        node.path("score").asInt(0);
+
+                evaluation.fillerWords =
+                        node.path("fillerWords").asInt(0);
+
+                evaluation.relevance =
+                        node.path("relevance")
+                                .asText("medium");
+
+                evaluation.technicalAccuracy =
+                        node.path("technicalAccuracy")
+                                .asText("average");
+
+                evaluation.strengths =
+                        readStringList(
+                                node.path("strengths")
+                        );
+
+                evaluation.weaknesses =
+                        readStringList(
+                                node.path("weaknesses")
+                        );
+
+                evaluation.recommendations =
+                        readStringList(
+                                node.path("recommendations")
+                        );
+
+                validateEvaluation(evaluation);
+
+                evaluations.add(evaluation);
+            }
+
+            return evaluations.isEmpty()
+                    ? null
+                    : evaluations;
+
+        } catch (Exception e) {
+
+            System.err.println(
+                    "[AIService] Batch evaluation JSON parsing failed."
+            );
+
+            return null;
+        }
+    }
+
+
+    // ============================================================
+    // PARSE QUESTION LIST
+    // ============================================================
+
+    private List<String> parseQuestionList(
+            String aiText) {
+
+        try {
+
+            String clean =
+                    cleanJsonResponse(aiText);
+
+            JsonNode root =
+                    objectMapper.readTree(clean);
+
+            if (!root.isArray()) {
+
+                return null;
+            }
+
+            List<String> questions =
+                    new ArrayList<>();
+
+            for (JsonNode node : root) {
+
+                if (node.isTextual()) {
+
+                    String question =
+                            node.asText().trim();
+
+                    if (!question.isBlank()) {
+
+                        questions.add(question);
+                    }
+                }
+            }
+
+            return questions.isEmpty()
+                    ? null
+                    : questions;
+
+        } catch (Exception e) {
+
+            System.err.println(
+                    "[AIService] Question JSON parsing failed."
+            );
+
+            return null;
+        }
+    }
+
+
+    // ============================================================
+    // READ JSON STRING ARRAY
+    // ============================================================
+
+    private List<String> readStringList(
+            JsonNode node) {
+
+        List<String> result =
+                new ArrayList<>();
+
+        if (node != null && node.isArray()) {
+
+            for (JsonNode item : node) {
+
+                if (item.isTextual()) {
+
+                    String value =
+                            item.asText().trim();
+
+                    if (!value.isBlank()) {
+
+                        result.add(value);
+                    }
+                }
+            }
         }
 
-        AIEvaluation e = new AIEvaluation();
-        e.score             = parseInt(clean,    "score",             50);        // fallback 50
-        e.fillerWords       = parseInt(clean,    "fillerWords",       0);
-        e.relevance         = parseString(clean, "relevance",         "medium");
-        e.technicalAccuracy = parseString(clean, "technicalAccuracy", "average");
-        e.strengths         = parseArray(clean,  "strengths");
-        e.weaknesses        = parseArray(clean,  "weaknesses");
-        e.recommendations   = parseArray(clean,  "recommendations");
-        return e;
+        return result;
     }
 
-    /* ==================================================================
-     *  Tiny JSON helpers (regex-based — fine because the AI's JSON shape
-     *  is small and predictable).
-     * ================================================================== */
 
-    /* Find a number after "key": .
-     * Example: parseInt({"score": 72}, "score", 0) -> 72
-     *
-     * Regex pieces:
-     *   "\"" + key + "\""  -> the literal key in quotes, e.g. "score"
-     *   "\\s*:\\s*"        -> colon with optional whitespace
-     *   "(\\d+)"           -> capture one or more digits
-     */
-    private int parseInt(String json, String key, int fallback) {
-        Matcher m = Pattern.compile("\"" + key + "\"\\s*:\\s*(\\d+)").matcher(json);
-        return m.find() ? Integer.parseInt(m.group(1)) : fallback;
+    // ============================================================
+    // CLEAN AI JSON RESPONSE
+    // ============================================================
+
+    private String cleanJsonResponse(
+            String text) {
+
+        if (text == null) {
+
+            throw new IllegalArgumentException(
+                    "AI response is null"
+            );
+        }
+
+        String clean =
+                text.trim();
+
+        // Remove Markdown code fences
+        if (clean.startsWith("```")) {
+
+            clean =
+                    clean.replaceFirst(
+                            "^```(?:json)?\\s*",
+                            ""
+                    );
+
+            clean =
+                    clean.replaceFirst(
+                            "\\s*```$",
+                            ""
+                    );
+        }
+
+        return clean.trim();
     }
 
-    /* Find a string after "key": .
-     * Example: parseString({"relevance": "high"}, "relevance", "low") -> "high"
-     *
-     * "([^\"]*)" -> capture any chars except a quote (good enough for our well-formed AI output).
-     */
-    private String parseString(String json, String key, String fallback) {
-        Matcher m = Pattern.compile("\"" + key + "\"\\s*:\\s*\"([^\"]*)\"").matcher(json);
-        return m.find() ? m.group(1) : fallback;
-    }
 
-    /* Find an array of strings after "key": .
-     * Example:
-     *   json = { "strengths": ["Clear", "Concise"] }
-     *   parseArray(json, "strengths") -> ["Clear", "Concise"]
-     *
-     * Two-step: first grab the "[ ... ]" block, then pull each "..." inside it.
-     */
-    private List<String> parseArray(String json, String key) {
-        List<String> out = new ArrayList<>();
-        Matcher block = Pattern.compile("\"" + key + "\"\\s*:\\s*\\[(.*?)\\]", Pattern.DOTALL)
-                .matcher(json);
-        if (!block.find()) return out;   // key missing -> empty list
+    // ============================================================
+    // VALIDATE AI EVALUATION
+    // ============================================================
 
-        Matcher items = Pattern.compile("\"((?:\\\\.|[^\"\\\\])*)\"").matcher(block.group(1));
-        while (items.find()) out.add(unescapeJson(items.group(1)));
-        return out;
-    }
+    private void validateEvaluation(
+            AIEvaluation evaluation) {
 
-    /* ==================================================================
-     *  ESCAPING / UNESCAPING .
-     *
-     *  WHY DO WE NEED THIS?
-     *  --------------------
-     *  JSON is just text. Inside a JSON string, certain characters are
-     *  SPECIAL and must be written with a backslash:
-     *
-     *      Real character        How JSON writes it
-     *      ------------------    ------------------
-     *      "  (double quote)     \"
-     *      \  (backslash)        \\
-     *      newline               \n
-     *      carriage return       \r
-     *      tab                   \t
-     *
-     *  EXAMPLE — escapeJson (Java string -> JSON-safe string):
-     *  -------------------------------------------------------
-     *  (3 chars: " H i ", newline, tab):
-     *      He said "Hi"
-     *      <tab>bye
-     *
-     *  If we drop it straight into JSON, we get BROKEN JSON:
-     *      {"text":"He said "Hi"
-     *      	bye"}
-     *
-     *  After escapeJson(...) it becomes a SAFE one-liner:
-     *      He said \"Hi\"\n\tbye
-     *
-     *  And the full JSON is now valid:
-     *      {"text":"He said \"Hi\"\n\tbye"}
-     *
-     *  EXAMPLE — unescapeJson (JSON-safe string -> normal Java string):
-     *  ----------------------------------------------------------------
-     *  Gemini's response contains:   He said \"Hi\"\n\tbye
-     *  Java sees these as literal characters:  \  "  H ...  \  n  \  t ...
-     *  unescapeJson turns them back into the real characters " and newline and tab
-     *  so we end up with what a human would actually read.
-     *
-     *  ORDER MATTERS!
-     *  --------------
-     *  In escapeJson we replace "\\" FIRST. Why?
-     *    If we replaced " -> \" first, the new \ we just inserted would itself
-     *    get doubled in the next step, corrupting the output.
-     *  In unescapeJson we replace "\\\\" LAST for the same reason in reverse.
-     * ================================================================== */
+        // Protect our application from invalid AI scores.
 
-    /* Java -> JSON-safe.
-     * Note on the Java string literals here:
-     *   "\\"   in Java code = ONE backslash character at runtime (\)
-     *   "\\\\" in Java code = TWO backslashes at runtime (\\)
-     *   "\""   in Java code = ONE double-quote character at runtime (")
-     *   "\\\"" in Java code = a backslash followed by a double-quote (\")  <-- the JSON escape
-     */
-    private String escapeJson(String s) {
-        return s.replace("\\", "\\\\")   // \  ->  \\        (must be FIRST — see note above)
-                .replace("\"", "\\\"")   // "  ->  \"
-                .replace("\n", "\\n")    // newline   -> \n  (two chars: backslash + n)
-                .replace("\r", "\\r")    // CR        -> \r
-                .replace("\t", "\\t");   // tab       -> \t
-    }
+        if (evaluation.score < 0) {
 
-    /* JSON-safe -> Java.
-     * We do the reverse. Replace the two-char sequences (like \  +  n) with
-     * the real single character (newline). Backslash-backslash goes LAST so
-     * sequences we just produced aren't reinterpreted.
-     */
-    private String unescapeJson(String s) {
-        return s.replace("\\n", "\n")     // \n -> real newline
-                .replace("\\r", "\r")     // \r -> real CR
-                .replace("\\t", "\t")     // \t -> real tab
-                .replace("\\\"", "\"")    // \" -> "
-                .replace("\\\\", "\\");   // \\ -> \   (must be LAST)
+            evaluation.score = 0;
+        }
+
+        if (evaluation.score > 100) {
+
+            evaluation.score = 100;
+        }
+
+        if (evaluation.fillerWords < 0) {
+
+            evaluation.fillerWords = 0;
+        }
+
+        if (evaluation.relevance == null ||
+                !List.of(
+                        "low",
+                        "medium",
+                        "high"
+                ).contains(
+                        evaluation.relevance.toLowerCase()
+                )) {
+
+            evaluation.relevance =
+                    "medium";
+        }
+
+        if (evaluation.technicalAccuracy == null ||
+                !List.of(
+                        "poor",
+                        "average",
+                        "good"
+                ).contains(
+                        evaluation.technicalAccuracy.toLowerCase()
+                )) {
+
+            evaluation.technicalAccuracy =
+                    "average";
+        }
     }
 }

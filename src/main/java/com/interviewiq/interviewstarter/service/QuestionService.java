@@ -51,7 +51,7 @@ public class QuestionService {
 
     public List<Question> getQuestionsForInterview(Long interviewId) {
         // 1. Already generated? return cached rows.
-        List<Question> existing = questionRepository.findByinterviewId(interviewId);
+        List<Question> existing = questionRepository.findByInterviewIdOrderByIdAsc(interviewId);
         if (!existing.isEmpty()) return existing;
 
         // 2. Need the interview to know role/experience/difficulty.
@@ -74,7 +74,7 @@ public class QuestionService {
         // 4. Persist linked to this interview.
         List<Question> toSave = new ArrayList<>();
         for (String text : texts) {
-            toSave.add(new Question(null, interviewId, text));
+            toSave.add(new Question(null, interview, text));
         }
         return questionRepository.saveAll(toSave);
     }
