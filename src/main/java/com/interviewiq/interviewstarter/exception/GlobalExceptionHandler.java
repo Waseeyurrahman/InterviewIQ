@@ -2,8 +2,11 @@ package com.interviewiq.interviewstarter.exception;
 
 import com.interviewiq.interviewstarter.dto.AuthDtos;
 import jakarta.validation.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -14,6 +17,9 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<AuthDtos.ApiResponse> handleNotFound(
@@ -93,11 +99,24 @@ public class GlobalExceptionHandler {
     public ResponseEntity<AuthDtos.ApiResponse> handleGeneralException(
             Exception ex) {
 
+        log.error("Unhandled exception while processing request", ex);
+
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new AuthDtos.ApiResponse(
                         false,
                         "An unexpected error occurred"
+                ));
+    }
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<AuthDtos.ApiResponse> handleMalformedJson(
+            HttpMessageNotReadableException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new AuthDtos.ApiResponse(
+                        false,
+                        "Invalid request body"
                 ));
     }
 }

@@ -4,6 +4,7 @@ import com.interviewiq.interviewstarter.dto.InterviewDtos.*;
 import com.interviewiq.interviewstarter.entity.Interview;
 import com.interviewiq.interviewstarter.security.CustomUserDetails;
 import com.interviewiq.interviewstarter.service.InterviewService;
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,7 +24,7 @@ public class Interviewcontroller {
 
     @PreAuthorize("hasRole('USER')")
     @PostMapping("/create")
-    public InterviewResponse create(@RequestBody InterviewRequest request, Authentication authentication){
+    public InterviewResponse create(@Valid @RequestBody InterviewRequest request, Authentication authentication){
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal() ;
         Long userId = userDetails.getUserId();
         Interview saved = interviewService.create(request.getRole(), request.getExperienceLevel(),request.getDifficulty(), request.getDuration(),userId);
