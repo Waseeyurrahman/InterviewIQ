@@ -48,7 +48,7 @@ public class Interviewcontroller {
 
     @PreAuthorize("@interviewSecurity.isOwner(#id,authentication)")
     @PostMapping("/{id}/finish")
-    public InterviewResponse finish(@PathVariable Long id, @RequestBody FinishInterviewRequest request){
+    public InterviewResponse finish(@PathVariable Long id, @Valid@RequestBody FinishInterviewRequest request){
         Interview saved = interviewService.finish(id, request.getFinalScore());
         return new InterviewResponse(true, "Interview finished", saved.getId());
     }
