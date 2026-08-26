@@ -4,6 +4,7 @@ import com.interviewiq.interviewstarter.dto.AuthDtos;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -95,6 +96,32 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<AuthDtos.ApiResponse> handleMalformedJson(
+            HttpMessageNotReadableException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new AuthDtos.ApiResponse(
+                        false,
+                        "Invalid request body"
+                ));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<AuthDtos.ApiResponse> handleDataIntegrityViolation(
+            DataIntegrityViolationException ex) {
+
+        log.warn("Database constraint violation", ex);
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new AuthDtos.ApiResponse(
+                        false,
+                        "Email already registered"
+                ));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<AuthDtos.ApiResponse> handleGeneralException(
             Exception ex) {
@@ -108,15 +135,5 @@ public class GlobalExceptionHandler {
                         "An unexpected error occurred"
                 ));
     }
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<AuthDtos.ApiResponse> handleMalformedJson(
-            HttpMessageNotReadableException ex) {
 
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(new AuthDtos.ApiResponse(
-                        false,
-                        "Invalid request body"
-                ));
-    }
 }
