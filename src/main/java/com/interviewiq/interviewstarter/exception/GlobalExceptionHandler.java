@@ -1,34 +1,103 @@
 package com.interviewiq.interviewstarter.exception;
 
 import com.interviewiq.interviewstarter.dto.AuthDtos;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<AuthDtos.ApiResponse> handleNotFound(ResourceNotFoundException ex){
+    public ResponseEntity<AuthDtos.ApiResponse> handleNotFound(
+            ResourceNotFoundException ex) {
+
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(new AuthDtos.ApiResponse(false,ex.getMessage()));
+                .body(new AuthDtos.ApiResponse(
+                        false,
+                        ex.getMessage()
+                ));
     }
 
     @ExceptionHandler(ForbiddenException.class)
-    public ResponseEntity<AuthDtos.ApiResponse> handleForbidden(ForbiddenException ex){
+    public ResponseEntity<AuthDtos.ApiResponse> handleForbidden(
+            ForbiddenException ex) {
+
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
-                .body(new AuthDtos.ApiResponse(false,ex.getMessage()));
+                .body(new AuthDtos.ApiResponse(
+                        false,
+                        ex.getMessage()
+                ));
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<AuthDtos.ApiResponse> handleBadCredentials(
+            BadCredentialsException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(new AuthDtos.ApiResponse(
+                        false,
+                        "Invalid email or password"
+                ));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidation(
+            MethodArgumentNotValidException ex) {
+
+        Map<String, String> errors = new LinkedHashMap<>();
+
+        ex.getBindingResult()
+                .getFieldErrors()
+                .forEach(error ->
+                        errors.put(
+                                error.getField(),
+                                error.getDefaultMessage()
+                        )
+                );
+
+        Map<String, Object> response = new LinkedHashMap<>();
+
+        response.put("success", false);
+        response.put("message", "Validation failed");
+        response.put("errors", errors);
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(response);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<AuthDtos.ApiResponse> handleConstraintViolation(
+            ConstraintViolationException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new AuthDtos.ApiResponse(
+                        false,
+                        "Invalid request parameters"
+                ));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<AuthDtos.ApiResponse> handleGeneralException(Exception ex) {
-
-        ex.printStackTrace();
+    public ResponseEntity<AuthDtos.ApiResponse> handleGeneralException(
+            Exception ex) {
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new AuthDtos.ApiResponse(false, ex.getMessage()));
+                .body(new AuthDtos.ApiResponse(
+                        false,
+                        "An unexpected error occurred"
+                ));
     }
 }
