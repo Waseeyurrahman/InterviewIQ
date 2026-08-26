@@ -106,6 +106,15 @@ public class EvaluationService {
                                         "Interview not found: " + interviewId
                                 )
                         );
+        if (interview.getStatus() != InterviewStatus.COMPLETED) {
+            throw new IllegalStateException(
+                    "Interview cannot be evaluated from status "
+                            + interview.getStatus()
+            );
+        }
+
+        interview.setStatus(InterviewStatus.EVALUATING);
+        interviewRepository.save(interview);
 
 
         /*
@@ -181,6 +190,7 @@ public class EvaluationService {
                     "Try to answer at least one question "
                             + "to receive an AI evaluation."
             );
+
 
             return result;
         }
@@ -292,11 +302,8 @@ public class EvaluationService {
                     "Please try evaluating the interview again later."
             );
 
-            /*
-             * Do NOT mark completed.
-             *
-             * The interview remains IN_PROGRESS.
-             */
+            interview.setStatus(InterviewStatus.FAILED);
+            interviewRepository.save(interview);
 
             return result;
         }
@@ -600,7 +607,7 @@ public class EvaluationService {
         );
 
         interview.setStatus(
-                InterviewStatus.COMPLETED
+                InterviewStatus.EVALUATED
         );
 
         interviewRepository.save(

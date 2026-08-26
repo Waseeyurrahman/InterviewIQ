@@ -122,6 +122,18 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<AuthDtos.ApiResponse> handleIllegalState(
+            IllegalStateException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new AuthDtos.ApiResponse(
+                        false,
+                        ex.getMessage()
+                ));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<AuthDtos.ApiResponse> handleGeneralException(
             Exception ex) {
