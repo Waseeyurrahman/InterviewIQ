@@ -14,18 +14,16 @@ import java.util.List;
 @Service
 public class AIService {
 
-//    private static final String GEMINI_URL =
-//            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=";
-private static final String GEMINI_BASE_URL =
-        "https://generativelanguage.googleapis.com/v1beta/models/";
+    private static final String GEMINI_BASE_URL =
+            "https://generativelanguage.googleapis.com/v1beta/models/";
 
     @Value("${ai.gemini.model}")
     private String model;
 
-    private int geminiCallCount = 0;
-
     @Value("${ai.gemini.api-key:}")
     private String apiKey;
+
+    private int geminiCallCount = 0;
 
     private final RestTemplate http = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -40,6 +38,8 @@ private static final String GEMINI_BASE_URL =
         public int score;
 
         public int fillerWords;
+
+        public int confidence;
 
         public String relevance;
 
@@ -108,9 +108,10 @@ private static final String GEMINI_BASE_URL =
         }
     }
 
+
     // ============================================================
-// EVALUATE MULTIPLE QUESTION + ANSWER PAIRS
-// ============================================================
+    // EVALUATE MULTIPLE QUESTION + ANSWER PAIRS
+    // ============================================================
 
     public List<AIEvaluation> evaluateInterviewWithAI(
             List<String> questions,
@@ -148,7 +149,10 @@ private static final String GEMINI_BASE_URL =
             String aiResponse =
                     callGemini(prompt);
 
-            return parseBatchEvaluation(aiResponse);
+            return parseBatchEvaluation(
+                    aiResponse,
+                    questions.size()
+            );
 
         } catch (Exception e) {
 
@@ -194,7 +198,25 @@ private static final String GEMINI_BASE_URL =
             String aiResponse =
                     callGemini(prompt);
 
-            return parseQuestionList(aiResponse);
+            List<String> questions =
+                    parseQuestionList(aiResponse);
+
+            if (questions == null ||
+                    questions.size() != count) {
+
+                System.err.println(
+                        "[AIService] Gemini returned "
+                                + (questions == null
+                                ? 0
+                                : questions.size())
+                                + " questions, expected "
+                                + count
+                );
+
+                return null;
+            }
+
+            return questions;
 
         } catch (Exception e) {
 
@@ -246,6 +268,12 @@ private static final String GEMINI_BASE_URL =
                 4. COMPLETENESS
                 Did the candidate address the important parts of the question?
 
+                5. CONFIDENCE
+                Estimate how confidently the candidate appears to communicate
+                the answer based ONLY on the wording and structure of the answer.
+
+                Do not infer personality or real-world confidence.
+
                 SCORING:
 
                 Return an integer score from 0 to 100.
@@ -255,6 +283,16 @@ private static final String GEMINI_BASE_URL =
                 60-74  = Average
                 40-59  = Weak
                 0-39   = Poor
+
+                CONFIDENCE:
+
+                Return an integer from 0 to 100.
+
+                90-100 = Very confident
+                75-89  = Confident
+                60-74  = Moderately confident
+                40-59  = Low confidence
+                0-39   = Very low confidence
 
                 IMPORTANT SCORING RULES:
 
@@ -319,6 +357,7 @@ private static final String GEMINI_BASE_URL =
                 {
                   "score": 0,
                   "fillerWords": 0,
+                  "confidence": 0,
                   "relevance": "medium",
                   "technicalAccuracy": "average",
                   "strengths": [],
@@ -335,9 +374,10 @@ private static final String GEMINI_BASE_URL =
         );
     }
 
+
     // ============================================================
-// BATCH EVALUATION PROMPT
-// ============================================================
+    // BATCH EVALUATION PROMPT
+    // ============================================================
 
     private String buildBatchEvaluationPrompt(
             List<String> questions,
@@ -370,13 +410,13 @@ private static final String GEMINI_BASE_URL =
             TASK:
             Evaluate every question and answer pair separately.
 
-                IMPORTANT:
-                - Evaluation 1 corresponds to Question 1.
-                - Evaluation 2 corresponds to Question 2.
-                - Continue in the same order.
-                - Do not skip any question.
-                - Do not combine multiple answers into one evaluation.
-                - Evaluate only what the candidate actually said.
+            IMPORTANT:
+            - Evaluation 1 corresponds to Question 1.
+            - Evaluation 2 corresponds to Question 2.
+            - Continue in the same order.
+            - Do not skip any question.
+            - Do not combine multiple answers into one evaluation.
+            - Evaluate only what the candidate actually said.
 
             EVALUATION CRITERIA:
 
@@ -392,6 +432,12 @@ private static final String GEMINI_BASE_URL =
             4. COMPLETENESS
             Did the candidate address the important parts of the question?
 
+            5. CONFIDENCE
+            Estimate how confidently the candidate appears to communicate
+            the answer based ONLY on the wording and structure of the answer.
+
+            Do not infer personality or real-world confidence.
+
             SCORING:
 
             90-100 = Excellent
@@ -399,6 +445,16 @@ private static final String GEMINI_BASE_URL =
             60-74  = Average
             40-59  = Weak
             0-39   = Poor
+
+            CONFIDENCE:
+
+            Return an integer from 0 to 100.
+
+            90-100 = Very confident
+            75-89  = Confident
+            60-74  = Moderately confident
+            40-59  = Low confidence
+            0-39   = Very low confidence
 
             FILLER WORDS:
 
@@ -453,6 +509,7 @@ private static final String GEMINI_BASE_URL =
               {
                 "score": 75,
                 "fillerWords": 0,
+                "confidence": 75,
                 "relevance": "high",
                 "technicalAccuracy": "good",
                 "strengths": [],
@@ -539,10 +596,17 @@ private static final String GEMINI_BASE_URL =
     // CALL GEMINI
     // ============================================================
 
-
     private String callGemini(String prompt)
-
             throws Exception {
+
+        /*
+         * IMPORTANT:
+         *
+         * responseMimeType = application/json
+         *
+         * This tells Gemini that the expected response
+         * should be JSON instead of relying only on the prompt.
+         */
 
         String body =
                 """
@@ -555,7 +619,10 @@ private static final String GEMINI_BASE_URL =
                         }
                       ]
                     }
-                  ]
+                  ],
+                  "generationConfig": {
+                    "responseMimeType": "application/json"
+                  }
                 }
                 """.formatted(
                         objectMapper.writeValueAsString(prompt)
@@ -583,16 +650,31 @@ private static final String GEMINI_BASE_URL =
                             + apiKey;
 
             System.out.println("=== GEMINI REQUEST ===");
-            System.out.println("Model: " + model);
-            System.out.println("URL: " + GEMINI_BASE_URL + model + ":generateContent");
-            System.out.println("Calling Gemini...");
 
+            System.out.println(
+                    "Model: "
+                            + model
+            );
+
+            System.out.println(
+                    "URL: "
+                            + GEMINI_BASE_URL
+                            + model
+                            + ":generateContent"
+            );
+
+            System.out.println(
+                    "Calling Gemini..."
+            );
 
             geminiCallCount++;
 
             System.out.println(
-                    "=== GEMINI API CALL #" + geminiCallCount + " ==="
+                    "=== GEMINI API CALL #"
+                            + geminiCallCount
+                            + " ==="
             );
+
             ResponseEntity<String> response =
                     http.exchange(
                             url,
@@ -600,7 +682,11 @@ private static final String GEMINI_BASE_URL =
                             request,
                             String.class
                     );
-            System.out.println("=== GEMINI RESPONSE RECEIVED ===");
+
+            System.out.println(
+                    "=== GEMINI RESPONSE RECEIVED ==="
+            );
+
             if (response.getBody() == null ||
                     response.getBody().isBlank()) {
 
@@ -631,7 +717,22 @@ private static final String GEMINI_BASE_URL =
                 );
             }
 
-            return textNode.asText();
+            String aiText =
+                    textNode.asText();
+
+            System.out.println(
+                    "=== GEMINI RAW TEXT ==="
+            );
+
+            System.out.println(
+                    aiText
+            );
+
+            System.out.println(
+                    "=== END GEMINI RAW TEXT ==="
+            );
+
+            return aiText;
 
         } catch (HttpStatusCodeException e) {
 
@@ -662,6 +763,18 @@ private static final String GEMINI_BASE_URL =
             String clean =
                     cleanJsonResponse(aiText);
 
+            System.out.println(
+                    "=== CLEAN EVALUATION JSON ==="
+            );
+
+            System.out.println(
+                    clean
+            );
+
+            System.out.println(
+                    "=== END CLEAN EVALUATION JSON ==="
+            );
+
             JsonNode root =
                     objectMapper.readTree(clean);
 
@@ -673,6 +786,9 @@ private static final String GEMINI_BASE_URL =
 
             evaluation.fillerWords =
                     root.path("fillerWords").asInt(0);
+
+            evaluation.confidence =
+                    root.path("confidence").asInt(0);
 
             evaluation.relevance =
                     root.path("relevance")
@@ -705,21 +821,52 @@ private static final String GEMINI_BASE_URL =
                     "[AIService] Evaluation JSON parsing failed."
             );
 
+            System.err.println(
+                    "[AIService] Raw AI response:"
+            );
+
+            System.err.println(
+                    aiText
+            );
+
+            e.printStackTrace();
+
             return null;
         }
     }
 
+
     // ============================================================
-// PARSE BATCH EVALUATIONS
-// ============================================================
+    // PARSE BATCH EVALUATIONS
+    // ============================================================
 
     private List<AIEvaluation> parseBatchEvaluation(
-            String aiText) {
+            String aiText,
+            int expectedCount) {
 
         try {
 
             String clean =
                     cleanJsonResponse(aiText);
+
+            /*
+             * DEBUGGING:
+             *
+             * This lets us see the EXACT string that Jackson
+             * receives, rather than only the raw Gemini output.
+             */
+
+            System.out.println(
+                    "=== CLEAN BATCH JSON ==="
+            );
+
+            System.out.println(
+                    clean
+            );
+
+            System.out.println(
+                    "=== END CLEAN BATCH JSON ==="
+            );
 
             JsonNode root =
                     objectMapper.readTree(clean);
@@ -728,6 +875,23 @@ private static final String GEMINI_BASE_URL =
 
                 System.err.println(
                         "[AIService] Batch response is not an array."
+                );
+
+                return null;
+            }
+
+            /*
+             * Gemini must return exactly one evaluation
+             * for every question-answer pair.
+             */
+
+            if (root.size() != expectedCount) {
+
+                System.err.println(
+                        "[AIService] Expected "
+                                + expectedCount
+                                + " evaluations but received "
+                                + root.size()
                 );
 
                 return null;
@@ -746,6 +910,9 @@ private static final String GEMINI_BASE_URL =
 
                 evaluation.fillerWords =
                         node.path("fillerWords").asInt(0);
+
+                evaluation.confidence =
+                        node.path("confidence").asInt(0);
 
                 evaluation.relevance =
                         node.path("relevance")
@@ -770,9 +937,13 @@ private static final String GEMINI_BASE_URL =
                                 node.path("recommendations")
                         );
 
-                validateEvaluation(evaluation);
+                validateEvaluation(
+                        evaluation
+                );
 
-                evaluations.add(evaluation);
+                evaluations.add(
+                        evaluation
+                );
             }
 
             return evaluations.isEmpty()
@@ -784,6 +955,16 @@ private static final String GEMINI_BASE_URL =
             System.err.println(
                     "[AIService] Batch evaluation JSON parsing failed."
             );
+
+            System.err.println(
+                    "[AIService] Raw AI response:"
+            );
+
+            System.err.println(
+                    aiText
+            );
+
+            e.printStackTrace();
 
             return null;
         }
@@ -801,6 +982,18 @@ private static final String GEMINI_BASE_URL =
 
             String clean =
                     cleanJsonResponse(aiText);
+
+            System.out.println(
+                    "=== CLEAN QUESTION JSON ==="
+            );
+
+            System.out.println(
+                    clean
+            );
+
+            System.out.println(
+                    "=== END CLEAN QUESTION JSON ==="
+            );
 
             JsonNode root =
                     objectMapper.readTree(clean);
@@ -837,6 +1030,16 @@ private static final String GEMINI_BASE_URL =
                     "[AIService] Question JSON parsing failed."
             );
 
+            System.err.println(
+                    "[AIService] Raw AI response:"
+            );
+
+            System.err.println(
+                    aiText
+            );
+
+            e.printStackTrace();
+
             return null;
         }
     }
@@ -852,7 +1055,8 @@ private static final String GEMINI_BASE_URL =
         List<String> result =
                 new ArrayList<>();
 
-        if (node != null && node.isArray()) {
+        if (node != null &&
+                node.isArray()) {
 
             for (JsonNode item : node) {
 
@@ -890,7 +1094,14 @@ private static final String GEMINI_BASE_URL =
         String clean =
                 text.trim();
 
-        // Remove Markdown code fences
+        /*
+         * Gemini should now return JSON directly because
+         * responseMimeType is application/json.
+         *
+         * We still keep this cleanup as a safety net in case
+         * Markdown fences are returned.
+         */
+
         if (clean.startsWith("```")) {
 
             clean =
@@ -917,8 +1128,6 @@ private static final String GEMINI_BASE_URL =
     private void validateEvaluation(
             AIEvaluation evaluation) {
 
-        // Protect our application from invalid AI scores.
-
         if (evaluation.score < 0) {
 
             evaluation.score = 0;
@@ -932,6 +1141,16 @@ private static final String GEMINI_BASE_URL =
         if (evaluation.fillerWords < 0) {
 
             evaluation.fillerWords = 0;
+        }
+
+        if (evaluation.confidence < 0) {
+
+            evaluation.confidence = 0;
+        }
+
+        if (evaluation.confidence > 100) {
+
+            evaluation.confidence = 100;
         }
 
         if (evaluation.relevance == null ||

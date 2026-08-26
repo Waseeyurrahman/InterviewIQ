@@ -1,141 +1,577 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <title>Step 4 - Duration | InterviewIQ AI</title>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8" />
+
+    <title>Step 4 - Duration | InterviewIQ AI</title>
+
+    <link rel="stylesheet" href="style.css" />
+
+    <link
+            href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+            rel="stylesheet"
+    >
 </head>
+
+
 <body class="setup-panel-page">
 
-  <div class="main-container">
+<div class="main-container">
+
 
     <!-- ===== TOP: Header + Stepper + Section title ===== -->
+
     <div class="top-section">
 
-      <div class="panel-header">
-        <h1>Let's set up your interview</h1>
-        <p>Tell us about your preferences</p>
-      </div>
+        <div class="panel-header">
+            <h1>Let's set up your interview</h1>
+            <p>Tell us about your preferences</p>
+        </div>
 
-      <div class="step-bar">
-        <div class="step done">
-          <div class="step-circle">✓</div>
-          <div class="step-label">Role</div>
-        </div>
-        <div class="step-line"></div>
-        <div class="step done">
-          <div class="step-circle">✓</div>
-          <div class="step-label">Experience</div>
-        </div>
-        <div class="step-line"></div>
-        <div class="step done">
-          <div class="step-circle">✓</div>
-          <div class="step-label">Difficulty</div>
-        </div>
-        <div class="step-line"></div>
-        <div class="step active">
-          <div class="step-circle">4</div>
-          <div class="step-label">Duration</div>
-        </div>
-      </div>
 
-      <div class="section-heading">
-        <h2>Select Interview Duration</h2>
-        <p>You can end the interview anytime</p>
-      </div>
+        <!-- Stepper -->
+
+        <div class="step-bar">
+
+            <!-- Step 1 -->
+
+            <div class="step done">
+                <div class="step-circle">✓</div>
+                <div class="step-label">Role</div>
+            </div>
+
+            <div class="step-line"></div>
+
+
+            <!-- Step 2 -->
+
+            <div class="step done">
+                <div class="step-circle">✓</div>
+                <div class="step-label">Experience</div>
+            </div>
+
+            <div class="step-line"></div>
+
+
+            <!-- Step 3 -->
+
+            <div class="step done">
+                <div class="step-circle">✓</div>
+                <div class="step-label">Difficulty</div>
+            </div>
+
+            <div class="step-line"></div>
+
+
+            <!-- Step 4 -->
+
+            <div class="step active">
+                <div class="step-circle">4</div>
+                <div class="step-label">Duration</div>
+            </div>
+
+        </div>
+
+
+        <!-- Section heading -->
+
+        <div class="section-heading">
+
+            <h2>Select Interview Duration</h2>
+
+            <p>
+                You can end the interview anytime
+            </p>
+
+        </div>
 
     </div>
 
-    <!-- ===== MIDDLE: Duration cards (centered) ===== -->
+
+    <!-- ===== MIDDLE: Duration cards ===== -->
+
     <div class="duration-row">
-      <div class="duration-card" data-value="10 Minutes">
-        <div class="dur-icon">⏱</div>
-        <div class="dur-title">10 Minutes</div>
-        <div class="dur-subtitle">Quick Practice</div>
-      </div>
 
-      <div class="duration-card recommended" data-value="20 Minutes">
-        <span class="recommended-badge">Recommended</span>
-        <div class="dur-icon">⏱</div>
-        <div class="dur-title">20 Minutes</div>
-        <div class="dur-subtitle">Recommended</div>
-      </div>
 
-      <div class="duration-card" data-value="30 Minutes">
-        <div class="dur-icon">⏱</div>
-        <div class="dur-title">30 Minutes</div>
-        <div class="dur-subtitle">Full Practice</div>
-      </div>
+        <!-- 10 Minutes -->
+
+        <div
+                class="duration-card"
+                data-value="10"
+        >
+
+            <div class="dur-icon">
+                ⏱
+            </div>
+
+            <div class="dur-title">
+                10 Minutes
+            </div>
+
+            <div class="dur-subtitle">
+                Quick Practice
+            </div>
+
+        </div>
+
+
+        <!-- 20 Minutes -->
+
+        <div
+                class="duration-card recommended"
+                data-value="20"
+        >
+
+        <span class="recommended-badge">
+          Recommended
+        </span>
+
+            <div class="dur-icon">
+                ⏱
+            </div>
+
+            <div class="dur-title">
+                20 Minutes
+            </div>
+
+            <div class="dur-subtitle">
+                Recommended
+            </div>
+
+        </div>
+
+
+        <!-- 30 Minutes -->
+
+        <div
+                class="duration-card"
+                data-value="30"
+        >
+
+            <div class="dur-icon">
+                ⏱
+            </div>
+
+            <div class="dur-title">
+                30 Minutes
+            </div>
+
+            <div class="dur-subtitle">
+                Full Practice
+            </div>
+
+        </div>
+
     </div>
+
 
     <!-- ===== BOTTOM: Action buttons ===== -->
+
     <div class="footer-actions">
-      <button class="btn-back" onclick="window.location.href='difficulty.html'">← Back</button>
-      <button class="btn-next" onclick="startInterview()">Start Interview →</button>
+
+        <button
+                class="btn-back"
+                onclick="window.location.href='difficulty.html'"
+        >
+            ← Back
+        </button>
+
+
+        <button
+                class="btn-next"
+                onclick="startInterview()"
+        >
+            Start Interview →
+        </button>
+
     </div>
 
-  </div>
+</div>
 
-  <script>
+
+<script>
+
     const STORAGE_KEY = "duration";
 
-    let selected = localStorage.getItem(STORAGE_KEY) || null;
+    const role =
+        localStorage.getItem("role");
 
-    document.querySelectorAll(".duration-card").forEach(card => {
-      if (card.dataset.value === selected) card.classList.add("selected");
+    const experience =
+        localStorage.getItem("experience");
 
-      card.addEventListener("click", () => {
-        document.querySelectorAll(".duration-card").forEach(c => c.classList.remove("selected"));
-        card.classList.add("selected");
-        selected = card.dataset.value;
-        localStorage.setItem(STORAGE_KEY, selected);
-      });
-    });
+    const difficulty =
+        localStorage.getItem("difficulty");
 
-    function startInterview() {
-      if (!selected) {
-        alert("Please select an interview duration.");
-        return;
-      }
 
-      // Map textual duration ("10 Minutes") -> integer minutes
-      const durationMinutes = parseInt(localStorage.getItem("duration"), 10) || 10;
+    if (!role) {
+    window.location.href = "setup-role.html";
+    throw new Error("Role not selected");
+}
 
-      const setup = {
-        role:            localStorage.getItem("role"),
-        experienceLevel: localStorage.getItem("experience"),
-        difficulty:      localStorage.getItem("difficulty"),
-        duration:        durationMinutes
-      };
+if (!experience) {
+    window.location.href = "experience.html";
+    throw new Error("Experience not selected");
+}
 
-      console.log("[duration] creating interview", setup);
+if (!difficulty) {
+    window.location.href = "difficulty.html";
+    throw new Error("Difficulty not selected");
+}
 
-      // Disable button while we hit the backend
-      const btn = document.querySelector(".btn-next");
-      if (btn) { btn.disabled = true; btn.textContent = "Starting..."; }
 
-      fetch("/interview/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(setup)
-      })
-      .then(r => r.ok ? r.json() : Promise.reject("HTTP " + r.status))
-      .then(resp => {
-        // Save id so submitting.html can link answers + evaluation back
-        localStorage.setItem("interviewId", resp.interviewId);
-        console.log("[duration] interview saved, id =", resp.interviewId);
-        window.location.href = "live-interview.html";
-      })
-      .catch(err => {
-        console.error("[duration] could not create interview:", err);
-        // Don't block the user — let the interview proceed without DB persistence
-        localStorage.removeItem("interviewId");
-        window.location.href = "live-interview.html";
-      });
+    /*
+     * Restore previously selected duration.
+     */
+
+    let selected =
+        localStorage.getItem(STORAGE_KEY);
+
+
+    /*
+     * Handle duration cards.
+     */
+
+    document
+        .querySelectorAll(".duration-card")
+        .forEach(card => {
+
+            const value =
+                card.dataset.value;
+
+            /*
+             * Restore selected card
+             */
+
+            if (value === selected) {
+
+                card.classList.add("selected");
+
+            }
+
+
+            /*
+             * Select duration
+             */
+
+            card.addEventListener("click", () => {
+
+                document
+                    .querySelectorAll(".duration-card")
+                    .forEach(c =>
+                        c.classList.remove("selected")
+                    );
+
+
+                card.classList.add("selected");
+
+
+                selected =
+                    card.dataset.value;
+
+
+                localStorage.setItem(
+                    STORAGE_KEY,
+                    selected
+                );
+
+
+                console.log(
+                    "[duration] Selected duration:",
+                    selected
+                );
+
+            });
+
+        });
+
+
+    /*
+     * ============================================================
+     * START INTERVIEW
+     * ============================================================
+     */
+
+    async function startInterview() {
+
+        /*
+         * Make sure duration is selected.
+         */
+
+        if (!selected) {
+
+            alert(
+                "Please select an interview duration."
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * Convert duration safely.
+         */
+
+        const durationMinutes =
+            parseInt(selected, 10);
+
+
+        /*
+         * Validate duration.
+         */
+
+        if (
+            Number.isNaN(durationMinutes) ||
+            ![10, 20, 30].includes(durationMinutes)
+        ) {
+
+            console.error(
+                "[duration] Invalid duration:",
+                selected
+            );
+
+            alert(
+                "Please select a valid interview duration."
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * Get JWT.
+         */
+
+        const token =
+            localStorage.getItem("token");
+
+
+        if (!token) {
+
+            alert(
+                "Your session has expired. Please login again."
+            );
+
+            window.location.href =
+                "login.html";
+
+            return;
+
+        }
+
+
+        /*
+         * Build request.
+         */
+
+        const setup = {
+
+            role: role,
+
+            experienceLevel: experience,
+
+            difficulty: difficulty,
+
+            duration: durationMinutes
+
+        };
+
+
+        console.log(
+            "[duration] Creating interview:",
+            setup
+        );
+
+
+        /*
+         * Disable button.
+         */
+
+        const btn =
+            document.querySelector(".btn-next");
+
+
+        if (btn) {
+
+            btn.disabled = true;
+
+            btn.textContent =
+                "Starting...";
+
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/interview/create",
+                    {
+
+                        method: "POST",
+
+                        headers: {
+
+                            "Content-Type":
+                                "application/json",
+
+                            "Authorization":
+                                "Bearer " + token
+
+                        },
+
+                        body:
+                            JSON.stringify(setup)
+
+                    }
+                );
+
+
+            /*
+             * JWT expired
+             */
+
+            if (response.status === 401) {
+
+                localStorage.removeItem("token");
+
+                alert(
+                    "Your session has expired. Please login again."
+                );
+
+                window.location.href =
+                    "login.html";
+
+                return;
+
+            }
+
+
+            /*
+             * Forbidden
+             */
+
+            if (response.status === 403) {
+
+                alert(
+                    "You are not authorized to start an interview."
+                );
+
+                return;
+
+            }
+
+
+            /*
+             * Other backend errors
+             */
+
+            if (!response.ok) {
+
+                let message =
+                    "Could not create interview.";
+
+                try {
+
+                    const errorData =
+                        await response.json();
+
+                    console.error(
+                        "[duration] Backend error:",
+                        errorData
+                    );
+
+                    if (errorData.message) {
+
+                        message =
+                            errorData.message;
+
+                    }
+
+                } catch (e) {
+
+                    const text =
+                        await response.text();
+
+                    console.error(
+                        "[duration] Backend error:",
+                        text
+                    );
+
+                }
+
+
+                throw new Error(message);
+
+            }
+
+
+            /*
+             * Successful response
+             */
+
+            const responseData =
+                await response.json();
+
+
+            console.log(
+                "[duration] Interview created:",
+                responseData
+            );
+
+
+            /*
+             * Save interview ID.
+             */
+
+            localStorage.setItem(
+                "interviewId",
+                responseData.interviewId
+            );
+
+
+            /*
+             * Go to live interview.
+             */
+
+            window.location.href =
+                "live-interview.html";
+
+
+        } catch (error) {
+
+            console.error(
+                "[duration] Interview creation failed:",
+                error
+            );
+
+
+            alert(
+                error.message ||
+                "Unable to start interview. Please try again."
+            );
+
+
+            /*
+             * Re-enable button.
+             */
+
+            if (btn) {
+
+                btn.disabled = false;
+
+                btn.textContent =
+                    "Start Interview →";
+
+            }
+
+        }
+
     }
-  </script>
 
+</script>
 </body>
-</html>
 
+</html>

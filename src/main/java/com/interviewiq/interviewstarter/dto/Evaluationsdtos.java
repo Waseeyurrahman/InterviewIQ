@@ -6,28 +6,40 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-public class Evaluationsdtos
-{
+public class Evaluationsdtos {
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class EvaluateAnswersRequest{
+    public static class EvaluateAnswersRequest {
+
         private List<AnswerDtos.SubmitAnswerItem> answers;
     }
 
+
     @Data
     @AllArgsConstructor
-    public static class EvaluateAnswersResponse{
+    public static class EvaluateAnswersResponse {
+
         private boolean success;
         private boolean aiAvailable;
+
         private int score;
+
         private int fillerWords;
         private int confidence;
+
+        private int totalQuestions;
+        private int answeredQuestions;
+        private int skippedQuestions;
+
         private String relevance;
+
         private List<String> strengths;
         private List<String> weaknesses;
         private List<String> recommendations;
     }
+
 
     @Data
     @NoArgsConstructor

@@ -1,87 +1,295 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Sign Up - InterviewIQ AI</title>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <title>Sign Up - InterviewIQ AI</title>
+
+    <link rel="stylesheet" href="style.css" />
+
+    <link
+            href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+            rel="stylesheet"
+    >
 </head>
+
 <body class="auth-page signup-page">
 
-  <div class="split-container">
+<div class="split-container">
 
     <!-- LEFT: Brand + Illustration -->
     <div class="split-left">
-      <div class="brand-block">
-        <div class="brand-logo">InterviewIQ AI</div>
-        <div class="brand-tagline">AI Mock Interview Platform</div>
-      </div>
-      <img src="https://cdn-icons-png.flaticon.com/512/2103/2103633.png" alt="Signup Illustration" />
+
+        <div class="brand-block">
+            <div class="brand-logo">InterviewIQ AI</div>
+            <div class="brand-tagline">AI Mock Interview Platform</div>
+        </div>
+
+        <img
+                src="https://cdn-icons-png.flaticon.com/512/2103/2103633.png"
+                alt="Signup Illustration"
+        />
+
     </div>
+
 
     <!-- RIGHT: Signup Form -->
     <div class="split-right">
-      <div class="auth-card">
-        <h2>Create Your Account</h2>
-        <p class="muted">Start practicing interviews with AI today</p>
 
-        <form id="signupForm">
-          <label>Full Name</label>
-          <input type="text" id="name" placeholder="John Doe" required />
+        <div class="auth-card">
 
-          <label>Email</label>
-          <input type="email" id="email" placeholder="you@example.com" required />
+            <h2>Create Your Account</h2>
 
-          <label>Password</label>
-          <input type="password" id="password" placeholder="••••••••" required />
+            <p class="muted">
+                Start practicing interviews with AI today
+            </p>
 
-          <label>Confirm Password</label>
-          <input type="password" id="confirm" placeholder="••••••••" required />
 
-          <button type="submit" class="btn btn-primary btn-full">Sign Up</button>
+            <form id="signupForm">
 
-          <p class="bottom-text">
-            Already have an account? <a href="login.html">Login</a>
-          </p>
-        </form>
-      </div>
+                <!-- Name -->
+                <label for="name">Full Name</label>
+
+                <input
+                        type="text"
+                        id="name"
+                        placeholder="John Doe"
+                        maxlength="100"
+                        required
+                />
+
+
+                <!-- Email -->
+                <label for="email">Email</label>
+
+                <input
+                        type="email"
+                        id="email"
+                        placeholder="you@example.com"
+                        maxlength="255"
+                        required
+                />
+
+
+                <!-- Password -->
+                <label for="password">Password</label>
+
+                <input
+                        type="password"
+                        id="password"
+                        placeholder="••••••••"
+                        minlength="8"
+                        maxlength="100"
+                        required
+                />
+
+
+                <!-- Confirm Password -->
+                <label for="confirm">Confirm Password</label>
+
+                <input
+                        type="password"
+                        id="confirm"
+                        placeholder="••••••••"
+                        minlength="8"
+                        maxlength="100"
+                        required
+                />
+
+
+                <!-- Submit -->
+                <button
+                        type="submit"
+                        class="btn btn-primary btn-full"
+                        id="signupButton"
+                >
+                    Sign Up
+                </button>
+
+
+                <p class="bottom-text">
+                    Already have an account?
+                    <a href="login.html">Login</a>
+                </p>
+
+            </form>
+
+        </div>
+
     </div>
 
-  </div>
+</div>
 
-  <script>
-    document.getElementById("signupForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
 
-      const name = document.getElementById("name").value;
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const confirm = document.getElementById("confirm").value;
+<script>
 
-      // Simple check: passwords must match
-      if (password !== confirm) {
-        alert("Passwords do not match");
-        return;
-      }
+    document
+      .getElementById("signupForm")
+      .addEventListener("submit", async (e) => {
 
-      try {
-        const res = await fetch("/auth/register", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, email, password })
-        });
+        e.preventDefault();
 
-        if (res.ok) {
-          alert("Account created! Please login.");
-          window.location.href = "login.html";
-        } else {
-          alert("Signup failed. Try again.");
+
+        const name =
+          document.getElementById("name").value.trim();
+
+        const email =
+          document.getElementById("email").value.trim();
+
+        const password =
+          document.getElementById("password").value;
+
+        const confirm =
+          document.getElementById("confirm").value;
+
+
+        /* =========================================
+           FRONTEND VALIDATION
+           ========================================= */
+
+        if (!name) {
+          alert("Please enter your name.");
+          return;
         }
-      } catch (err) {
-        alert("Server error: " + err.message);
-      }
-    });
-  </script>
+
+
+        if (!email) {
+          alert("Please enter your email.");
+          return;
+        }
+
+
+        if (password.length < 8) {
+          alert("Password must be at least 8 characters.");
+          return;
+        }
+
+
+        if (password !== confirm) {
+          alert("Passwords do not match.");
+          return;
+        }
+
+
+        const signupButton =
+          document.getElementById("signupButton");
+
+
+        // Prevent duplicate submissions
+        signupButton.disabled = true;
+        signupButton.textContent = "Creating Account...";
+
+
+        try {
+
+          const res = await fetch("/auth/register", {
+
+            method: "POST",
+
+            headers: {
+              "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+              name: name,
+              email: email,
+              password: password
+            })
+
+          });
+
+
+          /* =========================================
+             READ BACKEND RESPONSE
+             ========================================= */
+
+          let data = null;
+
+          try {
+            data = await res.json();
+          } catch (e) {
+            // Response may not contain JSON
+          }
+
+
+          /* =========================================
+             SUCCESS
+             ========================================= */
+
+          if (res.ok) {
+
+            alert(
+              data?.message ||
+              "Account created successfully! Please login."
+            );
+
+            window.location.href = "login.html";
+
+            return;
+          }
+
+
+          /* =========================================
+             DUPLICATE USER
+             HTTP 409
+             ========================================= */
+
+          if (res.status === 409) {
+
+            alert(
+              data?.message ||
+              "An account with this email already exists."
+            );
+
+            return;
+          }
+
+
+          /* =========================================
+             VALIDATION ERROR
+             HTTP 400
+             ========================================= */
+
+          if (res.status === 400) {
+
+            alert(
+              data?.message ||
+              "Please check your registration details."
+            );
+
+            return;
+          }
+
+
+          /* =========================================
+             OTHER SERVER ERROR
+             ========================================= */
+
+          alert(
+            data?.message ||
+            "Signup failed. Please try again."
+          );
+
+        } catch (err) {
+
+          console.error(
+            "[signup] Registration error:",
+            err
+          );
+
+          alert(
+            "Server error. Please make sure the backend is running."
+          );
+
+        } finally {
+
+          signupButton.disabled = false;
+          signupButton.textContent = "Sign Up";
+
+        }
+
+      });
+
+</script>
 
 </body>
 </html>

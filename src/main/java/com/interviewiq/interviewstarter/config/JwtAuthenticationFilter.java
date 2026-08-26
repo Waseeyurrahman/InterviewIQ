@@ -1,7 +1,7 @@
 package com.interviewiq.interviewstarter.config;
 
-import com.interviewiq.interviewstarter.service.JwtService;
 import com.interviewiq.interviewstarter.service.CustomUserDetailsService;
+import com.interviewiq.interviewstarter.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,15 +36,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain)
             throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
+        String authHeader = request.getHeader("Authorization");
 
-        // No Authorization header
+        // No JWT → continue request
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Extract JWT
         String token = authHeader.substring(7);
 
         try {
@@ -52,7 +51,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Extract email from JWT
             String email = jwtService.extractEmail(token);
 
-            // Only authenticate if SecurityContext is not already populated
+            // Don't overwrite existing authentication
             if (email != null &&
                     SecurityContextHolder.getContext().getAuthentication() == null) {
 
@@ -60,8 +59,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UserDetails userDetails =
                         userDetailsService.loadUserByUsername(email);
 
-                // Validate token
-                if (jwtService.isTokenValid(token, userDetails.getUsername())) {
+                // Validate JWT
+                if (jwtService.isTokenValid(
+                        token,
+                        userDetails.getUsername())) {
 
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(
@@ -75,7 +76,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     .buildDetails(request)
                     );
 
-                    // Store authentication in SecurityContext
+                    // Store authenticated user
                     SecurityContextHolder
                             .getContext()
                             .setAuthentication(authentication);
@@ -83,10 +84,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
         } catch (Exception e) {
-            // Invalid JWT - continue without authentication
+
+            // Invalid/expired JWT.
+            // Do not authenticate the request.
+            System.err.println(
+                    "[JWT] Authentication failed: " + e.getMessage()
+            );
         }
 
-        // Continue request
+        // Continue to Spring Security
         filterChain.doFilter(request, response);
     }
 }

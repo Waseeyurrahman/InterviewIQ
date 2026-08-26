@@ -345,12 +345,35 @@
      *    The "|| 'default'" parts protect us if the user lands on this
      *    page directly without going through the wizard.
      * ------------------------------------------------------------------- */
-    const userSelection = {
-      role:       localStorage.getItem("role")       || "Frontend Developer",
-      experience: localStorage.getItem("experience") || "Fresher (0–1 years)",
-      difficulty: localStorage.getItem("difficulty") || "Easy",
-      duration:   localStorage.getItem("duration")   || "10 Minutes"
-    };
+    const token = localStorage.getItem("token");
+
+const userSelection = {
+  role: localStorage.getItem("role"),
+  experience: localStorage.getItem("experience"),
+  difficulty: localStorage.getItem("difficulty"),
+  duration: localStorage.getItem("duration")
+};
+
+if (!token) {
+  alert("Your session has expired. Please login again.");
+  window.location.href = "login.html";
+}
+
+if (!userSelection.role) {
+  window.location.href = "setup-role.html";
+}
+
+if (!userSelection.experience) {
+  window.location.href = "experience.html";
+}
+
+if (!userSelection.difficulty) {
+  window.location.href = "difficulty.html";
+}
+
+if (!userSelection.duration) {
+  window.location.href = "duration.html";
+}
 
     /* -------------------------------------------------------------------
      * 2) Page-level state.
@@ -624,9 +647,10 @@
      * =================================================================== */
     (async function init() {
       try {
+       await startInterview();
         // generateInterview() lives in api.js. It does GET /questions/{id}
         // and returns an array of {id, question} objects.
-        questions = await generateInterview(userSelection);
+        questions = await generateInterview();
         if (!questions.length) throw new Error("Backend returned no questions");
 
         document.getElementById("qTotal").textContent = questions.length;

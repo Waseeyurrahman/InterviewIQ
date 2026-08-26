@@ -2036,6 +2036,94 @@ form input:focus {
   gap: 8px;
   flex-wrap: wrap;
 }
+
+.custom-role {
+    width: 100%;
+    max-width: 700px;
+    margin: 25px auto 0;
+    text-align: center;
+}
+
+.custom-role-label {
+    margin-bottom: 10px;
+    color: #6B7280;
+    font-size: 14px;
+}
+
+.custom-role input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 14px 16px;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    font-family: Poppins, sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: 0.2s;
+}
+
+.custom-role input:focus {
+    border-color: #6C63FF;
+    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+}
+
+.experience-grid {
+    width: 100%;
+    max-width: 850px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+.experience-card {
+    cursor: pointer;
+    text-align: center;
+    padding: 22px 15px;
+    border: 2px solid transparent;
+    border-radius: 14px;
+    transition: 0.2s ease;
+}
+
+.experience-card:hover {
+    transform: translateY(-2px);
+}
+
+.experience-card.selected {
+    border-color: #6C63FF;
+}
+
+.exp-icon {
+    font-size: 30px;
+    margin-bottom: 10px;
+}
+
+.exp-title {
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.exp-subtitle {
+    margin-top: 5px;
+    color: #9CA3AF;
+    font-size: 12px;
+}
+
+@media (max-width: 750px) {
+
+    .experience-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+@media (max-width: 500px) {
+
+    .experience-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
 .meta-pill {
   font-size: 12px;
   font-weight: 500;

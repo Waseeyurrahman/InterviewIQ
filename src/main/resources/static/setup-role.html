@@ -1,114 +1,372 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Step 1 - Select Role | InterviewIQ AI</title>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <title>Step 1 - Select Role | InterviewIQ AI</title>
+
+    <link rel="stylesheet" href="style.css" />
+
+    <link
+            href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+            rel="stylesheet"
+    >
 </head>
+
 <body class="setup-panel-page">
 
-  <div class="main-container">
+<div class="main-container">
 
-    <!-- ===== TOP: Header + Stepper + Section title ===== -->
+    <!-- ===== TOP ===== -->
+
     <div class="top-section">
 
-      <div class="panel-header">
-        <h1>Let's set up your interview</h1>
-        <p>Tell us about your preferences</p>
-      </div>
+        <div class="panel-header">
+            <h1>Let's set up your interview</h1>
+            <p>Tell us about your preferences</p>
+        </div>
 
-      <div class="step-bar">
-        <div class="step active">
-          <div class="step-circle">1</div>
-          <div class="step-label">Role</div>
-        </div>
-        <div class="step-line"></div>
-        <div class="step">
-          <div class="step-circle">2</div>
-          <div class="step-label">Experience</div>
-        </div>
-        <div class="step-line"></div>
-        <div class="step">
-          <div class="step-circle">3</div>
-          <div class="step-label">Difficulty</div>
-        </div>
-        <div class="step-line"></div>
-        <div class="step">
-          <div class="step-circle">4</div>
-          <div class="step-label">Duration</div>
-        </div>
-      </div>
+        <div class="step-bar">
 
-      <div class="section-heading">
-        <h2>Select Role</h2>
-        <p>Choose the role you want to practice</p>
-      </div>
+            <div class="step active">
+                <div class="step-circle">1</div>
+                <div class="step-label">Role</div>
+            </div>
+
+            <div class="step-line"></div>
+
+            <div class="step">
+                <div class="step-circle">2</div>
+                <div class="step-label">Experience</div>
+            </div>
+
+            <div class="step-line"></div>
+
+            <div class="step">
+                <div class="step-circle">3</div>
+                <div class="step-label">Difficulty</div>
+            </div>
+
+            <div class="step-line"></div>
+
+            <div class="step">
+                <div class="step-circle">4</div>
+                <div class="step-label">Duration</div>
+            </div>
+
+        </div>
+
+        <div class="section-heading">
+            <h2>Select Role</h2>
+            <p>Choose a role or enter your own</p>
+        </div>
 
     </div>
 
-    <!-- ===== MIDDLE: Role grid (centered) ===== -->
+
+    <!-- ===== POPULAR ROLES ===== -->
+
     <div class="role-grid">
-      <div class="role-card" data-value="Frontend Developer">
-        <div class="role-icon">💻</div>
-        <div class="role-label">Frontend Developer</div>
-      </div>
-      <div class="role-card" data-value="Backend Developer">
-        <div class="role-icon">⚙️</div>
-        <div class="role-label">Backend Developer</div>
-      </div>
-      <div class="role-card" data-value="Java Developer">
-        <div class="role-icon">☕</div>
-        <div class="role-label">Java Developer</div>
-      </div>
-      <div class="role-card" data-value="MERN Stack Developer">
-        <div class="role-icon">🟩</div>
-        <div class="role-label">MERN Stack Developer</div>
-      </div>
-      <div class="role-card" data-value="HR Interview">
-        <div class="role-icon">👥</div>
-        <div class="role-label">HR Interview</div>
-      </div>
-      <div class="role-card" data-value="DevOps Engineer">
-        <div class="role-icon">♾️</div>
-        <div class="role-label">DevOps Engineer</div>
-      </div>
+
+        <div class="role-card" data-value="Frontend Developer">
+            <div class="role-icon">💻</div>
+            <div class="role-label">Frontend Developer</div>
+        </div>
+
+        <div class="role-card" data-value="Backend Developer">
+            <div class="role-icon">⚙️</div>
+            <div class="role-label">Backend Developer</div>
+        </div>
+
+        <div class="role-card" data-value="Java Developer">
+            <div class="role-icon">☕</div>
+            <div class="role-label">Java Developer</div>
+        </div>
+
+        <div class="role-card" data-value="MERN Stack Developer">
+            <div class="role-icon">🟩</div>
+            <div class="role-label">MERN Stack Developer</div>
+        </div>
+
+        <div class="role-card" data-value="HR Interview">
+            <div class="role-icon">👥</div>
+            <div class="role-label">HR Interview</div>
+        </div>
+
+        <div class="role-card" data-value="DevOps Engineer">
+            <div class="role-icon">♾️</div>
+            <div class="role-label">DevOps Engineer</div>
+        </div>
+
     </div>
 
-    <!-- ===== BOTTOM: Action buttons ===== -->
+
+    <!-- ===== CUSTOM ROLE ===== -->
+
+    <div class="custom-role">
+
+        <p class="custom-role-label">
+            Or enter another role
+        </p>
+
+        <input
+                type="text"
+                id="customRole"
+                placeholder="e.g. Python Developer, Data Analyst, Cybersecurity Engineer"
+                maxlength="100"
+        />
+
+    </div>
+
+
+    <!-- ===== ACTIONS ===== -->
+
     <div class="footer-actions">
-      <button class="btn-back" onclick="window.location.href='dashboard.html'">← Back</button>
-      <button class="btn-next" onclick="goNext()">Next →</button>
+
+        <button
+                class="btn-back"
+                type="button"
+                onclick="goBack()">
+            ← Back
+        </button>
+
+        <button
+                class="btn-next"
+                type="button"
+                onclick="goNext()">
+            Next →
+        </button>
+
     </div>
 
-  </div>
+</div>
 
-  <script>
+
+<script>
+
+    /* ============================================
+       AUTH CHECK
+       ============================================ */
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+
+      alert("Please login to continue.");
+
+      window.location.href = "login.html";
+
+    }
+
+
+    /* ============================================
+       STORAGE
+       ============================================ */
+
     const STORAGE_KEY = "role";
-    const NEXT_PAGE   = "experience.html";
 
-    let selected = localStorage.getItem(STORAGE_KEY) || null;
+    const NEXT_PAGE = "experience.html";
 
-    document.querySelectorAll(".role-card").forEach(card => {
-      if (card.dataset.value === selected) card.classList.add("selected");
 
-      card.addEventListener("click", () => {
-        document.querySelectorAll(".role-card").forEach(c => c.classList.remove("selected"));
+    let selected =
+        localStorage.getItem(STORAGE_KEY) || null;
+
+
+    /* ============================================
+       ELEMENTS
+       ============================================ */
+
+    const roleCards =
+        document.querySelectorAll(".role-card");
+
+    const customRole =
+        document.getElementById("customRole");
+
+
+    /* ============================================
+       RESTORE PREVIOUS ROLE
+       ============================================ */
+
+    roleCards.forEach(card => {
+
+      if (card.dataset.value === selected) {
+
         card.classList.add("selected");
-        selected = card.dataset.value;
-        localStorage.setItem(STORAGE_KEY, selected);
-      });
+
+      }
+
     });
 
-    function goNext() {
-      if (!selected) {
-        alert("Please select a role to continue.");
-        return;
-      }
-      window.location.href = NEXT_PAGE;
+
+    /*
+     * If previously selected role is not one
+     * of the six popular roles, it must be
+     * a custom role.
+     */
+
+    const popularRoleExists =
+        [...roleCards].some(
+            card => card.dataset.value === selected
+        );
+
+    if (selected && !popularRoleExists) {
+
+      customRole.value = selected;
+
     }
-  </script>
+
+
+    /* ============================================
+       POPULAR ROLE SELECTION
+       ============================================ */
+
+    roleCards.forEach(card => {
+
+      card.addEventListener("click", () => {
+
+        /*
+         * Remove selection from all cards
+         */
+
+        roleCards.forEach(c =>
+            c.classList.remove("selected")
+        );
+
+
+        /*
+         * Select clicked card
+         */
+
+        card.classList.add("selected");
+
+
+        /*
+         * Store selected role
+         */
+
+        selected = card.dataset.value;
+
+        localStorage.setItem(
+            STORAGE_KEY,
+            selected
+        );
+
+
+        /*
+         * Clear custom role
+         */
+
+        customRole.value = "";
+
+      });
+
+    });
+
+
+    /* ============================================
+       CUSTOM ROLE
+       ============================================ */
+
+    customRole.addEventListener("input", () => {
+
+      const value = customRole.value.trim();
+
+
+      /*
+       * If user starts typing a custom role,
+       * remove popular-role selection.
+       */
+
+      roleCards.forEach(card =>
+          card.classList.remove("selected")
+      );
+
+
+      if (value.length > 0) {
+
+        selected = value;
+
+        localStorage.setItem(
+            STORAGE_KEY,
+            selected
+        );
+
+      } else {
+
+        selected = null;
+
+        localStorage.removeItem(
+            STORAGE_KEY
+        );
+
+      }
+
+    });
+
+
+    /* ============================================
+       NEXT
+       ============================================ */
+
+    function goNext() {
+
+      /*
+       * Get the latest custom input value.
+       */
+
+      const customValue =
+          customRole.value.trim();
+
+
+      /*
+       * If custom role exists,
+       * it takes priority.
+       */
+
+      if (customValue.length > 0) {
+
+        selected = customValue;
+
+        localStorage.setItem(
+            STORAGE_KEY,
+            selected
+        );
+
+      }
+
+
+      /*
+       * No role selected
+       */
+
+      if (!selected) {
+
+        alert("Please select or enter a role to continue.");
+
+        return;
+
+      }
+
+
+      /*
+       * Continue to experience step
+       */
+
+      window.location.href = NEXT_PAGE;
+
+    }
+
+
+    /* ============================================
+       BACK
+       ============================================ */
+
+    function goBack() {
+
+      window.location.href = "dashboard.html";
+
+    }
+
+</script>
 
 </body>
 </html>
-

@@ -39,6 +39,10 @@ public class Interview {
 
     private LocalDateTime completedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private InterviewStatus status;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_interview_user"))
     @JsonIgnore

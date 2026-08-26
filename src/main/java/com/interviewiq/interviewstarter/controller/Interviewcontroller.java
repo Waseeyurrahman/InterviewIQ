@@ -31,6 +31,21 @@ public class Interviewcontroller {
     }
 
     @PreAuthorize("@interviewSecurity.isOwner(#id,authentication)")
+    @PostMapping("/{id}/start")
+    public InterviewResponse start(
+            @PathVariable Long id) {
+
+        Interview started =
+                interviewService.startInterview(id);
+
+        return new InterviewResponse(
+                true,
+                "Interview started",
+                started.getId()
+        );
+    }
+
+    @PreAuthorize("@interviewSecurity.isOwner(#id,authentication)")
     @PostMapping("/{id}/finish")
     public InterviewResponse finish(@PathVariable Long id, @RequestBody FinishInterviewRequest request){
         Interview saved = interviewService.finish(id, request.getFinalScore());
