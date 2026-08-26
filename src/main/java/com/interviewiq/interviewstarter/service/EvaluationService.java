@@ -106,15 +106,14 @@ public class EvaluationService {
                                         "Interview not found: " + interviewId
                                 )
                         );
-        if (interview.getStatus() != InterviewStatus.COMPLETED) {
+        if (interview.getStatus() != InterviewStatus.COMPLETED
+                && interview.getStatus() != InterviewStatus.FAILED) {
             throw new IllegalStateException(
                     "Interview cannot be evaluated from status "
                             + interview.getStatus()
             );
         }
 
-        interview.setStatus(InterviewStatus.EVALUATING);
-        interviewRepository.save(interview);
 
 
         /*
@@ -191,9 +190,14 @@ public class EvaluationService {
                             + "to receive an AI evaluation."
             );
 
+            interview.setStatus(InterviewStatus.FAILED);
+            interviewRepository.save(interview);
 
             return result;
         }
+
+        interview.setStatus(InterviewStatus.EVALUATING);
+        interviewRepository.save(interview);
 
 
         /*
