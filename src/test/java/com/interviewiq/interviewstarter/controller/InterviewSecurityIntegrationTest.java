@@ -96,4 +96,13 @@ class InterviewSecurityIntegrationTest {
                 )
                 .andExpect(status().isForbidden());
     }
+    @Test
+    void unauthenticatedUserCannotStartInterview()
+            throws Exception {
+
+        mockMvc.perform(
+                        post("/interview/999/start")
+                )
+                .andExpect(status().isUnauthorized());
+    }
 }
