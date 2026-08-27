@@ -611,15 +611,6 @@ public class AIService {
     private String callGemini(String prompt)
             throws Exception {
 
-        /*
-         * IMPORTANT:
-         *
-         * responseMimeType = application/json
-         *
-         * This tells Gemini that the expected response
-         * should be JSON instead of relying only on the prompt.
-         */
-
         String body =
                 """
                 {
@@ -653,105 +644,117 @@ public class AIService {
                         headers
                 );
 
-        try {
+        String url =
+                GEMINI_BASE_URL
+                        + model
+                        + ":generateContent?key="
+                        + apiKey;
 
-            String url =
-                    GEMINI_BASE_URL
-                            + model
-                            + ":generateContent?key="
-                            + apiKey;
+        final int maxAttempts = 3;
 
-            System.out.println("=== GEMINI REQUEST ===");
+        for (int attempt = 1;
+             attempt <= maxAttempts;
+             attempt++) {
 
-            System.out.println(
-                    "Model: "
-                            + model
-            );
+            try {
 
-            System.out.println(
-                    "URL: "
-                            + GEMINI_BASE_URL
-                            + model
-                            + ":generateContent"
-            );
-
-            System.out.println(
-                    "Calling Gemini..."
-            );
-
-            geminiCallCount++;
-
-            System.out.println(
-                    "=== GEMINI API CALL #"
-                            + geminiCallCount
-                            + " ==="
-            );
-
-            ResponseEntity<String> response =
-                    http.exchange(
-                            url,
-                            HttpMethod.POST,
-                            request,
-                            String.class
-                    );
-
-            System.out.println(
-                    "=== GEMINI RESPONSE RECEIVED ==="
-            );
-
-            if (response.getBody() == null ||
-                    response.getBody().isBlank()) {
-
-                throw new RuntimeException(
-                        "Gemini returned an empty response."
+                System.out.println(
+                        "[AIService] Calling Gemini. Attempt "
+                                + attempt
+                                + "/"
+                                + maxAttempts
                 );
-            }
 
-            JsonNode root =
-                    objectMapper.readTree(
-                            response.getBody()
+                geminiCallCount++;
+
+                ResponseEntity<String> response =
+                        http.exchange(
+                                url,
+                                HttpMethod.POST,
+                                request,
+                                String.class
+                        );
+
+                if (response.getBody() == null ||
+                        response.getBody().isBlank()) {
+
+                    throw new RuntimeException(
+                            "Gemini returned an empty response."
                     );
+                }
 
-            JsonNode textNode =
-                    root.path("candidates")
-                            .path(0)
-                            .path("content")
-                            .path("parts")
-                            .path(0)
-                            .path("text");
+                JsonNode root =
+                        objectMapper.readTree(
+                                response.getBody()
+                        );
 
-            if (textNode.isMissingNode() ||
-                    textNode.isNull()) {
+                JsonNode textNode =
+                        root.path("candidates")
+                                .path(0)
+                                .path("content")
+                                .path("parts")
+                                .path(0)
+                                .path("text");
 
-                throw new RuntimeException(
-                        "Gemini response does not contain text: "
-                                + response.getBody()
+                if (textNode.isMissingNode() ||
+                        textNode.isNull()) {
+
+                    throw new RuntimeException(
+                            "Gemini response does not contain text."
+                    );
+                }
+
+                System.out.println(
+                        "[AIService] Gemini response received successfully."
                 );
+
+                return textNode.asText();
+
+            } catch (HttpStatusCodeException e) {
+
+                HttpStatusCode status =
+                        e.getStatusCode();
+
+                boolean retryable =
+                        status.value() == 429 ||
+                                status.value() == 500 ||
+                                status.value() == 502 ||
+                                status.value() == 503;
+
+                System.err.println(
+                        "[AIService] Gemini request failed. HTTP "
+                                + status.value()
+                                + " (attempt "
+                                + attempt
+                                + "/"
+                                + maxAttempts
+                                + ")"
+                );
+
+                if (!retryable ||
+                        attempt == maxAttempts) {
+
+                    throw e;
+                }
+
+                long delay =
+                        1000L * (1L << (attempt - 1));
+
+                System.out.println(
+                        "[AIService] Retrying Gemini request after "
+                                + delay
+                                + " ms."
+                );
+
+                Thread.sleep(delay);
             }
-
-            String aiText =
-                    textNode.asText();
-
-            System.out.println(
-                    "[AIService] Gemini response received successfully."
-            );
-
-            return aiText;
-
-        } catch (HttpStatusCodeException e) {
-
-            System.err.println(
-                    "Gemini HTTP status: "
-                            + e.getStatusCode()
-            );
-
-            System.err.println(
-                    "Gemini response: "
-                            + e.getResponseBodyAsString()
-            );
-
-            throw e;
         }
+
+        throw new IllegalStateException(
+                "Gemini request failed after "
+                        + maxAttempts
+                        + " attempts."
+        );
     }
 
 
