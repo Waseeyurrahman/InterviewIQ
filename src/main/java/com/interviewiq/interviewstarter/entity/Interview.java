@@ -43,8 +43,12 @@ public class Interview {
     @Column(nullable = false, length = 20)
     private InterviewStatus status;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
-    @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_interview_user"))
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(
+            name = "user_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_interview_user")
+    )
     @JsonIgnore
     private User user;
 
