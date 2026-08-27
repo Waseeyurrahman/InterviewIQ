@@ -378,13 +378,7 @@ public class EvaluationService {
              */
 
             int score =
-                    Math.max(
-                            0,
-                            Math.min(
-                                    100,
-                                    evaluation.score
-                            )
-                    );
+                    evaluation.score;
 
             totalScore += score;
 
@@ -396,13 +390,7 @@ public class EvaluationService {
              */
 
             int confidence =
-                    Math.max(
-                            0,
-                            Math.min(
-                                    100,
-                                    evaluation.confidence
-                            )
-                    );
+                    evaluation.confidence;
 
             totalConfidence += confidence;
 
@@ -416,10 +404,7 @@ public class EvaluationService {
              */
 
             result.fillerWords +=
-                    Math.max(
-                            0,
-                            evaluation.fillerWords
-                    );
+                    evaluation.fillerWords;
 
 
             if (evaluation.relevance != null) {
