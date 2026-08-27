@@ -74,30 +74,27 @@ public class InterviewService {
                                 "Interview not found: " + interviewId
                         ));
 
-        if (interview.getStatus() != InterviewStatus.CREATED) {
+        int updated = interviewRepository.updateStatusIfCurrent(
+                interviewId,
+                InterviewStatus.CREATED,
+                InterviewStatus.IN_PROGRESS
+        );
 
+        if (updated == 0) {
             throw new IllegalStateException(
                     "Interview cannot be started from status "
                             + interview.getStatus()
             );
         }
 
-        interview.setStatus(
-                InterviewStatus.IN_PROGRESS
-        );
+        interview.setStatus(InterviewStatus.IN_PROGRESS);
 
-        return interviewRepository.save(interview);
+        return interview;
     }
 
 
-    // ============================================================
-    // FINISH INTERVIEW
-    // IN_PROGRESS → COMPLETED
-    // ============================================================
-
     @Transactional
-    public Interview finish(
-            Long interviewId) {
+    public Interview finish(Long interviewId) {
 
         Interview interview = interviewRepository
                 .findById(interviewId)
@@ -106,15 +103,18 @@ public class InterviewService {
                                 "Interview not found: " + interviewId
                         ));
 
-        if (interview.getStatus()
-                != InterviewStatus.IN_PROGRESS) {
+        int updated = interviewRepository.updateStatusIfCurrent(
+                interviewId,
+                InterviewStatus.IN_PROGRESS,
+                InterviewStatus.COMPLETED
+        );
 
+        if (updated == 0) {
             throw new IllegalStateException(
                     "Interview cannot be finished from status "
                             + interview.getStatus()
             );
         }
-
 
         interview.setCompletedAt(
                 LocalDateTime.now()
@@ -124,6 +124,6 @@ public class InterviewService {
                 InterviewStatus.COMPLETED
         );
 
-        return interviewRepository.save(interview);
+        return interview;
     }
 }
