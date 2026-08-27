@@ -119,7 +119,7 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.CONFLICT)
                 .body(new AuthDtos.ApiResponse(
                         false,
-                        "Email already registered"
+                        "Database constraint violation"
                 ));
     }
 
