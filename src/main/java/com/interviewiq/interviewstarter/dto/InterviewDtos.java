@@ -37,15 +37,4 @@ public class InterviewDtos {
         private String message;
         private Long interviewId;
     }
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class FinishInterviewRequest {
-
-        @NotNull(message = "Final score is required")
-        @Min(value = 0, message = "Final score cannot be negative")
-        @Max(value = 100, message = "Final score cannot exceed 100")
-        private Integer finalScore;
-    }
 }

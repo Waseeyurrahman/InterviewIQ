@@ -177,6 +177,21 @@
 
         try {
 
+             const token =
+    localStorage.getItem("token");
+
+if (!token) {
+
+    alert(
+        "Your session has expired. Please login again."
+    );
+
+    window.location.href =
+        "login.html";
+
+    return;
+}
+
             /*
              * ====================================================
              * STEP 1 — SAVE ANSWERS
@@ -201,10 +216,59 @@
                 saveResponse
             );
 
+            /*
+ * ====================================================
+ * STEP 2 — FINISH INTERVIEW
+ * ====================================================
+ */
+
+document.getElementById("statusText").textContent =
+    "Completing your interview...";
+
+console.log(
+    "[submitting] Finishing interview:",
+    interviewId
+);
+
+const finishResponse =
+    await fetch(
+        "/interview/" +
+        interviewId +
+        "/finish",
+        {
+            method: "POST",
+            headers: {
+                "Authorization":
+                    "Bearer " + token
+            }
+        }
+    );
+
+if (!finishResponse.ok) {
+
+    const errorText =
+        await finishResponse.text();
+
+    console.error(
+        "[submitting] Interview finish failed:",
+        finishResponse.status,
+        errorText
+    );
+
+    throw new Error(
+        "Failed to finish interview. HTTP " +
+        finishResponse.status
+    );
+}
+
+console.log(
+    "[submitting] Interview finished successfully"
+);
+
 
             /*
              * ====================================================
-             * STEP 2 — EVALUATE INTERVIEW
+             * STEP 3 — EVALUATE INTERVIEW
              * ====================================================
              */
 
@@ -216,23 +280,6 @@
                 "[submitting] Evaluating interview:",
                 interviewId
             );
-
-
-            const token =
-                localStorage.getItem("token");
-
-
-            if (!token) {
-
-                alert(
-                    "Your session has expired. Please login again."
-                );
-
-                window.location.href =
-                    "login.html";
-
-                return;
-            }
 
 
             const response =

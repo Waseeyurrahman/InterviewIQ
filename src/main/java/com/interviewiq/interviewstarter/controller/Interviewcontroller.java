@@ -18,17 +18,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class Interviewcontroller {
     private final InterviewService interviewService;
 
-    public Interviewcontroller(InterviewService interviewService){
+    public Interviewcontroller(InterviewService interviewService) {
         this.interviewService = interviewService;
     }
 
     @PreAuthorize("hasRole('USER')")
     @PostMapping("/create")
-    public InterviewResponse create(@Valid @RequestBody InterviewRequest request, Authentication authentication){
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal() ;
+    public InterviewResponse create(@Valid @RequestBody InterviewRequest request, Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         Long userId = userDetails.getUserId();
-        Interview saved = interviewService.create(request.getRole(), request.getExperienceLevel(),request.getDifficulty(), request.getDuration(),userId);
-        return new InterviewResponse(true,"Interview created",saved.getId());
+        Interview saved = interviewService.create(request.getRole(), request.getExperienceLevel(), request.getDifficulty(), request.getDuration(), userId);
+        return new InterviewResponse(true, "Interview created", saved.getId());
     }
 
     @PreAuthorize("@interviewSecurity.isOwner(#id,authentication)")
@@ -48,8 +48,16 @@ public class Interviewcontroller {
 
     @PreAuthorize("@interviewSecurity.isOwner(#id,authentication)")
     @PostMapping("/{id}/finish")
-    public InterviewResponse finish(@PathVariable Long id, @Valid@RequestBody FinishInterviewRequest request){
-        Interview saved = interviewService.finish(id, request.getFinalScore());
-        return new InterviewResponse(true, "Interview finished", saved.getId());
+    public InterviewResponse finish(
+            @PathVariable Long id) {
+
+        Interview saved =
+                interviewService.finish(id);
+
+        return new InterviewResponse(
+                true,
+                "Interview finished",
+                saved.getId()
+        );
     }
 }

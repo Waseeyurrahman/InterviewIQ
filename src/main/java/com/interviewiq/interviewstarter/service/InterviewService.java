@@ -97,8 +97,7 @@ public class InterviewService {
 
     @Transactional
     public Interview finish(
-            Long interviewId,
-            Integer finalScore) {
+            Long interviewId) {
 
         Interview interview = interviewRepository
                 .findById(interviewId)
@@ -116,7 +115,6 @@ public class InterviewService {
             );
         }
 
-        interview.setFinalScore(finalScore);
 
         interview.setCompletedAt(
                 LocalDateTime.now()
