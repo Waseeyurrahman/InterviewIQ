@@ -575,6 +575,9 @@ public class EvaluationService {
                     "Please try evaluating the interview again."
             );
 
+            interview.setStatus(InterviewStatus.FAILED);
+            interviewRepository.save(interview);
+
             return result;
         }
 
