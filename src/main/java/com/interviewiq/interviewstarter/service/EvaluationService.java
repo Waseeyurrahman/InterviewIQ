@@ -10,6 +10,7 @@ import com.interviewiq.interviewstarter.exception.ResourceNotFoundException;
 import com.interviewiq.interviewstarter.repository.AnswerRepository;
 import com.interviewiq.interviewstarter.repository.EvaluationRepository;
 import com.interviewiq.interviewstarter.repository.InterviewRepository;
+import com.interviewiq.interviewstarter.repository.QuestionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,18 +26,21 @@ public class EvaluationService {
     private final AnswerRepository answerRepository;
     private final InterviewRepository interviewRepository;
     private final ObjectMapper objectMapper;
+    private final QuestionRepository questionRepository;
 
     public EvaluationService(
             AIService aiService,
             EvaluationRepository evaluationRepository,
             AnswerRepository answerRepository,
             InterviewRepository interviewRepository,
+            QuestionRepository questionRepository,
             ObjectMapper objectMapper) {
 
         this.aiService = aiService;
         this.evaluationRepository = evaluationRepository;
         this.answerRepository = answerRepository;
         this.interviewRepository = interviewRepository;
+        this.questionRepository = questionRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -150,9 +154,7 @@ public class EvaluationService {
          */
 
         int totalQuestions =
-                interview.getQuestions() != null
-                        ? interview.getQuestions().size()
-                        : 0;
+                (int) questionRepository.countByInterviewId(interviewId);
 
 
         /*
@@ -313,7 +315,9 @@ public class EvaluationService {
 
         boolean aiAvailable =
                 evaluations != null
-                        && evaluations.size() == answers.size();
+                        && evaluations.size() == answers.size()
+                        && evaluations.stream()
+                        .allMatch(evaluation -> evaluation != null);
 
         result.aiAvailable =
                 aiAvailable;
@@ -362,12 +366,10 @@ public class EvaluationService {
 
             if (evaluation == null) {
 
-                System.err.println(
-                        "[EvaluationService] Null evaluation for answer "
+                throw new IllegalStateException(
+                        "AI evaluation missing for answer "
                                 + answer.getId()
                 );
-
-                continue;
             }
 
 
