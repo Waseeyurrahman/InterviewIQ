@@ -11,6 +11,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class AIService {
@@ -24,7 +25,8 @@ public class AIService {
     @Value("${ai.gemini.api-key:}")
     private String apiKey;
 
-    private int geminiCallCount = 0;
+    private final AtomicInteger geminiCallCount =
+            new AtomicInteger(0);
 
     private final RestTemplate http;
 
@@ -665,7 +667,8 @@ public class AIService {
                                 + maxAttempts
                 );
 
-                geminiCallCount++;
+                int callNumber =
+                        geminiCallCount.incrementAndGet();
 
                 ResponseEntity<String> response =
                         http.exchange(
