@@ -911,21 +911,22 @@ public class AIService {
                         new AIEvaluation();
 
                 evaluation.score =
-                        node.path("score").asInt(0);
+                        requireIntField(node, "score");
 
                 evaluation.fillerWords =
-                        node.path("fillerWords").asInt(0);
+                        requireIntField(node, "fillerWords");
 
                 evaluation.confidence =
-                        node.path("confidence").asInt(0);
+                        requireIntField(node, "confidence");
 
                 evaluation.relevance =
-                        node.path("relevance")
-                                .asText("medium");
+                        requireStringField(node, "relevance");
 
                 evaluation.technicalAccuracy =
-                        node.path("technicalAccuracy")
-                                .asText("average");
+                        requireStringField(
+                                node,
+                                "technicalAccuracy"
+                        );
 
                 evaluation.strengths =
                         readStringList(
@@ -1119,58 +1120,102 @@ public class AIService {
     // VALIDATE AI EVALUATION
     // ============================================================
 
+    private int requireIntField(
+            JsonNode node,
+            String fieldName) {
+
+        JsonNode field =
+                node.get(fieldName);
+
+        if (field == null ||
+                !field.isInt()) {
+
+            throw new IllegalArgumentException(
+                    "Missing or invalid integer field: "
+                            + fieldName
+            );
+        }
+
+        return field.asInt();
+    }
+
+    private String requireStringField(
+            JsonNode node,
+            String fieldName) {
+
+        JsonNode field =
+                node.get(fieldName);
+
+        if (field == null ||
+                !field.isTextual() ||
+                field.asText().isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "Missing or invalid string field: "
+                            + fieldName
+            );
+        }
+
+        return field.asText().trim();
+    }
+
     private void validateEvaluation(
             AIEvaluation evaluation) {
 
-        if (evaluation.score < 0) {
+        if (evaluation.score < 0 ||
+                evaluation.score > 100) {
 
-            evaluation.score = 0;
-        }
-
-        if (evaluation.score > 100) {
-
-            evaluation.score = 100;
+            throw new IllegalArgumentException(
+                    "AI returned invalid score: "
+                            + evaluation.score
+            );
         }
 
         if (evaluation.fillerWords < 0) {
 
-            evaluation.fillerWords = 0;
+            throw new IllegalArgumentException(
+                    "AI returned invalid filler word count: "
+                            + evaluation.fillerWords
+            );
         }
 
-        if (evaluation.confidence < 0) {
+        if (evaluation.confidence < 0 ||
+                evaluation.confidence > 100) {
 
-            evaluation.confidence = 0;
+            throw new IllegalArgumentException(
+                    "AI returned invalid confidence: "
+                            + evaluation.confidence
+            );
         }
 
-        if (evaluation.confidence > 100) {
+        String relevance =
+                evaluation.relevance.toLowerCase();
 
-            evaluation.confidence = 100;
+        if (!List.of(
+                "low",
+                "medium",
+                "high"
+        ).contains(relevance)) {
+
+            throw new IllegalArgumentException(
+                    "AI returned invalid relevance: "
+                            + evaluation.relevance
+            );
         }
 
-        if (evaluation.relevance == null ||
-                !List.of(
-                        "low",
-                        "medium",
-                        "high"
-                ).contains(
-                        evaluation.relevance.toLowerCase()
-                )) {
+        String technicalAccuracy =
+                evaluation.technicalAccuracy.toLowerCase();
 
-            evaluation.relevance =
-                    "medium";
-        }
+        if (!List.of(
+                "poor",
+                "average",
+                "good"
+        ).contains(technicalAccuracy)) {
 
-        if (evaluation.technicalAccuracy == null ||
-                !List.of(
-                        "poor",
-                        "average",
-                        "good"
-                ).contains(
-                        evaluation.technicalAccuracy.toLowerCase()
-                )) {
-
-            evaluation.technicalAccuracy =
-                    "average";
+            throw new IllegalArgumentException(
+                    "AI returned invalid technical accuracy: "
+                            + evaluation.technicalAccuracy
+            );
         }
     }
 }
