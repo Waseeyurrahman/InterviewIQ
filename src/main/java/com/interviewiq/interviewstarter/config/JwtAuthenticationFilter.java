@@ -6,6 +6,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,6 +22,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
+
+    private static final Logger log =
+            LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     public JwtAuthenticationFilter(
             JwtService jwtService,
@@ -87,8 +92,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // Invalid/expired JWT.
             // Do not authenticate the request.
-            System.err.println(
-                    "[JWT] Authentication failed: " + e.getMessage()
+            log.debug(
+                    "JWT authentication failed: {}",
+                    e.getMessage()
             );
         }
 

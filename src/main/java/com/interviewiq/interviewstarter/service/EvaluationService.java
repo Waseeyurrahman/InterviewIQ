@@ -11,6 +11,8 @@ import com.interviewiq.interviewstarter.repository.AnswerRepository;
 import com.interviewiq.interviewstarter.repository.EvaluationRepository;
 import com.interviewiq.interviewstarter.repository.InterviewRepository;
 import com.interviewiq.interviewstarter.repository.QuestionRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,9 @@ import java.util.List;
 
 @Service
 public class EvaluationService {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(EvaluationService.class);
 
     private final AIService aiService;
     private final EvaluationRepository evaluationRepository;
@@ -143,7 +148,11 @@ public class EvaluationService {
                     "Interview is already being evaluated or has already been evaluated"
             );
         }
-        interview.setStatus(InterviewStatus.EVALUATING);
+
+        log.info(
+                "Starting evaluation for interview {}",
+                interviewId
+        );
 
 
 
@@ -325,8 +334,9 @@ public class EvaluationService {
 
         if (!aiAvailable) {
 
-            System.err.println(
-                    "[EvaluationService] AI evaluation unavailable."
+            log.warn(
+                    "AI evaluation unavailable for interview {}",
+                    interviewId
             );
 
             result.weaknesses.add(
@@ -633,6 +643,14 @@ public class EvaluationService {
 
         interviewRepository.save(
                 interview
+        );
+
+        log.info(
+                "Interview {} evaluated successfully: score={}, answered={}, skipped={}",
+                interviewId,
+                result.score,
+                result.answeredQuestions,
+                result.skippedQuestions
         );
 
 

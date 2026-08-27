@@ -2,6 +2,8 @@ package com.interviewiq.interviewstarter.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -11,10 +13,13 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+
 
 @Service
 public class AIService {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(AIService.class);
 
     private static final String GEMINI_BASE_URL =
             "https://generativelanguage.googleapis.com/v1beta/models/";
@@ -25,8 +30,6 @@ public class AIService {
     @Value("${ai.gemini.api-key:}")
     private String apiKey;
 
-    private final AtomicInteger geminiCallCount =
-            new AtomicInteger(0);
 
     private final RestTemplate http;
 
@@ -77,10 +80,7 @@ public class AIService {
 
         if (apiKey == null || apiKey.isBlank()) {
 
-            System.err.println(
-                    "[AIService] Gemini API key is missing."
-            );
-
+            log.warn("Gemini API key is missing");
             return null;
         }
 
@@ -100,9 +100,7 @@ public class AIService {
 
             if (evaluation == null) {
 
-                System.err.println(
-                        "[AIService] Failed to parse AI evaluation."
-                );
+                log.warn("Failed to parse AI evaluation");
 
                 return null;
             }
@@ -113,10 +111,7 @@ public class AIService {
 
         } catch (Exception e) {
 
-            System.err.println(
-                    "[AIService] AI evaluation failed: "
-                            + e.getMessage()
-            );
+            log.warn("AI evaluation failed: {}", e.getMessage());
 
             return null;
         }
@@ -133,9 +128,7 @@ public class AIService {
 
         if (apiKey == null || apiKey.isBlank()) {
 
-            System.err.println(
-                    "[AIService] Gemini API key is missing."
-            );
+            log.warn("Gemini API key is missing");
 
             return null;
         }
@@ -145,9 +138,7 @@ public class AIService {
                 questions.size() != answers.size() ||
                 questions.isEmpty()) {
 
-            System.err.println(
-                    "[AIService] Invalid questions/answers."
-            );
+            log.warn("Invalid questions or answers supplied for batch evaluation");
 
             return null;
         }
@@ -170,10 +161,7 @@ public class AIService {
 
         } catch (Exception e) {
 
-            System.err.println(
-                    "[AIService] Batch AI evaluation failed: "
-                            + e.getMessage()
-            );
+            log.warn("Batch AI evaluation failed: {}", e.getMessage());
 
             return null;
         }
@@ -192,9 +180,7 @@ public class AIService {
 
         if (apiKey == null || apiKey.isBlank()) {
 
-            System.err.println(
-                    "[AIService] Gemini API key is missing."
-            );
+            log.warn("Gemini API key is missing");
 
             return null;
         }
@@ -218,13 +204,10 @@ public class AIService {
             if (questions == null ||
                     questions.size() != count) {
 
-                System.err.println(
-                        "[AIService] Gemini returned "
-                                + (questions == null
-                                ? 0
-                                : questions.size())
-                                + " questions, expected "
-                                + count
+                log.warn(
+                        "Gemini returned {} questions, expected {}",
+                        questions == null ? 0 : questions.size(),
+                        count
                 );
 
                 return null;
@@ -234,10 +217,7 @@ public class AIService {
 
         } catch (Exception e) {
 
-            System.err.println(
-                    "[AIService] Question generation failed: "
-                            + e.getMessage()
-            );
+            log.warn("Question generation failed: {}", e.getMessage());
 
             return null;
         }
@@ -660,15 +640,11 @@ public class AIService {
 
             try {
 
-                System.out.println(
-                        "[AIService] Calling Gemini. Attempt "
-                                + attempt
-                                + "/"
-                                + maxAttempts
+                log.debug(
+                        "Calling Gemini, attempt {}/{}",
+                        attempt,
+                        maxAttempts
                 );
-
-                int callNumber =
-                        geminiCallCount.incrementAndGet();
 
                 ResponseEntity<String> response =
                         http.exchange(
@@ -707,9 +683,7 @@ public class AIService {
                     );
                 }
 
-                System.out.println(
-                        "[AIService] Gemini response received successfully."
-                );
+                log.debug("Gemini response received successfully");
 
                 return textNode.asText();
 
@@ -724,14 +698,11 @@ public class AIService {
                                 status.value() == 502 ||
                                 status.value() == 503;
 
-                System.err.println(
-                        "[AIService] Gemini request failed. HTTP "
-                                + status.value()
-                                + " (attempt "
-                                + attempt
-                                + "/"
-                                + maxAttempts
-                                + ")"
+                log.warn(
+                        "Gemini request failed with HTTP {} on attempt {}/{}",
+                        status.value(),
+                        attempt,
+                        maxAttempts
                 );
 
                 if (!retryable ||
@@ -743,10 +714,9 @@ public class AIService {
                 long delay =
                         1000L * (1L << (attempt - 1));
 
-                System.out.println(
-                        "[AIService] Retrying Gemini request after "
-                                + delay
-                                + " ms."
+                log.debug(
+                        "Retrying Gemini request after {} ms",
+                        delay
                 );
 
                 Thread.sleep(delay);
@@ -773,17 +743,6 @@ public class AIService {
             String clean =
                     cleanJsonResponse(aiText);
 
-            System.out.println(
-                    "=== CLEAN EVALUATION JSON ==="
-            );
-
-            System.out.println(
-                    clean
-            );
-
-            System.out.println(
-                    "=== END CLEAN EVALUATION JSON ==="
-            );
 
             JsonNode root =
                     objectMapper.readTree(clean);
@@ -827,13 +786,9 @@ public class AIService {
 
         } catch (Exception e) {
 
-            System.err.println(
-                    "[AIService] Evaluation JSON parsing failed."
-            );
-
-            System.err.println(
-                    "[AIService] Failed to parse AI response: "
-                            + e.getMessage()
+            log.warn(
+                    "Evaluation JSON parsing failed: {}",
+                    e.getMessage()
             );
 
             return null;
@@ -861,26 +816,12 @@ public class AIService {
              * receives, rather than only the raw Gemini output.
              */
 
-            System.out.println(
-                    "=== CLEAN BATCH JSON ==="
-            );
-
-            System.out.println(
-                    clean
-            );
-
-            System.out.println(
-                    "=== END CLEAN BATCH JSON ==="
-            );
-
             JsonNode root =
                     objectMapper.readTree(clean);
 
             if (!root.isArray()) {
 
-                System.err.println(
-                        "[AIService] Batch response is not an array."
-                );
+                log.warn("Gemini batch response is not an array");
 
                 return null;
             }
@@ -892,11 +833,10 @@ public class AIService {
 
             if (root.size() != expectedCount) {
 
-                System.err.println(
-                        "[AIService] Expected "
-                                + expectedCount
-                                + " evaluations but received "
-                                + root.size()
+                log.warn(
+                        "Expected {} evaluations but received {}",
+                        expectedCount,
+                        root.size()
                 );
 
                 return null;
@@ -958,13 +898,9 @@ public class AIService {
 
         } catch (Exception e) {
 
-            System.err.println(
-                    "[AIService] Batch evaluation JSON parsing failed."
-            );
-
-            System.err.println(
-                    "[AIService] Failed to parse AI response: "
-                            + e.getMessage()
+            log.warn(
+                    "Batch evaluation JSON parsing failed: {}",
+                    e.getMessage()
             );
 
             return null;
@@ -984,17 +920,7 @@ public class AIService {
             String clean =
                     cleanJsonResponse(aiText);
 
-            System.out.println(
-                    "=== CLEAN QUESTION JSON ==="
-            );
 
-            System.out.println(
-                    clean
-            );
-
-            System.out.println(
-                    "=== END CLEAN QUESTION JSON ==="
-            );
 
             JsonNode root =
                     objectMapper.readTree(clean);
@@ -1027,12 +953,9 @@ public class AIService {
 
         } catch (Exception e) {
 
-            System.err.println(
-                    "[AIService] Question JSON parsing failed."
-            );
-            System.err.println(
-                    "[AIService] Failed to parse AI response: "
-                            + e.getMessage()
+            log.warn(
+                    "Question JSON parsing failed: {}",
+                    e.getMessage()
             );
 
             return null;

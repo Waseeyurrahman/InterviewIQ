@@ -6,6 +6,8 @@ import com.interviewiq.interviewstarter.entity.User;
 import com.interviewiq.interviewstarter.exception.ResourceNotFoundException;
 import com.interviewiq.interviewstarter.repository.InterviewRepository;
 import com.interviewiq.interviewstarter.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +15,9 @@ import java.time.LocalDateTime;
 
 @Service
 public class InterviewService {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(InterviewService.class);
 
     private final InterviewRepository interviewRepository;
     private final UserRepository userRepository;
@@ -55,7 +60,16 @@ public class InterviewService {
         // Initial lifecycle state
         interview.setStatus(InterviewStatus.CREATED);
 
-        return interviewRepository.save(interview);
+        Interview saved =
+                interviewRepository.save(interview);
+
+        log.info(
+                "Interview {} created for user {}",
+                saved.getId(),
+                userId
+        );
+
+        return saved;
     }
 
 
@@ -88,6 +102,11 @@ public class InterviewService {
         }
 
         interview.setStatus(InterviewStatus.IN_PROGRESS);
+
+        log.info(
+                "Interview {} started",
+                interviewId
+        );
 
         return interview;
     }
@@ -122,6 +141,11 @@ public class InterviewService {
 
         interview.setStatus(
                 InterviewStatus.COMPLETED
+        );
+
+        log.info(
+                "Interview {} finished",
+                interviewId
         );
 
         return interview;
