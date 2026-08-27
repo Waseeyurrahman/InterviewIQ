@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.interviewiq.interviewstarter.entity.Interview;
 import com.interviewiq.interviewstarter.entity.InterviewStatus;
+import com.interviewiq.interviewstarter.entity.Question;
 import com.interviewiq.interviewstarter.entity.User;
 import com.interviewiq.interviewstarter.repository.InterviewRepository;
+import com.interviewiq.interviewstarter.repository.QuestionRepository;
 import com.interviewiq.interviewstarter.repository.UserRepository;
 import com.interviewiq.interviewstarter.service.JwtService;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,8 +44,25 @@ class InterviewSecurityIntegrationTest {
     @Autowired
     private JwtService jwtService;
 
+    @Autowired
+    private QuestionRepository questionRepository;
+
     private User userA;
     private User userB;
+
+    private Interview createInterviewForUser(User user) {
+
+        Interview interview = new Interview();
+
+        interview.setRole("Java Developer");
+        interview.setExperienceLevel("Mid Level");
+        interview.setDifficulty("Medium");
+        interview.setDuration(30);
+        interview.setStatus(InterviewStatus.CREATED);
+        interview.setUser(user);
+
+        return interviewRepository.save(interview);
+    }
 
     @BeforeEach
     void setUp() {
@@ -104,5 +123,48 @@ class InterviewSecurityIntegrationTest {
                         post("/interview/999/start")
                 )
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void userCannotAnswerAnotherUsersQuestion()
+            throws Exception {
+
+        Interview interview =
+                createInterviewForUser(userA);
+
+        Question question = new Question();
+
+        question.setInterview(interview);
+        question.setQuestionText(
+                "Explain the difference between HashMap and Hashtable."
+        );
+
+        question = questionRepository.save(question);
+
+        String token = jwtService.generateToken(
+                userB.getEmail()
+        );
+
+        String requestBody = """
+            {
+                "answers": [
+                    {
+                        "questionId": %d,
+                        "answerText": "This is a test answer."
+                    }
+                ]
+            }
+            """.formatted(question.getId());
+
+        mockMvc.perform(
+                        post("/answers")
+                                .header(
+                                        "Authorization",
+                                        "Bearer " + token
+                                )
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody)
+                )
+                .andExpect(status().isForbidden());
     }
 }
