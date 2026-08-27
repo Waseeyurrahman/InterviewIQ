@@ -13,7 +13,10 @@ public interface InterviewRepository extends JpaRepository<Interview, Long> {
 
     List<Interview> findByUserId(Long userId);
 
-    @Modifying
+    @Modifying(
+            clearAutomatically = true,
+            flushAutomatically = true
+    )
     @Query("""
             UPDATE Interview i
             SET i.status = :newStatus
