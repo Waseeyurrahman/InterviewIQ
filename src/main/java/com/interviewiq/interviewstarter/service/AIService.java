@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
@@ -25,7 +26,18 @@ public class AIService {
 
     private int geminiCallCount = 0;
 
-    private final RestTemplate http = new RestTemplate();
+    private final RestTemplate http;
+
+    public AIService() {
+
+        SimpleClientHttpRequestFactory factory =
+                new SimpleClientHttpRequestFactory();
+
+        factory.setConnectTimeout(10_000);
+        factory.setReadTimeout(60_000);
+
+        this.http = new RestTemplate(factory);
+    }
     private final ObjectMapper objectMapper = new ObjectMapper();
 
 
@@ -721,15 +733,7 @@ public class AIService {
                     textNode.asText();
 
             System.out.println(
-                    "=== GEMINI RAW TEXT ==="
-            );
-
-            System.out.println(
-                    aiText
-            );
-
-            System.out.println(
-                    "=== END GEMINI RAW TEXT ==="
+                    "[AIService] Gemini response received successfully."
             );
 
             return aiText;
@@ -822,14 +826,9 @@ public class AIService {
             );
 
             System.err.println(
-                    "[AIService] Raw AI response:"
+                    "[AIService] Failed to parse AI response: "
+                            + e.getMessage()
             );
-
-            System.err.println(
-                    aiText
-            );
-
-            e.printStackTrace();
 
             return null;
         }
@@ -957,14 +956,9 @@ public class AIService {
             );
 
             System.err.println(
-                    "[AIService] Raw AI response:"
+                    "[AIService] Failed to parse AI response: "
+                            + e.getMessage()
             );
-
-            System.err.println(
-                    aiText
-            );
-
-            e.printStackTrace();
 
             return null;
         }
@@ -1029,16 +1023,10 @@ public class AIService {
             System.err.println(
                     "[AIService] Question JSON parsing failed."
             );
-
             System.err.println(
-                    "[AIService] Raw AI response:"
+                    "[AIService] Failed to parse AI response: "
+                            + e.getMessage()
             );
-
-            System.err.println(
-                    aiText
-            );
-
-            e.printStackTrace();
 
             return null;
         }
