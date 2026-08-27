@@ -6,6 +6,7 @@ import com.interviewiq.interviewstarter.entity.Answer;
 import com.interviewiq.interviewstarter.entity.Evaluation;
 import com.interviewiq.interviewstarter.entity.Interview;
 import com.interviewiq.interviewstarter.entity.InterviewStatus;
+import com.interviewiq.interviewstarter.exception.ResourceNotFoundException;
 import com.interviewiq.interviewstarter.repository.AnswerRepository;
 import com.interviewiq.interviewstarter.repository.EvaluationRepository;
 import com.interviewiq.interviewstarter.repository.InterviewRepository;
@@ -102,7 +103,7 @@ public class EvaluationService {
         Interview interview =
                 interviewRepository.findById(interviewId)
                         .orElseThrow(() ->
-                                new RuntimeException(
+                                new ResourceNotFoundException(
                                         "Interview not found: " + interviewId
                                 )
                         );
@@ -113,6 +114,32 @@ public class EvaluationService {
                             + interview.getStatus()
             );
         }
+
+        int claimed = 0;
+
+        if (interview.getStatus() == InterviewStatus.COMPLETED) {
+
+            claimed = interviewRepository.updateStatusIfCurrent(
+                    interviewId,
+                    InterviewStatus.COMPLETED,
+                    InterviewStatus.EVALUATING
+            );
+
+        } else if (interview.getStatus() == InterviewStatus.FAILED) {
+
+            claimed = interviewRepository.updateStatusIfCurrent(
+                    interviewId,
+                    InterviewStatus.FAILED,
+                    InterviewStatus.EVALUATING
+            );
+        }
+
+        if (claimed != 1) {
+            throw new IllegalStateException(
+                    "Interview is already being evaluated or has already been evaluated"
+            );
+        }
+        interview.setStatus(InterviewStatus.EVALUATING);
 
 
 
