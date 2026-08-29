@@ -1,0 +1,277 @@
+.profile-page {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    max-width: 900px;
+}
+
+.profile-card {
+    background: #ffffff;
+    border: 1px solid #e8e8ef;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 18px rgba(20, 20, 40, 0.04);
+}
+
+.profile-header-card {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.profile-avatar {
+    width: 68px;
+    height: 68px;
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #eeeaff;
+    color: #655ce9;
+
+    font-size: 26px;
+    font-weight: 600;
+}
+
+.profile-heading h2 {
+    margin: 0 0 5px;
+
+    color: #252633;
+
+    font-size: 22px;
+    font-weight: 600;
+}
+
+.profile-heading p {
+    margin: 0;
+
+    color: #858894;
+
+    font-size: 13px;
+}
+
+.profile-section-title {
+    margin-bottom: 20px;
+}
+
+.profile-section-title h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    margin: 0 0 5px;
+
+    color: #252633;
+
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.profile-section-title h3 i {
+    width: 20px;
+
+    color: #655ce9;
+
+    font-size: 16px;
+    text-align: center;
+}
+
+.profile-section-title p {
+    margin: 0;
+
+    color: #858894;
+
+    font-size: 12px;
+}
+
+.profile-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.profile-info {
+    padding: 15px;
+
+    background: #fafafd;
+
+    border: 1px solid #eeeeF3;
+
+    border-radius: 11px;
+}
+
+.profile-label {
+    display: block;
+
+    margin-bottom: 6px;
+
+    color: #999ba6;
+
+    font-size: 10px;
+    font-weight: 500;
+
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.profile-value {
+    display: block;
+
+    color: #444651;
+
+    font-size: 13px;
+    font-weight: 500;
+
+    word-break: break-word;
+}
+
+.profile-stat {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    padding: 17px;
+
+    background: #fafafd;
+
+    border: 1px solid #eeeeF3;
+
+    border-radius: 12px;
+}
+
+.profile-stat-icon {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 11px;
+
+    background: #eeeaff;
+    color: #655ce9;
+
+    font-size: 18px;
+}
+
+.profile-stat-value {
+    color: #252633;
+
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.profile-stat-label {
+    margin-top: 2px;
+
+    color: #858894;
+
+    font-size: 11px;
+}
+
+.profile-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+}
+
+.profile-actions h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    margin: 0 0 5px;
+
+    color: #252633;
+
+    font-size: 15px;
+}
+
+.profile-actions h3 i {
+    color: #655ce9;
+
+    font-size: 15px;
+}
+
+.profile-actions p {
+    margin: 0;
+
+    color: #858894;
+
+    font-size: 12px;
+}
+
+.profile-logout {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    padding: 10px 18px;
+
+    border: 1px solid #f0cccc;
+    border-radius: 9px;
+
+    background: #fff5f5;
+    color: #d95353;
+
+    font-family: inherit;
+
+    font-size: 12px;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.profile-logout i {
+    font-size: 13px;
+}
+
+.profile-logout:hover {
+    background: #ffeded;
+    border-color: #e9b5b5;
+
+    transform: translateY(-1px);
+}
+
+.sidebar .menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sidebar .menu-item i {
+    width: 20px;
+    flex-shrink: 0;
+
+    font-size: 17px;
+    text-align: center;
+}
+
+.state-icon i {
+    font-size: 28px;
+}
+
+@media (max-width: 700px) {
+
+    .profile-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-actions {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

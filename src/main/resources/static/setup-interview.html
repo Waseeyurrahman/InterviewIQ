@@ -1,0 +1,2245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Set Up Interview | InterviewIQ AI</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Font Awesome -->
+    <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+
+    <link
+            href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+            rel="stylesheet"
+    >
+
+    <style>
+
+        /* =========================================================
+           PAGE
+           ========================================================= */
+
+        .interview-setup-page {
+            min-height: 100vh;
+
+            background:
+                radial-gradient(
+                    circle at top right,
+                    rgba(108, 99, 255, 0.08),
+                    transparent 30%
+                ),
+                #f8f9fc;
+
+            font-family: 'Poppins', sans-serif;
+            color: #111827;
+        }
+
+
+        .setup-wrapper {
+            width: min(1050px, calc(100% - 40px));
+            margin: 0 auto;
+            padding: 36px 0 40px;
+        }
+
+
+        /* =========================================================
+           HEADER
+           ========================================================= */
+
+        .setup-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+
+        .setup-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.6px;
+            margin-bottom: 6px;
+        }
+
+
+        .setup-header p {
+            color: #6B7280;
+            font-size: 13px;
+        }
+
+
+        /* =========================================================
+           STEPPER
+           ========================================================= */
+
+        .setup-stepper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            margin: 0 auto 34px;
+
+            max-width: 700px;
+        }
+
+
+        .setup-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+            gap: 7px;
+
+            min-width: 80px;
+        }
+
+
+        .setup-step-circle {
+            width: 34px;
+            height: 34px;
+
+            border-radius: 50%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: #ffffff;
+
+            border: 1px solid #D1D5DB;
+
+            color: #9CA3AF;
+
+            font-size: 12px;
+            font-weight: 600;
+
+            transition: all .25s ease;
+        }
+
+
+        .setup-step-label {
+            font-size: 11px;
+
+            color: #9CA3AF;
+
+            font-weight: 500;
+
+            transition: color .25s ease;
+        }
+
+
+        .setup-step.active .setup-step-circle,
+        .setup-step.completed .setup-step-circle {
+
+            background: linear-gradient(
+                135deg,
+                #6C63FF,
+                #8A7CFF
+            );
+
+            border-color: transparent;
+
+            color: white;
+
+            box-shadow:
+                0 5px 14px rgba(108, 99, 255, .22);
+        }
+
+
+        .setup-step.active .setup-step-label,
+        .setup-step.completed .setup-step-label {
+
+            color: #6C63FF;
+        }
+
+
+        .setup-step-line {
+            width: 100px;
+            height: 2px;
+
+            background: #E5E7EB;
+
+            margin: 0 5px 20px;
+
+            transition: background .25s ease;
+        }
+
+
+        .setup-step-line.completed {
+            background: #6C63FF;
+        }
+
+
+        /* =========================================================
+           MAIN CARD
+           ========================================================= */
+
+        .setup-card {
+
+            background: #ffffff;
+
+            border: 1px solid #F1F2F6;
+
+            border-radius: 18px;
+
+            box-shadow:
+                0 12px 35px rgba(0, 0, 0, .055);
+
+            padding: 32px;
+        }
+
+
+        .setup-step-content {
+
+            display: none;
+
+            animation: setupFade .25s ease;
+        }
+
+
+        .setup-step-content.active {
+            display: block;
+        }
+
+
+        @keyframes setupFade {
+
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+
+        /* =========================================================
+           SECTION HEADER
+           ========================================================= */
+
+        .setup-section-header {
+            margin-bottom: 24px;
+        }
+
+
+        .setup-section-header h2 {
+
+            font-size: 20px;
+
+            margin-bottom: 5px;
+        }
+
+
+        .setup-section-header p {
+
+            font-size: 12.5px;
+
+            color: #6B7280;
+        }
+
+
+        /* =========================================================
+           ROLE GRID
+           ========================================================= */
+
+        .role-options {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 14px;
+        }
+
+
+        .option-card {
+
+            border: 1px solid #E5E7EB;
+
+            background: #ffffff;
+
+            border-radius: 13px;
+
+            padding: 20px 16px;
+
+            cursor: pointer;
+
+            transition:
+                transform .2s ease,
+                border-color .2s ease,
+                box-shadow .2s ease,
+                background .2s ease;
+        }
+
+
+        .option-card:hover {
+
+            transform: translateY(-2px);
+
+            border-color: #C7C2FF;
+
+            box-shadow:
+                0 8px 20px rgba(0,0,0,.05);
+        }
+
+
+        .option-card.selected {
+
+            border-color: #6C63FF;
+
+            background: #F7F6FF;
+
+            box-shadow:
+                0 0 0 2px rgba(108,99,255,.08);
+        }
+
+
+        /* =========================================================
+           ROLE ICON
+           ========================================================= */
+
+        .option-icon {
+
+            width: 44px;
+            height: 44px;
+
+            border-radius: 12px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background: #EEF2FF;
+
+            color: #6C63FF;
+
+            font-size: 18px;
+
+            margin-bottom: 12px;
+
+            transition:
+                background .2s ease,
+                color .2s ease,
+                transform .2s ease;
+        }
+
+
+        .option-card:hover .option-icon {
+
+            transform: scale(1.04);
+        }
+
+
+        .option-card.selected .option-icon {
+
+            background: #6C63FF;
+
+            color: #ffffff;
+        }
+
+
+        .option-title {
+
+            font-size: 13px;
+
+            font-weight: 600;
+
+            color: #1F2937;
+        }
+
+
+        .option-description {
+
+            font-size: 11px;
+
+            color: #9CA3AF;
+
+            margin-top: 3px;
+        }
+
+
+        /* =========================================================
+           CUSTOM ROLE
+           ========================================================= */
+
+        .custom-role {
+
+            margin-top: 22px;
+        }
+
+
+        .custom-role label {
+
+            display: block;
+
+            font-size: 12px;
+
+            font-weight: 600;
+
+            margin-bottom: 7px;
+        }
+
+
+        .setup-input {
+
+            width: 100%;
+
+            border: 1px solid #D1D5DB;
+
+            border-radius: 10px;
+
+            padding: 11px 13px;
+
+            font-family: 'Poppins', sans-serif;
+
+            font-size: 12.5px;
+
+            outline: none;
+
+            transition:
+                border-color .2s,
+                box-shadow .2s;
+        }
+
+
+        .setup-input::placeholder {
+
+            color: #A1A5B0;
+        }
+
+
+        .setup-input:focus {
+
+            border-color: #6C63FF;
+
+            box-shadow:
+                0 0 0 3px rgba(108,99,255,.09);
+        }
+
+
+        /* =========================================================
+           EXPERIENCE / DIFFICULTY / DURATION
+           ========================================================= */
+
+        .choice-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 16px;
+        }
+
+
+        .choice-card {
+
+            border: 1px solid #E5E7EB;
+
+            border-radius: 14px;
+
+            padding: 25px 18px;
+
+            text-align: center;
+
+            cursor: pointer;
+
+            transition: all .2s ease;
+        }
+
+
+        .choice-card:hover {
+
+            transform: translateY(-2px);
+
+            border-color: #C7C2FF;
+
+            box-shadow:
+                0 8px 20px rgba(0,0,0,.05);
+        }
+
+
+        .choice-card.selected {
+
+            border-color: #6C63FF;
+
+            background: #F7F6FF;
+
+            box-shadow:
+                0 0 0 2px rgba(108,99,255,.08);
+        }
+
+
+        /* =========================================================
+           CHOICE ICON
+           ========================================================= */
+
+        .choice-icon {
+
+            width: 48px;
+            height: 48px;
+
+            margin: 0 auto 10px;
+
+            border-radius: 13px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background: #EEF2FF;
+
+            color: #6C63FF;
+
+            font-size: 19px;
+
+            transition:
+                background .2s ease,
+                color .2s ease,
+                transform .2s ease;
+        }
+
+
+        .choice-card:hover .choice-icon {
+
+            transform: scale(1.05);
+        }
+
+
+        .choice-card.selected .choice-icon {
+
+            background: #6C63FF;
+
+            color: #ffffff;
+        }
+
+
+        .choice-title {
+
+            font-size: 14px;
+
+            font-weight: 600;
+        }
+
+
+        .choice-subtitle {
+
+            font-size: 11px;
+
+            color: #9CA3AF;
+
+            margin-top: 4px;
+        }
+
+
+        /* =========================================================
+           SUMMARY
+           ========================================================= */
+
+        .setup-summary {
+
+            margin-top: 25px;
+
+            background: #F8F8FF;
+
+            border: 1px solid #E6E3FF;
+
+            border-radius: 12px;
+
+            padding: 15px 17px;
+        }
+
+
+        .summary-title {
+
+            font-size: 11px;
+
+            font-weight: 600;
+
+            color: #6C63FF;
+
+            text-transform: uppercase;
+
+            letter-spacing: .5px;
+
+            margin-bottom: 9px;
+        }
+
+
+        .summary-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, 1fr);
+
+            gap: 10px;
+        }
+
+
+        .summary-item span {
+
+            display: block;
+        }
+
+
+        .summary-label {
+
+            color: #9CA3AF;
+
+            font-size: 10px;
+        }
+
+
+        .summary-value {
+
+            color: #1F2937;
+
+            font-size: 12px;
+
+            font-weight: 600;
+
+            margin-top: 2px;
+        }
+
+
+        /* =========================================================
+           ACTIONS
+           ========================================================= */
+
+        .setup-actions {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            margin-top: 30px;
+
+            padding-top: 20px;
+
+            border-top: 1px solid #F1F2F6;
+        }
+
+
+        .setup-back,
+        .setup-next {
+
+            border: none;
+
+            border-radius: 9px;
+
+            padding: 10px 18px;
+
+            font-family: 'Poppins', sans-serif;
+
+            font-size: 12.5px;
+
+            font-weight: 500;
+
+            cursor: pointer;
+
+            transition: all .2s ease;
+        }
+
+
+        .setup-back {
+
+            background: #F3F4F6;
+
+            color: #374151;
+        }
+
+
+        .setup-back:hover {
+
+            background: #E5E7EB;
+        }
+
+
+        .setup-next {
+
+            background: linear-gradient(
+                135deg,
+                #6C63FF,
+                #8A7CFF
+            );
+
+            color: white;
+
+            box-shadow:
+                0 5px 14px rgba(108,99,255,.25);
+        }
+
+
+        .setup-next:hover {
+
+            transform: translateY(-1px);
+
+            box-shadow:
+                0 8px 20px rgba(108,99,255,.32);
+        }
+
+
+        .setup-next:disabled {
+
+            opacity: .55;
+
+            cursor: not-allowed;
+
+            transform: none;
+
+            box-shadow: none;
+        }
+
+
+        /* =========================================================
+           ERROR
+           ========================================================= */
+
+        .setup-error {
+
+            display: none;
+
+            margin-top: 14px;
+
+            padding: 10px 12px;
+
+            border-radius: 8px;
+
+            background: #FEF2F2;
+
+            border: 1px solid #FECACA;
+
+            color: #B91C1C;
+
+            font-size: 11.5px;
+        }
+
+
+        .setup-error.show {
+
+            display: block;
+        }
+
+
+        /* =========================================================
+           LOADING
+           ========================================================= */
+
+        .button-spinner {
+
+            width: 14px;
+            height: 14px;
+
+            border: 2px solid rgba(255,255,255,.4);
+
+            border-top-color: white;
+
+            border-radius: 50%;
+
+            animation:
+                spin .7s linear infinite;
+        }
+
+
+        @keyframes spin {
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+
+        /* =========================================================
+           RESPONSIVE
+           ========================================================= */
+
+        @media (max-width: 800px) {
+
+            .role-options,
+            .choice-grid {
+
+                grid-template-columns:
+                    repeat(2, 1fr);
+            }
+
+
+            .summary-grid {
+
+                grid-template-columns:
+                    repeat(2, 1fr);
+            }
+
+
+            .setup-step-line {
+
+                width: 50px;
+            }
+        }
+
+
+        @media (max-width: 560px) {
+
+            .setup-wrapper {
+
+                width:
+                    min(100% - 20px, 1050px);
+
+                padding-top: 20px;
+            }
+
+
+            .setup-card {
+
+                padding: 20px;
+            }
+
+
+            .role-options,
+            .choice-grid {
+
+                grid-template-columns: 1fr;
+            }
+
+
+            .setup-step-label {
+
+                display: none;
+            }
+
+
+            .setup-step-line {
+
+                width: 35px;
+
+                margin-bottom: 0;
+            }
+
+
+            .setup-header h1 {
+
+                font-size: 23px;
+            }
+        }
+
+    </style>
+
+</head>
+
+<script>
+    if (!localStorage.getItem("token")) {
+        window.location.replace("login.html");
+    }
+</script>
+
+
+<body class="interview-setup-page">
+
+<div class="setup-wrapper">
+
+
+    <!-- =========================================================
+         HEADER
+         ========================================================= -->
+
+    <header class="setup-header">
+
+        <h1>Let's set up your interview</h1>
+
+        <p>
+            Tell us a little about the interview you want to practice
+        </p>
+
+    </header>
+
+
+    <!-- =========================================================
+         STEPPER
+         ========================================================= -->
+
+    <div class="setup-stepper">
+
+        <div class="setup-step active" data-step="1">
+
+            <div class="setup-step-circle">
+                1
+            </div>
+
+            <div class="setup-step-label">
+                Role
+            </div>
+
+        </div>
+
+
+        <div class="setup-step-line"></div>
+
+
+        <div class="setup-step" data-step="2">
+
+            <div class="setup-step-circle">
+                2
+            </div>
+
+            <div class="setup-step-label">
+                Experience
+            </div>
+
+        </div>
+
+
+        <div class="setup-step-line"></div>
+
+
+        <div class="setup-step" data-step="3">
+
+            <div class="setup-step-circle">
+                3
+            </div>
+
+            <div class="setup-step-label">
+                Difficulty
+            </div>
+
+        </div>
+
+
+        <div class="setup-step-line"></div>
+
+
+        <div class="setup-step" data-step="4">
+
+            <div class="setup-step-circle">
+                4
+            </div>
+
+            <div class="setup-step-label">
+                Duration
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         MAIN CARD
+         ========================================================= -->
+
+    <main class="setup-card">
+
+
+        <!-- =====================================================
+             STEP 1 — ROLE
+             ===================================================== -->
+
+        <section
+                class="setup-step-content active"
+                data-content="1"
+        >
+
+            <div class="setup-section-header">
+
+                <h2>Select your role</h2>
+
+                <p>
+                    Choose the role you want the AI interviewer
+                    to focus on.
+                </p>
+
+            </div>
+
+
+            <div class="role-options">
+
+
+                <!-- FRONTEND -->
+
+                <div
+                        class="option-card"
+                        data-role="Frontend Developer"
+                >
+
+                    <div class="option-icon">
+
+                        <i class="fa-solid fa-code"></i>
+
+                    </div>
+
+                    <div class="option-title">
+                        Frontend Developer
+                    </div>
+
+                    <div class="option-description">
+                        UI, JavaScript, React & web
+                    </div>
+
+                </div>
+
+
+                <!-- BACKEND -->
+
+                <div
+                        class="option-card"
+                        data-role="Backend Developer"
+                >
+
+                    <div class="option-icon">
+
+                        <i class="fa-solid fa-server"></i>
+
+                    </div>
+
+                    <div class="option-title">
+                        Backend Developer
+                    </div>
+
+                    <div class="option-description">
+                        APIs, databases & server-side
+                    </div>
+
+                </div>
+
+
+                <!-- JAVA -->
+
+                <div
+                        class="option-card"
+                        data-role="Java Developer"
+                >
+
+                    <div class="option-icon">
+
+                        <i class="fa-solid fa-mug-hot"></i>
+
+                    </div>
+
+                    <div class="option-title">
+                        Java Developer
+                    </div>
+
+                    <div class="option-description">
+                        Java, Spring Boot & backend
+                    </div>
+
+                </div>
+
+
+                <!-- MERN -->
+
+                <div
+                        class="option-card"
+                        data-role="MERN Stack Developer"
+                >
+
+                    <div class="option-icon">
+
+                        <i class="fa-solid fa-layer-group"></i>
+
+                    </div>
+
+                    <div class="option-title">
+                        MERN Stack Developer
+                    </div>
+
+                    <div class="option-description">
+                        MongoDB, Express, React & Node
+                    </div>
+
+                </div>
+
+
+                <!-- DEVOPS -->
+
+                <div
+                        class="option-card"
+                        data-role="DevOps Engineer"
+                >
+
+                    <div class="option-icon">
+
+                        <i class="fa-solid fa-infinity"></i>
+
+                    </div>
+
+                    <div class="option-title">
+                        DevOps Engineer
+                    </div>
+
+                    <div class="option-description">
+                        CI/CD, cloud & infrastructure
+                    </div>
+
+                </div>
+
+
+                <!-- HR -->
+
+                <div
+                        class="option-card"
+                        data-role="HR Interview"
+                >
+
+                    <div class="option-icon">
+
+                        <i class="fa-solid fa-users"></i>
+
+                    </div>
+
+                    <div class="option-title">
+                        HR Interview
+                    </div>
+
+                    <div class="option-description">
+                        Behavioral & communication
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- CUSTOM ROLE -->
+
+            <div class="custom-role">
+
+                <label for="customRole">
+                     Enter Your Role
+                </label>
+
+                <input
+                        class="setup-input"
+                        id="customRole"
+                        type="text"
+                        maxlength="100"
+                        placeholder=" Python Developer, Data Analyst, Cloud Engineer"
+                >
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             STEP 2 — EXPERIENCE
+             ===================================================== -->
+
+        <section
+                class="setup-step-content"
+                data-content="2"
+        >
+
+            <div class="setup-section-header">
+
+                <h2>Select your experience level</h2>
+
+                <p>
+                    This helps personalize the interview questions.
+                </p>
+
+            </div>
+
+
+            <div class="choice-grid">
+
+
+                <!-- ENTRY -->
+
+                <div
+                        class="choice-card"
+                        data-experience="Entry-Level (0–1 years)"
+                >
+
+                    <div class="choice-icon">
+
+                        <i class="fa-solid fa-graduation-cap"></i>
+
+                    </div>
+
+                    <div class="choice-title">
+                        Entry-Level
+                    </div>
+
+                    <div class="choice-subtitle">
+                        0–1 years
+                    </div>
+
+                </div>
+
+
+                <!-- JUNIOR -->
+
+                <div
+                        class="choice-card"
+                        data-experience="Junior (1–3 years)"
+                >
+
+                    <div class="choice-icon">
+
+                        <i class="fa-solid fa-seedling"></i>
+
+                    </div>
+
+                    <div class="choice-title">
+                        Junior
+                    </div>
+
+                    <div class="choice-subtitle">
+                        1–3 years
+                    </div>
+
+                </div>
+
+
+                <!-- MID -->
+
+                <div
+                        class="choice-card"
+                        data-experience="Mid-Level (3–7 years)"
+                >
+
+                    <div class="choice-icon">
+
+                        <i class="fa-solid fa-briefcase"></i>
+
+                    </div>
+
+                    <div class="choice-title">
+                        Mid-Level
+                    </div>
+
+                    <div class="choice-subtitle">
+                        3–7 years
+                    </div>
+
+                </div>
+
+
+                <!-- SENIOR -->
+
+                <div
+                        class="choice-card"
+                        data-experience="Senior (7–12 years)"
+                >
+
+                    <div class="choice-icon">
+
+                        <i class="fa-solid fa-rocket"></i>
+
+                    </div>
+
+                    <div class="choice-title">
+                        Senior
+                    </div>
+
+                    <div class="choice-subtitle">
+                        7–12 years
+                    </div>
+
+                </div>
+
+
+                <!-- LEAD -->
+
+                <div
+                        class="choice-card"
+                        data-experience="Lead / Expert (12+ years)"
+                >
+
+                    <div class="choice-icon">
+
+                        <i class="fa-solid fa-crown"></i>
+
+                    </div>
+
+                    <div class="choice-title">
+                        Lead / Expert
+                    </div>
+
+                    <div class="choice-subtitle">
+                        12+ years
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             STEP 3 — DIFFICULTY
+             ===================================================== -->
+
+        <section
+                class="setup-step-content"
+                data-content="3"
+        >
+
+            <div class="setup-section-header">
+
+                <h2>Select difficulty</h2>
+
+                <p>
+                    Choose how challenging you want the questions to be.
+                </p>
+
+            </div>
+
+
+            <div class="choice-grid">
+
+
+                <!-- EASY -->
+
+                <div
+                        class="choice-card"
+                        data-difficulty="EASY"
+                >
+
+                    <div class="choice-icon">
+
+                        <i class="fa-solid fa-lightbulb"></i>
+
+                    </div>
+
+                    <div class="choice-title">
+                        Easy
+                    </div>
+
+                    <div class="choice-subtitle">
+                        Basic level questions
+                    </div>
+
+                </div>
+
+
+                <!-- MEDIUM -->
+
+                <div
+                        class="choice-card"
+                        data-difficulty="MEDIUM"
+                >
+
+                    <div class="choice-icon">
+
+                        <i class="fa-solid fa-gauge-high"></i>
+
+                    </div>
+
+                    <div class="choice-title">
+                        Medium
+                    </div>
+
+                    <div class="choice-subtitle">
+                        Moderate difficulty
+                    </div>
+
+                </div>
+
+
+                <!-- HARD -->
+
+                <div
+                        class="choice-card"
+                        data-difficulty="HARD"
+                >
+
+                    <div class="choice-icon">
+
+                        <i class="fa-solid fa-bolt"></i>
+
+                    </div>
+
+                    <div class="choice-title">
+                        Hard
+                    </div>
+
+                    <div class="choice-subtitle">
+                        Advanced interview questions
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             STEP 4 — DURATION
+             ===================================================== -->
+
+        <section
+                class="setup-step-content"
+                data-content="4"
+        >
+
+            <div class="setup-section-header">
+
+                <h2>Select interview duration</h2>
+
+                <p>
+                    You can end the interview anytime.
+                </p>
+
+            </div>
+
+
+            <div class="choice-grid">
+
+
+                <!-- 10 MINUTES -->
+
+                <div
+                        class="choice-card"
+                        data-duration="10"
+                >
+
+                    <div class="choice-icon">
+
+                        <i class="fa-solid fa-bolt"></i>
+
+                    </div>
+
+                    <div class="choice-title">
+                        10 Minutes
+                    </div>
+
+                    <div class="choice-subtitle">
+                        Quick practice
+                    </div>
+
+                </div>
+
+
+                <!-- 20 MINUTES -->
+
+                <div
+                        class="choice-card"
+                        data-duration="20"
+                >
+
+                    <div class="choice-icon">
+
+                        <i class="fa-regular fa-clock"></i>
+
+                    </div>
+
+                    <div class="choice-title">
+                        20 Minutes
+                    </div>
+
+                    <div class="choice-subtitle">
+                        Standard interview
+                    </div>
+
+                </div>
+
+
+                <!-- 30 MINUTES -->
+
+                <div
+                        class="choice-card"
+                        data-duration="30"
+                >
+
+                    <div class="choice-icon">
+
+                        <i class="fa-solid fa-hourglass-half"></i>
+
+                    </div>
+
+                    <div class="choice-title">
+                        30 Minutes
+                    </div>
+
+                    <div class="choice-subtitle">
+                        Full practice session
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 SUMMARY
+                 ================================================= -->
+
+            <div class="setup-summary">
+
+                <div class="summary-title">
+                    Interview Summary
+                </div>
+
+                <div class="summary-grid">
+
+
+                    <div class="summary-item">
+
+                        <span class="summary-label">
+                            Role
+                        </span>
+
+                        <span
+                                class="summary-value"
+                                id="summaryRole">
+                            —
+                        </span>
+
+                    </div>
+
+
+                    <div class="summary-item">
+
+                        <span class="summary-label">
+                            Experience
+                        </span>
+
+                        <span
+                                class="summary-value"
+                                id="summaryExperience">
+                            —
+                        </span>
+
+                    </div>
+
+
+                    <div class="summary-item">
+
+                        <span class="summary-label">
+                            Difficulty
+                        </span>
+
+                        <span
+                                class="summary-value"
+                                id="summaryDifficulty">
+                            —
+                        </span>
+
+                    </div>
+
+
+                    <div class="summary-item">
+
+                        <span class="summary-label">
+                            Duration
+                        </span>
+
+                        <span
+                                class="summary-value"
+                                id="summaryDuration">
+                            —
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ERROR -->
+
+        <div
+                class="setup-error"
+                id="setupError">
+        </div>
+
+
+        <!-- =====================================================
+             ACTIONS
+             ===================================================== -->
+
+        <div class="setup-actions">
+
+            <button
+                    type="button"
+                    class="setup-back"
+                    id="backButton"
+            >
+                <i class="fa-solid fa-arrow-left"></i>
+                Back
+            </button>
+
+
+            <button
+                    type="button"
+                    class="setup-next"
+                    id="nextButton"
+            >
+                Next
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<script src="api.js"></script>
+
+
+<script>
+
+    /* =========================================================
+       AUTH
+       ========================================================= */
+
+    if (!localStorage.getItem("token")) {
+
+        alert("Please login to continue.");
+
+        window.location.href = "login.html";
+    }
+
+
+    /* =========================================================
+       INTERVIEW STATE
+       ========================================================= */
+
+    const interview = {
+
+        role: null,
+
+        experienceLevel: null,
+
+        difficulty: null,
+
+        duration: null
+
+    };
+
+
+    let currentStep = 1;
+
+
+    /* =========================================================
+       ELEMENTS
+       ========================================================= */
+
+    const contents =
+        document.querySelectorAll(
+            ".setup-step-content"
+        );
+
+
+    const steps =
+        document.querySelectorAll(
+            ".setup-step"
+        );
+
+
+    const stepLines =
+        document.querySelectorAll(
+            ".setup-step-line"
+        );
+
+
+    const errorBox =
+        document.getElementById(
+            "setupError"
+        );
+
+
+    const backButton =
+        document.getElementById(
+            "backButton"
+        );
+
+
+    const nextButton =
+        document.getElementById(
+            "nextButton"
+        );
+
+
+    /* =========================================================
+       ERROR
+       ========================================================= */
+
+    function showError(message) {
+
+        errorBox.textContent =
+            message;
+
+        errorBox.classList.add(
+            "show"
+        );
+    }
+
+
+    function clearError() {
+
+        errorBox.textContent = "";
+
+        errorBox.classList.remove(
+            "show"
+        );
+    }
+
+
+    /* =========================================================
+       ROLE
+       ========================================================= */
+
+    document
+        .querySelectorAll("[data-role]")
+        .forEach(card => {
+
+            card.addEventListener(
+                "click",
+                () => {
+
+                    document
+                        .querySelectorAll("[data-role]")
+                        .forEach(item =>
+                            item.classList.remove(
+                                "selected"
+                            )
+                        );
+
+
+                    card.classList.add(
+                        "selected"
+                    );
+
+
+                    interview.role =
+                        card.dataset.role;
+
+
+                    document
+                        .getElementById(
+                            "customRole"
+                        )
+                        .value = "";
+
+
+                    clearError();
+
+                }
+            );
+
+        });
+
+
+    document
+        .getElementById("customRole")
+        .addEventListener(
+            "input",
+            event => {
+
+                const value =
+                    event.target.value.trim();
+
+
+                document
+                    .querySelectorAll("[data-role]")
+                    .forEach(card =>
+                        card.classList.remove(
+                            "selected"
+                        )
+                    );
+
+
+                interview.role =
+                    value || null;
+
+
+                clearError();
+
+            }
+        );
+
+
+    /* =========================================================
+       EXPERIENCE
+       ========================================================= */
+
+    document
+        .querySelectorAll("[data-experience]")
+        .forEach(card => {
+
+            card.addEventListener(
+                "click",
+                () => {
+
+                    document
+                        .querySelectorAll(
+                            "[data-experience]"
+                        )
+                        .forEach(item =>
+                            item.classList.remove(
+                                "selected"
+                            )
+                        );
+
+
+                    card.classList.add(
+                        "selected"
+                    );
+
+
+                    interview.experienceLevel =
+                        card.dataset.experience;
+
+
+                    clearError();
+
+                }
+            );
+
+        });
+
+
+    /* =========================================================
+       DIFFICULTY
+       ========================================================= */
+
+    document
+        .querySelectorAll("[data-difficulty]")
+        .forEach(card => {
+
+            card.addEventListener(
+                "click",
+                () => {
+
+                    document
+                        .querySelectorAll(
+                            "[data-difficulty]"
+                        )
+                        .forEach(item =>
+                            item.classList.remove(
+                                "selected"
+                            )
+                        );
+
+
+                    card.classList.add(
+                        "selected"
+                    );
+
+
+                    interview.difficulty =
+                        card.dataset.difficulty;
+
+
+                    clearError();
+
+                }
+            );
+
+        });
+
+
+    /* =========================================================
+       DURATION
+       ========================================================= */
+
+    document
+        .querySelectorAll("[data-duration]")
+        .forEach(card => {
+
+            card.addEventListener(
+                "click",
+                () => {
+
+                    document
+                        .querySelectorAll(
+                            "[data-duration]"
+                        )
+                        .forEach(item =>
+                            item.classList.remove(
+                                "selected"
+                            )
+                        );
+
+
+                    card.classList.add(
+                        "selected"
+                    );
+
+
+                    interview.duration =
+                        Number(
+                            card.dataset.duration
+                        );
+
+
+                    clearError();
+
+                }
+            );
+
+        });
+
+
+    /* =========================================================
+       VALIDATION
+       ========================================================= */
+
+    function validateStep() {
+
+        clearError();
+
+
+        if (currentStep === 1) {
+
+            if (!interview.role) {
+
+                showError(
+                    "Please select or enter a role."
+                );
+
+                return false;
+            }
+        }
+
+
+        if (currentStep === 2) {
+
+            if (!interview.experienceLevel) {
+
+                showError(
+                    "Please select your experience level."
+                );
+
+                return false;
+            }
+        }
+
+
+        if (currentStep === 3) {
+
+            if (!interview.difficulty) {
+
+                showError(
+                    "Please select a difficulty level."
+                );
+
+                return false;
+            }
+        }
+
+
+        if (currentStep === 4) {
+
+            if (!interview.duration) {
+
+                showError(
+                    "Please select an interview duration."
+                );
+
+                return false;
+            }
+        }
+
+
+        return true;
+    }
+
+
+    /* =========================================================
+       SUMMARY
+       ========================================================= */
+
+    function updateSummary() {
+
+        document.getElementById(
+            "summaryRole"
+        ).textContent =
+            interview.role || "—";
+
+
+        document.getElementById(
+            "summaryExperience"
+        ).textContent =
+            interview.experienceLevel || "—";
+
+
+        document.getElementById(
+            "summaryDifficulty"
+        ).textContent =
+            interview.difficulty || "—";
+
+
+        document.getElementById(
+            "summaryDuration"
+        ).textContent =
+            interview.duration
+                ? interview.duration + " minutes"
+                : "—";
+    }
+
+
+    /* =========================================================
+       RENDER STEP
+       ========================================================= */
+
+    function renderStep() {
+
+        contents.forEach(content => {
+
+            content.classList.toggle(
+                "active",
+                Number(
+                    content.dataset.content
+                ) === currentStep
+            );
+
+        });
+
+
+        steps.forEach(step => {
+
+            const stepNumber =
+                Number(
+                    step.dataset.step
+                );
+
+
+            step.classList.toggle(
+                "active",
+                stepNumber === currentStep
+            );
+
+
+            step.classList.toggle(
+                "completed",
+                stepNumber < currentStep
+            );
+
+
+            const circle =
+                step.querySelector(
+                    ".setup-step-circle"
+                );
+
+
+            if (stepNumber < currentStep) {
+
+                circle.innerHTML =
+                    '<i class="fa-solid fa-check"></i>';
+
+            } else {
+
+                circle.textContent =
+                    stepNumber;
+            }
+
+        });
+
+
+        stepLines.forEach(
+            (line, index) => {
+
+                line.classList.toggle(
+                    "completed",
+                    index < currentStep - 1
+                );
+
+            }
+        );
+
+
+        backButton.innerHTML =
+            currentStep === 1
+
+                ? '<i class="fa-solid fa-arrow-left"></i> Dashboard'
+
+                : '<i class="fa-solid fa-arrow-left"></i> Back';
+
+
+        nextButton.innerHTML =
+            currentStep === 4
+
+                ? 'Start Interview <i class="fa-solid fa-arrow-right"></i>'
+
+                : 'Next <i class="fa-solid fa-arrow-right"></i>';
+
+
+        updateSummary();
+
+
+        window.scrollTo({
+
+            top: 0,
+
+            behavior: "smooth"
+
+        });
+
+    }
+
+
+    /* =========================================================
+       CREATE INTERVIEW
+       ========================================================= */
+
+    async function submitInterviewSetup() {
+
+        nextButton.disabled = true;
+
+
+        nextButton.innerHTML = `
+            <span class="button-spinner"></span>
+            Creating...
+        `;
+
+
+        clearError();
+
+
+        try {
+
+            const data =
+                await createInterview({
+
+                    role:
+                        interview.role,
+
+                    experienceLevel:
+                        interview.experienceLevel,
+
+                    difficulty:
+                        interview.difficulty,
+
+                    duration:
+                        interview.duration
+
+                });
+
+
+            if (
+                !data ||
+                !data.interviewId
+            ) {
+
+                throw new Error(
+                    "Server did not return an interview ID."
+                );
+            }
+
+
+            window.location.href =
+                "live-interview.html?interviewId=" +
+                encodeURIComponent(
+                    data.interviewId
+                );
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "[setup] Create interview failed:",
+                error
+            );
+
+
+            showError(
+                error.message ||
+                "Something went wrong. Please try again."
+            );
+
+        }
+
+        finally {
+
+            nextButton.disabled = false;
+
+
+            nextButton.innerHTML =
+                'Start Interview <i class="fa-solid fa-arrow-right"></i>';
+
+        }
+    }
+
+
+    /* =========================================================
+       NEXT
+       ========================================================= */
+
+    nextButton.addEventListener(
+        "click",
+        async () => {
+
+            if (!validateStep()) {
+
+                return;
+            }
+
+
+            if (currentStep < 4) {
+
+                currentStep++;
+
+                renderStep();
+
+                return;
+            }
+
+
+            await submitInterviewSetup();
+
+        }
+    );
+
+
+    /* =========================================================
+       BACK
+       ========================================================= */
+
+    backButton.addEventListener(
+        "click",
+        () => {
+
+            if (currentStep === 1) {
+
+                window.location.href =
+                    "dashboard.html";
+
+                return;
+            }
+
+
+            currentStep--;
+
+            renderStep();
+
+        }
+    );
+
+
+    /* =========================================================
+       INITIAL RENDER
+       ========================================================= */
+
+    renderStep();
+
+</script>
+
+</body>
+</html>

@@ -1,14 +1,7 @@
-/* ============================================
-   Backend API Client
-   ============================================ */
+const API_BASE = "";
 
-const API_BASE = ""; // Same origin
-
-/*
- * Get JWT authentication headers.
- */
-function authHeaders() {
-
+// Authentication
+function getToken() {
     const token = localStorage.getItem("token");
 
     if (!token) {
@@ -17,343 +10,254 @@ function authHeaders() {
         );
     }
 
+    return token;
+}
+
+function authHeaders() {
     return {
         "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
+        "Authorization": "Bearer " + getToken()
     };
 }
 
+// Handle API responses
+async function parseResponse(response) {
+    let data = null;
 
-/*
- * ============================================
- * GET QUESTIONS
- * ============================================
- *
- * Backend:
- * GET /questions/{interviewId}
- *
- * The backend decides the number of questions
- * based on interview duration:
- *
- * 10 minutes -> 5 questions
- * 20 minutes -> 7 questions
- * 30 minutes -> 10 questions
- */
-async function generateInterview() {
-
-    const interviewId =
-        localStorage.getItem("interviewId");
-
-    if (!interviewId) {
-        throw new Error(
-            "No interviewId in localStorage. " +
-            "Did /interview/create run successfully?"
-        );
+    try {
+        data = await response.json();
+    } catch (_) {
+        // Response may not contain JSON.
     }
 
-    const token =
-        localStorage.getItem("token");
-
-    if (!token) {
-        throw new Error(
-            "Authentication required. Please login again."
-        );
-    }
-
-
-   console.log("[api.js] interviewId:", interviewId);
-   console.log("[api.js] token exists:", !!token);
-
-   const response =
-       await fetch(
-           API_BASE + "/questions/" + interviewId,
-           {
-               method: "GET",
-               headers: {
-                   "Authorization": "Bearer " + token
-               }
-           }
-       );
-
-   console.log(
-       "[api.js] /questions status:",
-       response.status
-   );
-
-
-    /*
-     * JWT expired / invalid
-     */
     if (response.status === 401) {
-
         localStorage.removeItem("token");
+        window.location.href = "login.html";
 
-        window.location.href =
-            "login.html";
-
-        return;
+        throw new Error(
+            "Your session has expired. Please login again."
+        );
     }
 
-
-    /*
-     * Forbidden
-     */
     if (response.status === 403) {
-
         throw new Error(
-            "You are not authorized to access these questions."
+            "You are not authorized to perform this action."
         );
     }
 
-
-    /*
-     * Other errors
-     */
     if (!response.ok) {
-
         throw new Error(
-            "Failed to load questions: HTTP " +
-            response.status
+            data?.message ||
+            `Request failed: HTTP ${response.status}`
         );
     }
 
-
-    const rows =
-        await response.json();
-
-
-    /*
-     * Convert backend Question objects
-     * into the format used by live-interview.html.
-     *
-     * Backend:
-     * {
-     *   id,
-     *   interviewId,
-     *   questionText
-     * }
-     *
-     * Frontend:
-     * {
-     *   id,
-     *   question
-     * }
-     */
-    const questions =
-        rows.map(row => ({
-            id: row.id,
-            question: row.questionText
-        }));
-
-
-    console.log(
-        "[api.js] Questions received:",
-        questions.length
-    );
-
-
-    return questions;
+    return data;
 }
 
-
-
-async function startInterview() {
+// Get interview ID from URL
+function getInterviewId() {
+    const params =
+        new URLSearchParams(window.location.search);
 
     const interviewId =
-        localStorage.getItem("interviewId");
+        params.get("interviewId");
 
     if (!interviewId) {
-        throw new Error("No interviewId found.");
+        throw new Error(
+            "No interview ID was provided."
+        );
     }
 
+    return interviewId;
+}
+
+// Get interview
+async function getInterview(interviewId) {
     const response = await fetch(
-        "/interview/" + interviewId + "/start",
+        API_BASE +
+        "/interview/" +
+        encodeURIComponent(interviewId),
+        {
+            method: "GET",
+            headers: {
+                "Authorization":
+                    "Bearer " + getToken()
+            }
+        }
+    );
+
+    return parseResponse(response);
+}
+
+// Create interview
+async function createInterview(request) {
+    const response = await fetch(
+        API_BASE + "/interview/create",
+        {
+            method: "POST",
+            headers: authHeaders(),
+            body: JSON.stringify(request)
+        }
+    );
+
+    return parseResponse(response);
+}
+
+// Start interview
+async function startInterview(interviewId) {
+    const response = await fetch(
+        API_BASE +
+        "/interview/" +
+        encodeURIComponent(interviewId) +
+        "/start",
         {
             method: "POST",
             headers: authHeaders()
         }
     );
 
-    if (!response.ok) {
-        throw new Error(
-            "Failed to start interview: HTTP " +
-            response.status
-        );
-    }
-
-    return response.json();
+    return parseResponse(response);
 }
 
-
-/*
- * ============================================
- * SAVE ANSWERS
- * ============================================
- *
- * POST /answers
- */
-async function submitAnswersToBackend(answers) {
-
-    const response =
-        await fetch(
-            API_BASE + "/answers",
-            {
-                method: "POST",
-                headers: authHeaders(),
-                body: JSON.stringify({
-                    answers: answers.map(answer => ({
-                        questionId:
-                            answer.questionId,
-
-                        answerText:
-                            answer.answer
-                    }))
-                })
+// Get interview questions
+async function getQuestions(interviewId) {
+    const response = await fetch(
+        API_BASE +
+        "/questions/" +
+        encodeURIComponent(interviewId),
+        {
+            method: "GET",
+            headers: {
+                "Authorization":
+                    "Bearer " + getToken()
             }
-        );
+        }
+    );
 
+    const rows = await parseResponse(response);
 
-    /*
-     * JWT expired
-     */
-    if (response.status === 401) {
-
-        localStorage.removeItem("token");
-
-        window.location.href =
-            "login.html";
-
-        return;
-    }
-
-
-    /*
-     * Forbidden
-     */
-    if (response.status === 403) {
-
+    if (!Array.isArray(rows)) {
         throw new Error(
-            "You are not authorized to save these answers."
+            "Invalid question response from server."
         );
     }
 
-
-    if (!response.ok) {
-
-        throw new Error(
-            "Failed to save answers: HTTP " +
-            response.status
-        );
-    }
-
-
-    return response.json();
+    return rows.map(row => ({
+        id: Number(row.id),
+        question: row.questionText
+    }));
 }
 
-
-/*
- * ============================================
- * EVALUATE INTERVIEW
- * ============================================
- *
- * POST /evaluate-answer
- */
-async function submitInterview() {
-
-    const interviewId =
-        localStorage.getItem("interviewId");
-
-    if (!interviewId) {
+// Save or update one answer
+async function saveAnswerToServer(
+    questionId,
+    answerText
+) {
+    if (!questionId) {
         throw new Error(
-            "No interviewId found."
+            "Question ID is required."
         );
     }
 
-    const response =
-        await fetch(
-            API_BASE +
-            "/interviews/" +
-            interviewId +
-            "/evaluate",
-            {
-                method: "POST",
-                headers: authHeaders()
+    if (!answerText || !answerText.trim()) {
+        throw new Error(
+            "Answer cannot be empty."
+        );
+    }
+
+    const response = await fetch(
+        API_BASE +
+        "/answers/" +
+        encodeURIComponent(questionId),
+        {
+            method: "POST",
+            headers: authHeaders(),
+            body: JSON.stringify({
+                answerText: answerText.trim()
+            })
+        }
+    );
+
+    return parseResponse(response);
+}
+
+// Get saved answers
+async function getAnswers(interviewId) {
+    const response = await fetch(
+        API_BASE +
+        "/answers/interview/" +
+        encodeURIComponent(interviewId),
+        {
+            method: "GET",
+            headers: {
+                "Authorization":
+                    "Bearer " + getToken()
             }
-        );
+        }
+    );
 
+    const data = await parseResponse(response);
 
-    /*
-     * JWT expired
-     */
-    if (response.status === 401) {
-
-        localStorage.removeItem("token");
-
-        window.location.href =
-            "login.html";
-
-        return;
-    }
-
-
-    /*
-     * Forbidden
-     */
-    if (response.status === 403) {
-
+    if (!Array.isArray(data)) {
         throw new Error(
-            "You are not authorized to evaluate this interview."
+            "Invalid saved answers response from server."
         );
     }
 
+    return data.map(answer => ({
+        questionId: Number(answer.questionId),
+        answerText: answer.answerText || ""
+    }));
+}
 
-    /*
-     * Other errors
-     */
-    if (!response.ok) {
+// Finish interview
+async function finishInterview(interviewId) {
+    const response = await fetch(
+        API_BASE +
+        "/interview/" +
+        encodeURIComponent(interviewId) +
+        "/finish",
+        {
+            method: "POST",
+            headers: authHeaders()
+        }
+    );
 
-        throw new Error(
-            "Failed to evaluate interview: HTTP " +
-            response.status
-        );
-    }
+    return parseResponse(response);
+}
 
+// Evaluate interview
+async function evaluateInterview(interviewId) {
+    const response = await fetch(
+        API_BASE +
+        "/interviews/" +
+        encodeURIComponent(interviewId) +
+        "/evaluate",
+        {
+            method: "POST",
+            headers: authHeaders()
+        }
+    );
 
-    const data =
-        await response.json();
+    return parseResponse(response);
+}
 
+// Get detailed evaluation
+async function getEvaluation(interviewId) {
+    const response = await fetch(
+        API_BASE +
+        "/interviews/" +
+        encodeURIComponent(interviewId) +
+        "/evaluation",
+        {
+            method: "GET",
+            headers: {
+                "Authorization":
+                    "Bearer " + getToken()
+            }
+        }
+    );
 
-    /*
-     * Convert backend response
-     * into frontend format.
-     */
-     return {
-
-            score:
-                data.score,
-
-            strengths:
-                data.strengths || [],
-
-            weaknesses:
-                data.weaknesses || [],
-
-            suggestions:
-                data.recommendations || [],
-
-            fillerWords:
-                data.fillerWords ?? 0,
-
-            confidence:
-                data.confidence ?? 0,
-
-            relevance:
-                data.relevance || "medium",
-
-            answeredCount:
-                data.strengths ||
-                data.weaknesses
-                    ? undefined
-                    : 0
-        };
+    return parseResponse(response);
 }

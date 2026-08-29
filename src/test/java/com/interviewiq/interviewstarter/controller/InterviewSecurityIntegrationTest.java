@@ -1,0 +1,405 @@
+package com.interviewiq.interviewstarter.controller;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.interviewiq.interviewstarter.entity.Interview;
+import com.interviewiq.interviewstarter.entity.InterviewStatus;
+import com.interviewiq.interviewstarter.entity.Question;
+import com.interviewiq.interviewstarter.entity.User;
+import com.interviewiq.interviewstarter.repository.InterviewRepository;
+import com.interviewiq.interviewstarter.repository.QuestionRepository;
+import com.interviewiq.interviewstarter.repository.UserRepository;
+import com.interviewiq.interviewstarter.service.JwtService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
+
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@Transactional
+class InterviewSecurityIntegrationTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private InterviewRepository interviewRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtService jwtService;
+
+    @Autowired
+    private QuestionRepository questionRepository;
+
+    private User userA;
+    private User userB;
+
+    private Interview createInterviewForUser(User user) {
+
+        Interview interview = new Interview();
+
+        interview.setRole("Java Developer");
+        interview.setExperienceLevel("Mid Level");
+        interview.setDifficulty("Medium");
+        interview.setDuration(30);
+        interview.setStatus(InterviewStatus.CREATED);
+        interview.setUser(user);
+
+        return interviewRepository.save(interview);
+    }
+
+    @BeforeEach
+    void setUp() {
+
+        userA = new User();
+        userA.setName("User A");
+        userA.setEmail("usera@test.com");
+        userA.setPassword(
+                passwordEncoder.encode("password123")
+        );
+
+        userA = userRepository.save(userA);
+
+        userB = new User();
+        userB.setName("User B");
+        userB.setEmail("userb@test.com");
+        userB.setPassword(
+                passwordEncoder.encode("password123")
+        );
+
+        userB = userRepository.save(userB);
+    }
+
+    @Test
+    void userCannotStartAnotherUsersInterview()
+            throws Exception {
+
+        Interview interview = new Interview();
+
+        interview.setRole("Java Developer");
+        interview.setExperienceLevel("Mid Level");
+        interview.setDifficulty("Medium");
+        interview.setDuration(30);
+        interview.setStatus(InterviewStatus.CREATED);
+        interview.setUser(userA);
+
+        interview = interviewRepository.save(interview);
+
+        String token = jwtService.generateToken(
+                userB.getEmail()
+        );
+
+        mockMvc.perform(
+                        post("/interview/{id}/start", interview.getId())
+                                .header(
+                                        "Authorization",
+                                        "Bearer " + token
+                                )
+                                .with(csrf())
+                )
+                .andExpect(status().isForbidden());
+    }
+    @Test
+    void unauthenticatedUserCannotStartInterview()
+            throws Exception {
+
+        mockMvc.perform(
+                        post("/interview/999/start")
+                )
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void userCannotAnswerAnotherUsersQuestion()
+            throws Exception {
+
+        Interview interview =
+                createInterviewForUser(userA);
+
+        Question question = new Question();
+
+        question.setInterview(interview);
+        question.setQuestionText(
+                "Explain the difference between HashMap and Hashtable."
+        );
+
+        question = questionRepository.save(question);
+
+        String token = jwtService.generateToken(
+                userB.getEmail()
+        );
+
+        String requestBody = """
+            {
+                "answers": [
+                    {
+                        "questionId": %d,
+                        "answerText": "This is a test answer."
+                    }
+                ]
+            }
+            """.formatted(question.getId());
+
+        mockMvc.perform(
+                        post("/answers")
+                                .header(
+                                        "Authorization",
+                                        "Bearer " + token
+                                )
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody)
+                )
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void userCannotEvaluateAnotherUsersInterview()
+            throws Exception {
+
+        Interview interview =
+                createInterviewForUser(userA);
+
+        String token =
+                jwtService.generateToken(userB.getEmail());
+
+        mockMvc.perform(
+                        post("/interviews/{id}/evaluate", interview.getId())
+                                .header(
+                                        "Authorization",
+                                        "Bearer " + token
+                                )
+                )
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void userCannotViewAnotherUsersEvaluation()
+            throws Exception {
+
+        Interview interview =
+                createInterviewForUser(userA);
+
+        String token =
+                jwtService.generateToken(userB.getEmail());
+
+        mockMvc.perform(
+                        org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                                .get("/interviews/{id}/evaluation", interview.getId())
+                                .header(
+                                        "Authorization",
+                                        "Bearer " + token
+                                )
+                )
+                .andExpect(status().isForbidden());
+    }
+    @Test
+    void ownerCanSubmitAnswerWhileInterviewIsInProgress()
+            throws Exception {
+
+        Interview interview =
+                createInterviewForUser(userA);
+
+        interview.setStatus(InterviewStatus.IN_PROGRESS);
+        interview = interviewRepository.save(interview);
+
+        Question question = new Question();
+        question.setInterview(interview);
+        question.setQuestionText("What is polymorphism in Java?");
+
+        question = questionRepository.save(question);
+
+        String token =
+                jwtService.generateToken(userA.getEmail());
+
+        String requestBody = """
+            {
+                "answers": [
+                    {
+                        "questionId": %d,
+                        "answerText": "Polymorphism allows one interface to have multiple implementations."
+                    }
+                ]
+            }
+            """.formatted(question.getId());
+
+        mockMvc.perform(
+                        post("/answers")
+                                .header(
+                                        "Authorization",
+                                        "Bearer " + token
+                                )
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody)
+                )
+                .andExpect(status().isOk());
+    }
+    @Test
+    void ownerCannotSubmitAnswerAfterInterviewIsCompleted()
+            throws Exception {
+
+        Interview interview =
+                createInterviewForUser(userA);
+
+        interview.setStatus(InterviewStatus.COMPLETED);
+        interview = interviewRepository.save(interview);
+
+        Question question = new Question();
+        question.setInterview(interview);
+        question.setQuestionText("What is polymorphism in Java?");
+
+        question = questionRepository.save(question);
+
+        String token =
+                jwtService.generateToken(userA.getEmail());
+
+        String requestBody = """
+            {
+                "answers": [
+                    {
+                        "questionId": %d,
+                        "answerText": "Test answer"
+                    }
+                ]
+            }
+            """.formatted(question.getId());
+
+        mockMvc.perform(
+                        post("/answers")
+                                .header(
+                                        "Authorization",
+                                        "Bearer " + token
+                                )
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody)
+                )
+                .andExpect(status().isBadRequest());
+    }
+    @Test
+    void duplicateQuestionIdsAreRejected()
+            throws Exception {
+
+        Interview interview =
+                createInterviewForUser(userA);
+
+        interview.setStatus(InterviewStatus.IN_PROGRESS);
+        interview = interviewRepository.save(interview);
+
+        Question question = new Question();
+        question.setInterview(interview);
+        question.setQuestionText("What is HashMap?");
+
+        question = questionRepository.save(question);
+
+        String token =
+                jwtService.generateToken(userA.getEmail());
+
+        String requestBody = """
+            {
+                "answers": [
+                    {
+                        "questionId": %d,
+                        "answerText": "First answer"
+                    },
+                    {
+                        "questionId": %d,
+                        "answerText": "Second answer"
+                    }
+                ]
+            }
+            """.formatted(
+                question.getId(),
+                question.getId()
+        );
+
+        mockMvc.perform(
+                        post("/answers")
+                                .header(
+                                        "Authorization",
+                                        "Bearer " + token
+                                )
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody)
+                )
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void ownerCanStartInterview() throws Exception {
+
+        Interview interview =
+                createInterviewForUser(userA);
+
+        String token =
+                jwtService.generateToken(userA.getEmail());
+
+        mockMvc.perform(
+                        post("/interview/{id}/start", interview.getId())
+                                .header(
+                                        "Authorization",
+                                        "Bearer " + token
+                                )
+                )
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void ownerCanFinishInterview() throws Exception {
+
+        Interview interview =
+                createInterviewForUser(userA);
+
+        interview.setStatus(InterviewStatus.IN_PROGRESS);
+        interview = interviewRepository.save(interview);
+
+        String token =
+                jwtService.generateToken(userA.getEmail());
+
+        mockMvc.perform(
+                        post("/interview/{id}/finish", interview.getId())
+                                .header(
+                                        "Authorization",
+                                        "Bearer " + token
+                                )
+                )
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void userCannotFinishAnotherUsersInterview()
+            throws Exception {
+
+        Interview interview =
+                createInterviewForUser(userA);
+
+        interview.setStatus(InterviewStatus.IN_PROGRESS);
+        interview = interviewRepository.save(interview);
+
+        String token =
+                jwtService.generateToken(userB.getEmail());
+
+        mockMvc.perform(
+                        post("/interview/{id}/finish", interview.getId())
+                                .header(
+                                        "Authorization",
+                                        "Bearer " + token
+                                )
+                )
+                .andExpect(status().isForbidden());
+    }
+}

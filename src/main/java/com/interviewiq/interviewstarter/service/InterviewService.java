@@ -6,13 +6,19 @@ import com.interviewiq.interviewstarter.entity.User;
 import com.interviewiq.interviewstarter.exception.ResourceNotFoundException;
 import com.interviewiq.interviewstarter.repository.InterviewRepository;
 import com.interviewiq.interviewstarter.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class InterviewService {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(InterviewService.class);
 
     private final InterviewRepository interviewRepository;
     private final UserRepository userRepository;
@@ -25,9 +31,7 @@ public class InterviewService {
         this.userRepository = userRepository;
     }
 
-    // ============================================================
-    // CREATE INTERVIEW
-    // ============================================================
+
 
     public Interview create(
             String role,
@@ -55,14 +59,19 @@ public class InterviewService {
         // Initial lifecycle state
         interview.setStatus(InterviewStatus.CREATED);
 
-        return interviewRepository.save(interview);
+        Interview saved =
+                interviewRepository.save(interview);
+
+        log.info(
+                "Interview {} created for user {}",
+                saved.getId(),
+                userId
+        );
+
+        return saved;
     }
 
 
-    // ============================================================
-    // START INTERVIEW
-    // CREATED → IN_PROGRESS
-    // ============================================================
 
     @Transactional
     public Interview startInterview(Long interviewId) {
@@ -74,31 +83,48 @@ public class InterviewService {
                                 "Interview not found: " + interviewId
                         ));
 
-        if (interview.getStatus() != InterviewStatus.CREATED) {
+        LocalDateTime startedAt = LocalDateTime.now();
 
+        int updated = interviewRepository.startInterview(
+                interviewId,
+                InterviewStatus.CREATED,
+                InterviewStatus.IN_PROGRESS,
+                startedAt
+        );
+
+        if (updated == 0) {
             throw new IllegalStateException(
                     "Interview cannot be started from status "
                             + interview.getStatus()
             );
         }
 
-        interview.setStatus(
-                InterviewStatus.IN_PROGRESS
+        interview.setStatus(InterviewStatus.IN_PROGRESS);
+        interview.setStartedAt(startedAt);
+
+        log.info(
+                "Interview {} starte at {}",
+                interviewId,
+                startedAt
         );
 
-        return interviewRepository.save(interview);
+        return interview;
+    }
+
+    @Transactional(readOnly = true)
+    public Interview getInterview(Long interviewId) {
+
+        return interviewRepository
+                .findById(interviewId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Interview not found: " + interviewId
+                        ));
     }
 
 
-    // ============================================================
-    // FINISH INTERVIEW
-    // IN_PROGRESS → COMPLETED
-    // ============================================================
-
     @Transactional
-    public Interview finish(
-            Long interviewId,
-            Integer finalScore) {
+    public Interview finish(Long interviewId) {
 
         Interview interview = interviewRepository
                 .findById(interviewId)
@@ -107,25 +133,43 @@ public class InterviewService {
                                 "Interview not found: " + interviewId
                         ));
 
-        if (interview.getStatus()
-                != InterviewStatus.IN_PROGRESS) {
+        LocalDateTime completedAt = LocalDateTime.now();
 
+        int updated = interviewRepository.finishInterview(
+                interviewId,
+                InterviewStatus.IN_PROGRESS,
+                InterviewStatus.COMPLETED,
+                completedAt
+        );
+
+        if (updated == 0) {
             throw new IllegalStateException(
                     "Interview cannot be finished from status "
                             + interview.getStatus()
             );
         }
 
-        interview.setFinalScore(finalScore);
-
-        interview.setCompletedAt(
-                LocalDateTime.now()
-        );
-
         interview.setStatus(
                 InterviewStatus.COMPLETED
         );
 
-        return interviewRepository.save(interview);
+        interview.setCompletedAt(
+                completedAt
+        );
+
+
+        log.info(
+                "Interview {} finished at {}",
+                interviewId,
+                completedAt
+        );
+
+        return interview;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Interview> getInterviewsForUser(Long userId) {
+
+        return interviewRepository.findByUserId(userId);
     }
 }

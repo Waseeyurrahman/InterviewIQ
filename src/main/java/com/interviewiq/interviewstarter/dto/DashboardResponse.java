@@ -51,8 +51,10 @@ public class DashboardResponse{
     @AllArgsConstructor
     @Builder
     public static class RecentInterviews{
+        private Long interviewId;
         private String role;
-        private String level;
+        private String experienceLevel;
+        private String difficulty;
         private String date;
         private int score;
         private String status;

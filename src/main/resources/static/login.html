@@ -1,92 +1,839 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <title>Login - InterviewIQ AI</title>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Login — InterviewIQ</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <link
+            href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+            rel="stylesheet">
 </head>
+
 <body class="auth-page">
 
-  <div class="split-container">
+<div class="login-shell">
 
-    <!-- LEFT: Illustration -->
-    <div class="split-left">
-      <div class="brand-block">
-        <div class="brand-logo">InterviewIQ AI</div>
-        <div class="brand-tagline">AI Mock Interview Platform</div>
-      </div>
-      <img src="https://cdn-icons-png.flaticon.com/512/3940/3940056.png" alt="Login Illustration" />
-    </div>
+    <!-- =====================================================
+         LEFT BRAND PANEL
+         ===================================================== -->
 
-    <!-- RIGHT: Login Form -->
-    <div class="split-right">
-      <div class="auth-card">
-        <h2>Welcome Back!</h2>
-        <p class="muted">Login to continue your interview journey</p>
+    <section class="login-brand">
 
-        <form id="loginForm">
-          <label>Email</label>
-          <input type="email" id="email" placeholder="you@example.com" required />
+        <a href="index.html" class="login-logo">
+            Interview<span>IQ</span>
+        </a>
 
-          <label>Password</label>
-          <input type="password" id="password" placeholder="••••••••" required />
+        <div class="login-brand-content">
 
-          <div class="forgot"><a href="#">Forgot Password?</a></div>
+            <div class="login-badge">
+                <span></span>
+                AI-powered interview practice
+            </div>
 
-          <button type="submit" class="btn btn-primary btn-full">Login</button>
+            <h1>
+                Prepare with confidence.
+                <span>Interview better.</span>
+            </h1>
 
-          <div class="divider"><span>OR</span></div>
+            <p>
+                Practice realistic technical interviews and get
+                personalized AI feedback to help you improve with
+                every attempt.
+            </p>
+
+            <div class="login-benefits">
+
+                <div class="login-benefit">
+                    <span>✓</span>
+                    <div>
+                        <strong>Realistic interviews</strong>
+                        <small>Practice with role-specific questions</small>
+                    </div>
+                </div>
+
+                <div class="login-benefit">
+                    <span>✓</span>
+                    <div>
+                        <strong>AI-powered feedback</strong>
+                        <small>Understand your strengths and weaknesses</small>
+                    </div>
+                </div>
+
+                <div class="login-benefit">
+                    <span>✓</span>
+                    <div>
+                        <strong>Track your progress</strong>
+                        <small>See how your performance improves</small>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="login-brand-footer">
+            © 2026 InterviewIQ
+        </div>
+
+    </section>
 
 
-          <p class="bottom-text">
-            Don't have an account? <a href="signup.html">Sign up</a>
-          </p>
-        </form>
-      </div>
-    </div>
+    <!-- =====================================================
+         RIGHT LOGIN PANEL
+         ===================================================== -->
 
-  </div>
+    <section class="login-panel">
 
-  <script>
-      document.getElementById("loginForm").addEventListener("submit", async (e) => {
-          e.preventDefault();
+        <div class="login-card">
 
-          const email = document.getElementById("email").value.trim();
-          const password = document.getElementById("password").value;
+            <div class="login-card-header">
 
-          try {
-              const res = await fetch("/auth/login", {
-                  method: "POST",
-                  headers: {
-                      "Content-Type": "application/json"
-                  },
-                  body: JSON.stringify({
-                      email,
-                      password
-                  })
-              });
+                <div class="mobile-logo">
+                    Interview<span>IQ</span>
+                </div>
 
-              const data = await res.json();
+                <h2>Welcome back</h2>
 
-              if (!res.ok) {
-                  alert(data.message || "Invalid email or password");
-                  return;
-              }
+                <p>
+                    Sign in to continue your interview journey.
+                </p>
 
-              // Store JWT
-              localStorage.setItem("token", data.token);
+            </div>
 
-              alert("Login successful!");
 
-              window.location.href = "dashboard.html";
+            <form id="loginForm">
 
-          } catch (err) {
-              console.error("Login error:", err);
-              alert("Server error. Please try again.");
-          }
-      });
-  </script>
+                <div class="form-field">
+
+                    <label for="email">
+                        Email address
+                    </label>
+
+                    <input
+                            type="email"
+                            id="email"
+                            placeholder="you@example.com"
+                            autocomplete="email"
+                            required
+                    >
+
+                </div>
+
+
+                <div class="form-field">
+
+                    <div class="password-label">
+
+                        <label for="password">
+                            Password
+                        </label>
+
+                        <a href="#" class="forgot-link">
+                            Forgot password?
+                        </a>
+
+                    </div>
+
+                    <div class="password-input">
+
+                        <input
+                                type="password"
+                                id="password"
+                                placeholder="Enter your password"
+                                autocomplete="current-password"
+                                required
+                        >
+
+                        <button
+                                type="button"
+                                class="password-toggle"
+                                id="passwordToggle"
+                                aria-label="Show password"
+                        >
+                            Show
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                        type="submit"
+                        class="login-submit"
+                        id="loginButton"
+                >
+                    <span id="loginButtonText">
+                        Sign in
+                    </span>
+                </button>
+
+
+                <div class="login-divider">
+                    <span>OR</span>
+                </div>
+
+
+                <p class="signup-prompt">
+                    Don't have an account?
+                    <a href="signup.html">Create an account</a>
+                </p>
+
+            </form>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<script>
+
+    /* =====================================================
+       PASSWORD VISIBILITY
+       ===================================================== */
+
+    const passwordInput =
+        document.getElementById("password");
+
+    const passwordToggle =
+        document.getElementById("passwordToggle");
+
+    passwordToggle.addEventListener("click", () => {
+
+        const isPassword =
+            passwordInput.type === "password";
+
+        passwordInput.type =
+            isPassword ? "text" : "password";
+
+        passwordToggle.textContent =
+            isPassword ? "Hide" : "Show";
+
+        passwordToggle.setAttribute(
+            "aria-label",
+            isPassword ? "Hide password" : "Show password"
+        );
+
+    });
+
+
+    /* =====================================================
+       LOGIN
+       ===================================================== */
+
+    document
+        .getElementById("loginForm")
+        .addEventListener("submit", async (e) => {
+
+            e.preventDefault();
+
+            const email =
+                document.getElementById("email")
+                    .value
+                    .trim();
+
+            const password =
+                document.getElementById("password")
+                    .value;
+
+            const loginButton =
+                document.getElementById("loginButton");
+
+            const loginButtonText =
+                document.getElementById("loginButtonText");
+
+            loginButton.disabled = true;
+
+            loginButtonText.textContent =
+                "Signing in...";
+
+            try {
+
+                const res = await fetch(
+                    "/auth/login",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            email,
+                            password
+                        })
+                    }
+                );
+
+                const data =
+                    await res.json();
+
+                if (!res.ok) {
+
+                    alert(
+                        data.message ||
+                        "Invalid email or password"
+                    );
+
+                    return;
+                }
+
+                // Store JWT
+                localStorage.setItem(
+                    "token",
+                    data.token
+                );
+
+                window.location.href =
+                    "dashboard.html";
+
+            } catch (err) {
+
+                console.error(
+                    "Login error:",
+                    err
+                );
+
+                alert(
+                    "Server error. Please try again."
+                );
+
+            } finally {
+
+                loginButton.disabled = false;
+
+                loginButtonText.textContent =
+                    "Sign in";
+            }
+
+        });
+
+</script>
+
+
+<!-- =====================================================
+     LOGIN PAGE STYLES
+     ===================================================== -->
+
+<style>
+
+    .auth-page {
+        min-height: 100vh;
+        margin: 0;
+
+        background: #f8f9fc;
+
+        overflow: auto;
+    }
+
+
+    .login-shell {
+        min-height: 100vh;
+
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+
+    /* =====================================================
+       BRAND PANEL
+       ===================================================== */
+
+    .login-brand {
+        position: relative;
+
+        min-height: 100vh;
+
+        padding: 42px 8%;
+
+        display: flex;
+        flex-direction: column;
+
+        background:
+            radial-gradient(
+                circle at 75% 30%,
+                rgba(108, 99, 255, .17),
+                transparent 35%
+            ),
+            linear-gradient(
+                145deg,
+                #f4f3ff 0%,
+                #f8f9fc 70%
+            );
+    }
+
+
+    .login-logo,
+    .mobile-logo {
+        color: #20212d;
+
+        font-size: 20px;
+        font-weight: 700;
+
+        letter-spacing: -.6px;
+
+        text-decoration: none;
+    }
+
+    .login-logo span,
+    .mobile-logo span {
+        color: #6c63ff;
+    }
+
+
+    .login-brand-content {
+        max-width: 530px;
+
+        margin: auto 0;
+    }
+
+
+    .login-badge {
+        width: fit-content;
+
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        margin-bottom: 22px;
+        padding: 7px 12px;
+
+        border: 1px solid #e1defd;
+        border-radius: 999px;
+
+        background: #efedff;
+
+        color: #6259e9;
+
+        font-size: 10px;
+        font-weight: 600;
+    }
+
+
+    .login-badge span {
+        width: 6px;
+        height: 6px;
+
+        border-radius: 50%;
+
+        background: #6c63ff;
+
+        box-shadow:
+            0 0 0 4px #e3e0ff;
+    }
+
+
+    .login-brand h1 {
+        max-width: 550px;
+
+        margin: 0;
+
+        color: #1d1e2b;
+
+        font-size: clamp(38px, 4vw, 56px);
+        line-height: 1.1;
+
+        letter-spacing: -2px;
+    }
+
+
+    .login-brand h1 span {
+        color: #6c63ff;
+    }
+
+
+    .login-brand-content > p {
+        max-width: 490px;
+
+        margin: 22px 0 30px;
+
+        color: #777985;
+
+        font-size: 13px;
+        line-height: 1.8;
+    }
+
+
+    .login-benefits {
+        display: flex;
+        flex-direction: column;
+        gap: 17px;
+    }
+
+
+    .login-benefit {
+        display: flex;
+        align-items: center;
+
+        gap: 12px;
+    }
+
+
+    .login-benefit > span {
+        width: 28px;
+        height: 28px;
+
+        flex-shrink: 0;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 8px;
+
+        background: #eae8ff;
+        color: #655cf0;
+
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+
+    .login-benefit div {
+        display: flex;
+        flex-direction: column;
+
+        gap: 1px;
+    }
+
+
+    .login-benefit strong {
+        color: #3c3d49;
+
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+
+    .login-benefit small {
+        color: #999ba5;
+
+        font-size: 9.5px;
+    }
+
+
+    .login-brand-footer {
+        color: #a1a3ad;
+
+        font-size: 9px;
+    }
+
+
+    /* =====================================================
+       LOGIN PANEL
+       ===================================================== */
+
+    .login-panel {
+        min-height: 100vh;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        padding: 40px;
+
+        background: #ffffff;
+    }
+
+
+    .login-card {
+        width: min(100%, 390px);
+    }
+
+
+    .mobile-logo {
+        display: none;
+
+        margin-bottom: 30px;
+    }
+
+
+    .login-card-header {
+        margin-bottom: 30px;
+    }
+
+
+    .login-card-header h2 {
+        margin: 0;
+
+        color: #22232f;
+
+        font-size: 27px;
+        line-height: 1.2;
+
+        letter-spacing: -.8px;
+    }
+
+
+    .login-card-header p {
+        margin: 8px 0 0;
+
+        color: #91939d;
+
+        font-size: 11.5px;
+    }
+
+
+    /* =====================================================
+       FORM
+       ===================================================== */
+
+    .form-field {
+        margin-bottom: 20px;
+    }
+
+
+    .form-field label,
+    .password-label label {
+        display: block;
+
+        margin-bottom: 7px;
+
+        color: #40414c;
+
+        font-size: 10.5px;
+        font-weight: 600;
+    }
+
+
+    .form-field input {
+        width: 100%;
+        height: 46px;
+
+        padding: 0 13px;
+
+        border: 1px solid #dedfe6;
+        border-radius: 9px;
+
+        outline: none;
+
+        background: #fff;
+
+        color: #292a36;
+
+        font-family: inherit;
+        font-size: 11px;
+
+        transition:
+            border-color .2s ease,
+            box-shadow .2s ease;
+    }
+
+
+    .form-field input::placeholder {
+        color: #b4b5bd;
+    }
+
+
+    .form-field input:focus {
+        border-color: #7a73f4;
+
+        box-shadow:
+            0 0 0 3px rgba(108, 99, 255, .09);
+    }
+
+
+    .password-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+
+    .password-label label {
+        margin-bottom: 7px;
+    }
+
+
+    .forgot-link {
+        color: #6c63ff;
+
+        font-size: 9.5px;
+        font-weight: 500;
+
+        text-decoration: none;
+    }
+
+
+    .forgot-link:hover {
+        text-decoration: underline;
+    }
+
+
+    .password-input {
+        position: relative;
+    }
+
+
+    .password-input input {
+        padding-right: 58px;
+    }
+
+
+    .password-toggle {
+        position: absolute;
+
+        top: 50%;
+        right: 12px;
+
+        transform: translateY(-50%);
+
+        border: none;
+        background: none;
+
+        color: #6c63ff;
+
+        font-family: inherit;
+
+        font-size: 9.5px;
+        font-weight: 600;
+
+        cursor: pointer;
+    }
+
+
+    /* =====================================================
+       SUBMIT
+       ===================================================== */
+
+    .login-submit {
+        width: 100%;
+        height: 46px;
+
+        border: none;
+        border-radius: 9px;
+
+        background: #6c63ff;
+        color: #fff;
+
+        font-family: inherit;
+
+        font-size: 11px;
+        font-weight: 600;
+
+        cursor: pointer;
+
+        box-shadow:
+            0 9px 20px rgba(108, 99, 255, .18);
+
+        transition:
+            transform .2s ease,
+            background .2s ease,
+            box-shadow .2s ease;
+    }
+
+
+    .login-submit:hover:not(:disabled) {
+        background: #5d55ed;
+
+        transform: translateY(-1px);
+
+        box-shadow:
+            0 12px 24px rgba(108, 99, 255, .23);
+    }
+
+
+    .login-submit:disabled {
+        opacity: .7;
+
+        cursor: not-allowed;
+    }
+
+
+    /* =====================================================
+       DIVIDER
+       ===================================================== */
+
+    .login-divider {
+        display: flex;
+        align-items: center;
+
+        gap: 13px;
+
+        margin: 25px 0;
+    }
+
+
+    .login-divider::before,
+    .login-divider::after {
+        content: "";
+
+        flex: 1;
+
+        height: 1px;
+
+        background: #ececf1;
+    }
+
+
+    .login-divider span {
+        color: #b1b2bb;
+
+        font-size: 8.5px;
+        font-weight: 600;
+    }
+
+
+    .signup-prompt {
+        margin: 0;
+
+        text-align: center;
+
+        color: #92949e;
+
+        font-size: 10px;
+    }
+
+
+    .signup-prompt a {
+        color: #6c63ff;
+
+        font-weight: 600;
+
+        text-decoration: none;
+    }
+
+
+    .signup-prompt a:hover {
+        text-decoration: underline;
+    }
+
+
+    /* =====================================================
+       RESPONSIVE
+       ===================================================== */
+
+    @media (max-width: 850px) {
+
+        .login-shell {
+            grid-template-columns: 1fr;
+        }
+
+        .login-brand {
+            display: none;
+        }
+
+        .login-panel {
+            min-height: 100vh;
+
+            padding: 30px 24px;
+        }
+
+        .mobile-logo {
+            display: block;
+        }
+
+    }
+
+</style>
 
 </body>
 </html>

@@ -4,6 +4,8 @@ import com.interviewiq.interviewstarter.entity.Interview;
 import com.interviewiq.interviewstarter.entity.Question;
 import com.interviewiq.interviewstarter.repository.InterviewRepository;
 import com.interviewiq.interviewstarter.repository.QuestionRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -12,6 +14,9 @@ import java.util.Optional;
 
 @Service
 public class QuestionService {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(QuestionService.class);
 
     private static final int DEFAULT_QUESTION_COUNT = 5;
 
@@ -66,12 +71,10 @@ public class QuestionService {
         int questionCount =
                 getQuestionCount(interview.getDuration());
 
-        System.out.println(
-                "[QuestionService] Duration = "
-                        + interview.getDuration()
-                        + " minutes, generating "
-                        + questionCount
-                        + " questions"
+        log.info(
+                "Generating {} questions for interview {}",
+                questionCount,
+                interviewId
         );
 
         // 4. Generate questions using AI
@@ -86,8 +89,9 @@ public class QuestionService {
         // 5. Fallback if AI fails
         if (texts == null || texts.isEmpty()) {
 
-            System.out.println(
-                    "[QuestionService] AI unavailable - using fallback questions."
+            log.warn(
+                    "AI question generation unavailable for interview {}; using fallback questions",
+                    interviewId
             );
 
             texts = FALLBACK_QUESTIONS

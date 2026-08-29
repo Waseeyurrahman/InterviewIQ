@@ -1,7 +1,8 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8" />
 
     <title>Evaluating... | InterviewIQ AI</title>
@@ -12,21 +13,27 @@
             href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
             rel="stylesheet"
     />
+
 </head>
 
+
 <body class="submitting-page">
+
 
 <div class="eval-card">
 
     <div class="spinner"></div>
 
+
     <h1 class="submit-title">
         Evaluation in Progress...
     </h1>
 
+
     <p class="submit-subtitle" id="statusText">
         Please wait while we analyze your answers
     </p>
+
 
     <ul class="eval-steps" id="evalSteps">
 
@@ -54,91 +61,79 @@
 
 </div>
 
+
+<!-- =========================================================
+     CENTRALIZED API CLIENT
+     ========================================================= -->
+
 <script src="api.js"></script>
+
 
 <script>
 
-    /*
-     * ============================================================
-     * GET INTERVIEW ID + ANSWERS
-     * ============================================================
-     */
+    /* =========================================================
+       AUTHENTICATION
+       ========================================================= */
 
-    const interviewId =
-        localStorage.getItem("interviewId");
+    try {
 
-    const answers =
-        JSON.parse(
-            localStorage.getItem("answers") || "[]"
+        getToken();
+
+    }
+
+    catch (error) {
+
+        alert(
+            "Your session has expired. Please login again."
         );
 
+        window.location.href =
+            "login.html";
 
-    /*
-     * ============================================================
-     * VISUAL PROGRESS
-     * ============================================================
-     */
+        throw error;
 
-    const steps =
-        document.querySelectorAll(
-            "#evalSteps .step-icon"
-        );
-
-    let stepIndex = 0;
-
-    const progressTimer =
-        setInterval(() => {
-
-            if (stepIndex < steps.length) {
-
-                steps[stepIndex].textContent = "✔";
-
-                stepIndex++;
-            }
-
-            if (stepIndex >= steps.length) {
-
-                clearInterval(progressTimer);
-            }
-
-        }, 700);
-
-
-    /*
-     * ============================================================
-     * SAFETY CHECK
-     * ============================================================
-     */
-
-    if (!interviewId) {
-
-        document.getElementById("statusText").textContent =
-            "⚠️ Interview session not found.";
-
-        clearInterval(progressTimer);
-
-        throw new Error(
-            "No interviewId found in localStorage."
-        );
     }
 
 
-    /*
-     * ============================================================
-     * CHECK ANSWERS
-     * ============================================================
-     */
+    /* =========================================================
+       GET INTERVIEW ID FROM URL
+       ========================================================= */
 
-    if (!answers.length) {
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
 
-        document.getElementById("statusText").textContent =
-            "⚠️ No interview answers found.";
 
-        clearInterval(progressTimer);
+    const interviewId =
+        params.get("interviewId");
+
+
+    if (!interviewId) {
+
+        document.getElementById(
+            "statusText"
+        ).textContent =
+            "⚠️ Interview session not found.";
 
         throw new Error(
-            "No answers found in localStorage."
+            "No interviewId was provided in the URL."
         );
+
+    }
+
+
+    if (!/^\d+$/.test(interviewId)) {
+
+        document.getElementById(
+            "statusText"
+        ).textContent =
+            "⚠️ Invalid interview session.";
+
+        throw new Error(
+            "Invalid interviewId."
+        );
+
     }
 
 
@@ -147,68 +142,66 @@
         interviewId
     );
 
-    console.log(
-        "[submitting] answers:",
-        answers
-    );
+
+    /* =========================================================
+       VISUAL PROGRESS
+       ========================================================= */
+
+    const steps =
+        document.querySelectorAll(
+            "#evalSteps .step-icon"
+        );
 
 
-    /*
-     * ============================================================
-     * MAIN EVALUATION FLOW
-     * ============================================================
-     *
-     * STEP 1:
-     * Save answers to database.
-     *
-     * STEP 2:
-     * Ask backend to evaluate the interview.
-     *
-     * STEP 3:
-     * Save evaluation result.
-     *
-     * STEP 4:
-     * Redirect to result.html.
-     *
-     * ============================================================
-     */
+    let stepIndex = 0;
 
-    (async function evaluateInterview() {
+
+    const progressTimer =
+        setInterval(() => {
+
+            if (
+                stepIndex <
+                steps.length
+            ) {
+
+                steps[
+                    stepIndex
+                ].textContent = "✔";
+
+                stepIndex++;
+
+            }
+
+
+            if (
+                stepIndex >=
+                steps.length
+            ) {
+
+                clearInterval(
+                    progressTimer
+                );
+
+            }
+
+        }, 900);
+
+
+    /* =========================================================
+       MAIN EVALUATION FLOW
+       ========================================================= */
+
+    (async function runEvaluation() {
 
         try {
 
-            /*
-             * ====================================================
-             * STEP 1 — SAVE ANSWERS
-             * ====================================================
-             */
+            /* =================================================
+               STEP 1 — EVALUATE INTERVIEW
+               ================================================= */
 
-            document.getElementById("statusText").textContent =
-                "Saving your answers...";
-
-
-            console.log(
-                "[submitting] Saving answers to backend..."
-            );
-
-
-            const saveResponse =
-                await submitAnswersToBackend(answers);
-
-
-            console.log(
-                "[submitting] Answers saved:",
-                saveResponse
-            );
-
-
-            /*
-             * ====================================================
-             * STEP 2 — EVALUATE INTERVIEW
-             * ====================================================
-             */
-
-            document.getElementById("statusText").textContent =
+            document.getElementById(
+                "statusText"
+            ).textContent =
                 "Analyzing your answers with AI...";
 
 
@@ -218,73 +211,10 @@
             );
 
 
-            const token =
-                localStorage.getItem("token");
-
-
-            if (!token) {
-
-                alert(
-                    "Your session has expired. Please login again."
-                );
-
-                window.location.href =
-                    "login.html";
-
-                return;
-            }
-
-
-            const response =
-                await fetch(
-                    "/interviews/" +
-                    interviewId +
-                    "/evaluate",
-                    {
-                        method: "POST",
-                        headers: {
-                            "Content-Type":
-                                "application/json",
-
-                            "Authorization":
-                                "Bearer " + token
-                        }
-                    }
-                );
-
-
-            /*
-             * ====================================================
-             * HTTP ERROR
-             * ====================================================
-             */
-
-            if (!response.ok) {
-
-                const errorText =
-                    await response.text();
-
-                console.error(
-                    "[submitting] Evaluation failed:",
-                    response.status,
-                    errorText
-                );
-
-                throw new Error(
-                    "Server returned HTTP " +
-                    response.status
-                );
-            }
-
-
-            /*
-             * ====================================================
-             * READ BACKEND RESULT
-             * ====================================================
-             */
-
             const data =
-                await response.json();
+                await evaluateInterview(
+                    interviewId
+                );
 
 
             console.log(
@@ -293,70 +223,60 @@
             );
 
 
-            /*
-             * ====================================================
-             * SAVE RESULT FOR result.html
-             * ====================================================
-             */
+            /* =================================================
+               STEP 2 — VALIDATE RESPONSE
+               ================================================= */
 
-            const result = {
+            if (!data) {
 
-                score:
-                    data.score ?? 0,
+                throw new Error(
+                    "Server returned an empty evaluation."
+                );
 
-                fillerWords:
-                    data.fillerWords ?? 0,
-
-                confidence:
-                    data.confidence ?? 0,
-
-                relevance:
-                    data.relevance ?? "medium",
-
-                strengths:
-                    data.strengths ?? [],
-
-                weaknesses:
-                    data.weaknesses ?? [],
-
-                suggestions:
-                    data.recommendations ?? [],
-
-                aiAvailable:
-                    data.aiAvailable ?? false,
-
-                answeredCount:
-                    answers.length
-            };
+            }
 
 
-            localStorage.setItem(
-                "result",
-                JSON.stringify(result)
+            /* =================================================
+               STEP 3 — COMPLETE VISUAL PROGRESS
+               ================================================= */
+
+            clearInterval(
+                progressTimer
             );
 
 
-            /*
-             * ====================================================
-             * DONE
-             * ====================================================
-             */
+            steps.forEach(
+                step =>
+                    step.textContent = "✔"
+            );
 
-            document.getElementById("statusText").textContent =
+
+            document.getElementById(
+                "statusText"
+            ).textContent =
                 data.aiAvailable
                     ? "Evaluation complete. Preparing your results..."
                     : "Evaluation completed with limited AI availability.";
 
 
+            /* =================================================
+               STEP 4 — REDIRECT
+               ================================================= */
+
             setTimeout(() => {
 
                 window.location.href =
-                    "result.html";
+                    "result.html?interviewId=" +
+                    encodeURIComponent(
+                        interviewId
+                    );
 
-            }, 1200);
+            }, 1000);
 
 
-        } catch (error) {
+        }
+
+        catch (error) {
 
             console.error(
                 "[submitting] Evaluation error:",
@@ -369,20 +289,28 @@
             );
 
 
-            document.getElementById("statusText").textContent =
+            document.getElementById(
+                "statusText"
+            ).textContent =
                 "⚠️ Evaluation failed. Please try again.";
 
 
-            if (stepIndex < steps.length) {
+            if (
+                stepIndex <
+                steps.length
+            ) {
 
-                steps[stepIndex].textContent =
-                    "⚠";
+                steps[
+                    stepIndex
+                ].textContent = "⚠";
 
-            } else if (steps.length > 0) {
-
-                steps[steps.length - 1].textContent =
-                    "⚠";
             }
+
+
+            /*
+             * Don't automatically redirect.
+             * The user needs to see the error.
+             */
 
         }
 
@@ -390,5 +318,7 @@
 
 </script>
 
+
 </body>
+
 </html>

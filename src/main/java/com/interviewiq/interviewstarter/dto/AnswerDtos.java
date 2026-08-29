@@ -1,5 +1,10 @@
 package com.interviewiq.interviewstarter.dto;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,8 +35,15 @@ public class AnswerDtos {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class SubmitAnswerItem {
-        private Long questionId;     // optional, may be null in mock flow
-        private String questionText; // optional but used for relevance check
+
+        @NotNull(message = "Question ID is required")
+        private Long questionId;
+
+        @Size(max = 10000, message = "Question text must not exceed 10000 characters")
+        private String questionText;
+
+        @NotBlank(message = "Answer text is required")
+        @Size(max = 10000, message = "Answer text must not exceed 10000 characters")
         private String answerText;
     }
 
@@ -39,7 +51,9 @@ public class AnswerDtos {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class SubmitAnswersRequest {
-        private List<SubmitAnswerItem> answers;
+
+        @NotEmpty(message = "At least one answer is required")
+        private List<@Valid SubmitAnswerItem> answers;
     }
 
     @Data

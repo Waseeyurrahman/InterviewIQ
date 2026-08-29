@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Recommendations - InterviewIQ AI</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="recommendations.css">
+
+    <link
+            href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+            rel="stylesheet">
+
+    <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+</head>
+
+<body class="dashboard-page">
+
+<div class="dash-layout">
+
+    <aside class="sidebar">
+
+        <div class="sidebar-logo">
+            InterviewIQ <span>AI</span>
+        </div>
+
+        <nav class="sidebar-menu">
+
+            <a
+                    href="dashboard.html"
+                    class="menu-item">
+
+                <i class="fa-solid fa-chart-pie"></i>
+
+                <span>Dashboard</span>
+
+            </a>
+
+            <a
+                    href="my-interviews.html"
+                    class="menu-item">
+
+                <i class="fa-solid fa-microphone"></i>
+
+                <span>My Interviews</span>
+
+            </a>
+
+            <a
+                    href="recommendations.html"
+                    class="menu-item active">
+
+                <i class="fa-solid fa-lightbulb"></i>
+
+                <span>Recommendations</span>
+
+            </a>
+
+            <a
+                    href="profile.html"
+                    class="menu-item">
+
+                <i class="fa-solid fa-user"></i>
+
+                <span>Profile</span>
+
+            </a>
+
+            <a
+                    href="login.html"
+                    class="menu-item logout"
+                    onclick="logout(event)">
+
+                <i class="fa-solid fa-right-from-bracket"></i>
+
+                <span>Logout</span>
+
+            </a>
+
+        </nav>
+
+    </aside>
+
+    <main class="dash-main">
+
+        <header class="dash-header">
+
+            <div class="header-text">
+
+                <h1>
+                    Recommendations
+                </h1>
+
+                <p class="dash-subtitle">
+                    Personalized feedback based on your interview performance.
+                </p>
+
+            </div>
+
+            <button
+                    class="btn-start"
+                    onclick="location.href='setup-interview.html'">
+
+                <span>
+                    Start Interview
+                </span>
+
+            </button>
+
+        </header>
+
+        <div class="dashboard-content">
+
+            <div
+                    id="loadingState"
+                    class="state-box">
+
+                <div class="spinner"></div>
+
+                <p>
+                    Analyzing your interview performance...
+                </p>
+
+            </div>
+
+            <div
+                    id="errorState"
+                    class="state-box hidden">
+
+                <div class="state-icon">
+
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+
+                </div>
+
+                <h3>
+                    Couldn't load recommendations
+                </h3>
+
+                <p id="errorMsg">
+                    Please check your connection and try again.
+                </p>
+
+                <button
+                        class="btn-start"
+                        onclick="loadRecommendations()">
+
+                    Retry
+
+                </button>
+
+            </div>
+
+            <div
+                    id="emptyState"
+                    class="state-box hidden">
+
+                <div class="state-icon">
+
+                    <i class="fa-solid fa-lightbulb"></i>
+
+                </div>
+
+                <h3>
+                    No recommendations yet
+                </h3>
+
+                <p>
+                    Complete an interview to receive personalized
+                    recommendations.
+                </p>
+
+                <button
+                        class="btn-start"
+                        onclick="location.href='setup-interview.html'">
+
+                    Start Your First Interview
+
+                </button>
+
+            </div>
+
+            <div
+                    id="recommendationsData"
+                    class="recommendations-page hidden">
+
+                <section class="recommendation-panel">
+
+                    <div class="recommendation-panel-header">
+
+                        <div>
+
+                            <h2>
+
+                                <i class="fa-solid fa-bullseye"></i>
+
+                                <span>
+                                    Areas to Improve
+                                </span>
+
+                            </h2>
+
+                            <p>
+                                Topics and habits that need more attention.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div
+                            id="weakAreasList"
+                            class="recommendation-list">
+                    </div>
+
+                </section>
+
+                <section class="recommendation-panel">
+
+                    <div class="recommendation-panel-header">
+
+                        <div>
+
+                            <h2>
+
+                                <i class="fa-solid fa-lightbulb"></i>
+
+                                <span>
+                                    Actionable Recommendations
+                                </span>
+
+                            </h2>
+
+                            <p>
+                                Practical steps you can take to improve.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div
+                            id="recommendationsList"
+                            class="recommendation-list">
+                    </div>
+
+                </section>
+
+                <section class="recommendation-panel">
+
+                    <div class="recommendation-panel-header">
+
+                        <div>
+
+                            <h2>
+
+                                <i class="fa-solid fa-dumbbell"></i>
+
+                                <span>
+                                    Your Strengths
+                                </span>
+
+                            </h2>
+
+                            <p>
+                                Areas where your interview performance is strong.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div
+                            id="strengthsList"
+                            class="recommendation-list">
+                    </div>
+
+                </section>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script src="auth-guard.js"></script>
+<script src="auth.js"></script>
+<script src="recommendations.js"></script>
+
+</body>
+
+</html>
