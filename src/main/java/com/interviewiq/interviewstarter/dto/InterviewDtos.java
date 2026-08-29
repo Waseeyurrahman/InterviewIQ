@@ -2,8 +2,11 @@ package com.interviewiq.interviewstarter.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 public class InterviewDtos {
 
@@ -37,4 +40,21 @@ public class InterviewDtos {
         private String message;
         private Long interviewId;
     }
+
+    @Data
+    @AllArgsConstructor
+    public static class InterviewDetailsResponse {
+
+        private Long id;
+        private String role;
+        private String experienceLevel;
+        private String difficulty;
+        private Integer duration;
+        private String status;
+        private Integer finalScore;
+        private LocalDateTime startedAt;
+        private LocalDateTime completedAt;
+    }
+
+
 }

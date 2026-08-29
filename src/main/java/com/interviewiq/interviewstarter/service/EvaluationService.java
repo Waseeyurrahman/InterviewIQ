@@ -30,8 +30,8 @@ public class EvaluationService {
     private final EvaluationRepository evaluationRepository;
     private final AnswerRepository answerRepository;
     private final InterviewRepository interviewRepository;
-    private final ObjectMapper objectMapper;
     private final QuestionRepository questionRepository;
+    private final ObjectMapper objectMapper;
 
     public EvaluationService(
             AIService aiService,
@@ -49,12 +49,6 @@ public class EvaluationService {
         this.objectMapper = objectMapper;
     }
 
-
-    /*
-     * ============================================================
-     * OVERALL RESULT
-     * ============================================================
-     */
     public static class OverallResult {
 
         public boolean aiAvailable = false;
@@ -74,40 +68,8 @@ public class EvaluationService {
         public List<String> recommendations = new ArrayList<>();
     }
 
-
-    /*
-     * ============================================================
-     * EVALUATE ENTIRE INTERVIEW
-     * ============================================================
-     *
-     * Important:
-     *
-     * We evaluate ONLY questions for which an Answer exists.
-     *
-     * Example:
-     *
-     * 5 questions
-     * 3 answers
-     *
-     * Gemini receives:
-     *
-     * Question 1 + Answer 1
-     * Question 2 + Answer 2
-     * Question 4 + Answer 4
-     *
-     * One Gemini request.
-     *
-     * The skipped questions are NOT sent to Gemini.
-     *
-     */
     @Transactional
     public OverallResult evaluateInterview(Long interviewId) {
-
-        /*
-         * ========================================================
-         * STEP 1 — Find interview
-         * ========================================================
-         */
 
         Interview interview =
                 interviewRepository.findById(interviewId)
@@ -116,32 +78,22 @@ public class EvaluationService {
                                         "Interview not found: " + interviewId
                                 )
                         );
+
         if (interview.getStatus() != InterviewStatus.COMPLETED
                 && interview.getStatus() != InterviewStatus.FAILED) {
+
             throw new IllegalStateException(
                     "Interview cannot be evaluated from status "
                             + interview.getStatus()
             );
         }
 
-        int claimed = 0;
-
-        if (interview.getStatus() == InterviewStatus.COMPLETED) {
-
-            claimed = interviewRepository.updateStatusIfCurrent(
-                    interviewId,
-                    InterviewStatus.COMPLETED,
-                    InterviewStatus.EVALUATING
-            );
-
-        } else if (interview.getStatus() == InterviewStatus.FAILED) {
-
-            claimed = interviewRepository.updateStatusIfCurrent(
-                    interviewId,
-                    InterviewStatus.FAILED,
-                    InterviewStatus.EVALUATING
-            );
-        }
+        int claimed =
+                interviewRepository.updateStatusIfCurrent(
+                        interviewId,
+                        interview.getStatus(),
+                        InterviewStatus.EVALUATING
+                );
 
         if (claimed != 1) {
             throw new IllegalStateException(
@@ -154,31 +106,15 @@ public class EvaluationService {
                 interviewId
         );
 
-
-
-        /*
-         * ========================================================
-         * STEP 2 — Get all generated questions
-         * ========================================================
-         */
-
         int totalQuestions =
                 (int) questionRepository.countByInterviewId(interviewId);
 
-
-        /*
-         * ========================================================
-         * STEP 3 — Get only answered questions
-         * ========================================================
-         */
-
+        // Only answered questions are sent to the AI.
         List<Answer> answers =
                 answerRepository
                         .findByQuestionInterviewIdOrderByIdAsc(interviewId);
 
-
-        int answeredQuestions =
-                answers.size();
+        int answeredQuestions = answers.size();
 
         int skippedQuestions =
                 Math.max(
@@ -186,36 +122,16 @@ public class EvaluationService {
                         totalQuestions - answeredQuestions
                 );
 
+        OverallResult result = new OverallResult();
 
-        /*
-         * ========================================================
-         * STEP 4 — Create result
-         * ========================================================
-         */
+        result.totalQuestions = totalQuestions;
+        result.answeredQuestions = answeredQuestions;
+        result.skippedQuestions = skippedQuestions;
 
-        OverallResult result =
-                new OverallResult();
-
-        result.totalQuestions =
-                totalQuestions;
-
-        result.answeredQuestions =
-                answeredQuestions;
-
-        result.skippedQuestions =
-                skippedQuestions;
-
-
-        /*
-         * ========================================================
-         * STEP 5 — No answers
-         * ========================================================
-         */
-
+        // No answers means there is nothing to evaluate.
         if (answers.isEmpty()) {
 
             result.aiAvailable = false;
-
             result.score = 0;
             result.confidence = 0;
 
@@ -234,16 +150,6 @@ public class EvaluationService {
             return result;
         }
 
-        interview.setStatus(InterviewStatus.EVALUATING);
-        interviewRepository.save(interview);
-
-
-        /*
-         * ========================================================
-         * STEP 6 — Add skipped-question feedback
-         * ========================================================
-         */
-
         if (skippedQuestions > 0) {
 
             result.weaknesses.add(
@@ -260,19 +166,8 @@ public class EvaluationService {
             );
         }
 
-
-        /*
-         * ========================================================
-         * STEP 7 — Prepare answered Q&A pairs
-         * ========================================================
-         */
-
-        List<String> questions =
-                new ArrayList<>();
-
-        List<String> candidateAnswers =
-                new ArrayList<>();
-
+        List<String> questions = new ArrayList<>();
+        List<String> candidateAnswers = new ArrayList<>();
 
         for (Answer answer : answers) {
 
@@ -285,42 +180,12 @@ public class EvaluationService {
             );
         }
 
-
-        /*
-         * ========================================================
-         * STEP 8 — ONE GEMINI REQUEST
-         * ========================================================
-         *
-         * IMPORTANT:
-         *
-         * Only answered questions are sent.
-         *
-         * Example:
-         *
-         * 5 generated
-         * 3 answered
-         *
-         * Gemini receives exactly:
-         *
-         * Q1 + A1
-         * Q2 + A2
-         * Q4 + A4
-         *
-         * One API call.
-         */
-
+        // One AI request evaluates all answered questions.
         List<AIService.AIEvaluation> evaluations =
                 aiService.evaluateInterviewWithAI(
                         questions,
                         candidateAnswers
                 );
-
-
-        /*
-         * ========================================================
-         * STEP 9 — Validate Gemini result
-         * ========================================================
-         */
 
         boolean aiAvailable =
                 evaluations != null
@@ -328,9 +193,7 @@ public class EvaluationService {
                         && evaluations.stream()
                         .allMatch(evaluation -> evaluation != null);
 
-        result.aiAvailable =
-                aiAvailable;
-
+        result.aiAvailable = aiAvailable;
 
         if (!aiAvailable) {
 
@@ -353,158 +216,57 @@ public class EvaluationService {
             return result;
         }
 
-
-        /*
-         * ========================================================
-         * STEP 10 — Process AI evaluations
-         * ========================================================
-         */
-
         int totalScore = 0;
         int totalConfidence = 0;
         int validEvaluations = 0;
 
-
         for (int i = 0; i < answers.size(); i++) {
 
-            Answer answer =
-                    answers.get(i);
-
-            AIService.AIEvaluation evaluation =
-                    evaluations.get(i);
-
+            Answer answer = answers.get(i);
+            AIService.AIEvaluation evaluation = evaluations.get(i);
 
             if (evaluation == null) {
-
                 throw new IllegalStateException(
                         "AI evaluation missing for answer "
                                 + answer.getId()
                 );
             }
 
-
-            /*
-             * ====================================================
-             * SCORE
-             * ====================================================
-             */
-
-            int score =
-                    evaluation.score;
-
-            totalScore += score;
-
-
-            /*
-             * ====================================================
-             * CONFIDENCE
-             * ====================================================
-             */
-
-            int confidence =
-                    evaluation.confidence;
-
-            totalConfidence += confidence;
-
+            totalScore += evaluation.score;
+            totalConfidence += evaluation.confidence;
             validEvaluations++;
 
-
-            /*
-             * ====================================================
-             * OVERALL DATA
-             * ====================================================
-             */
-
-            result.fillerWords +=
-                    evaluation.fillerWords;
-
+            result.fillerWords += evaluation.fillerWords;
 
             if (evaluation.relevance != null) {
-
-                result.relevance =
-                        evaluation.relevance;
+                result.relevance = evaluation.relevance;
             }
-
 
             if (evaluation.strengths != null) {
-
-                result.strengths.addAll(
-                        evaluation.strengths
-                );
+                result.strengths.addAll(evaluation.strengths);
             }
-
 
             if (evaluation.weaknesses != null) {
-
-                result.weaknesses.addAll(
-                        evaluation.weaknesses
-                );
+                result.weaknesses.addAll(evaluation.weaknesses);
             }
 
-
             if (evaluation.recommendations != null) {
-
                 result.recommendations.addAll(
                         evaluation.recommendations
                 );
             }
 
-
-            /*
-             * ====================================================
-             * FIND EXISTING EVALUATION
-             * ====================================================
-             */
-
             Evaluation savedEvaluation =
                     evaluationRepository
                             .findByAnswerId(answer.getId())
-                            .orElseGet(
-                                    Evaluation::new
-                            );
+                            .orElseGet(Evaluation::new);
 
-
-            /*
-             * ====================================================
-             * LINK ANSWER
-             * ====================================================
-             */
-
-            savedEvaluation.setAnswer(
-                    answer
-            );
-
-
-            /*
-             * ====================================================
-             * SAVE SCORE
-             * ====================================================
-             */
-
-            savedEvaluation.setScore(
-                    score
-            );
-
-
-            /*
-             * ====================================================
-             * SAVE FILLER WORDS
-             * ====================================================
-             */
+            savedEvaluation.setAnswer(answer);
+            savedEvaluation.setScore(evaluation.score);
 
             savedEvaluation.setFillerWords(
-                    Math.max(
-                            0,
-                            evaluation.fillerWords
-                    )
+                    Math.max(0, evaluation.fillerWords)
             );
-
-
-            /*
-             * ====================================================
-             * SAVE RELEVANCE
-             * ====================================================
-             */
 
             savedEvaluation.setRelevance(
                     evaluation.relevance != null
@@ -512,23 +274,9 @@ public class EvaluationService {
                             : "medium"
             );
 
-
-            /*
-             * ====================================================
-             * SAVE TECHNICAL ACCURACY
-             * ====================================================
-             */
-
             savedEvaluation.setTechnicalAccuracy(
                     evaluation.technicalAccuracy
             );
-
-
-            /*
-             * ====================================================
-             * SAVE STRENGTHS
-             * ====================================================
-             */
 
             savedEvaluation.setStrengths(
                     toJson(
@@ -538,13 +286,6 @@ public class EvaluationService {
                     )
             );
 
-
-            /*
-             * ====================================================
-             * SAVE WEAKNESSES
-             * ====================================================
-             */
-
             savedEvaluation.setWeaknesses(
                     toJson(
                             evaluation.weaknesses != null
@@ -552,13 +293,6 @@ public class EvaluationService {
                                     : new ArrayList<>()
                     )
             );
-
-
-            /*
-             * ====================================================
-             * SAVE RECOMMENDATIONS
-             * ====================================================
-             */
 
             savedEvaluation.setRecommendations(
                     toJson(
@@ -568,24 +302,8 @@ public class EvaluationService {
                     )
             );
 
-
-            /*
-             * ====================================================
-             * SAVE
-             * ====================================================
-             */
-
-            evaluationRepository.save(
-                    savedEvaluation
-            );
+            evaluationRepository.save(savedEvaluation);
         }
-
-
-        /*
-         * ========================================================
-         * STEP 11 — Make sure at least one evaluation succeeded
-         * ========================================================
-         */
 
         if (validEvaluations == 0) {
 
@@ -605,45 +323,17 @@ public class EvaluationService {
             return result;
         }
 
-
-        /*
-         * ========================================================
-         * STEP 12 — Calculate overall score
-         * ========================================================
-         *
-         * ONLY answered questions are included.
-         */
-
         result.score =
                 totalScore / validEvaluations;
 
         result.confidence =
                 totalConfidence / validEvaluations;
 
+        interview.setFinalScore(result.score);
+        interview.setCompletedAt(LocalDateTime.now());
+        interview.setStatus(InterviewStatus.EVALUATED);
 
-        /*
-         * ========================================================
-         * STEP 13 — Mark interview COMPLETED
-         * ========================================================
-         *
-         * This happens ONLY after successful AI evaluation.
-         */
-
-        interview.setFinalScore(
-                result.score
-        );
-
-        interview.setCompletedAt(
-                LocalDateTime.now()
-        );
-
-        interview.setStatus(
-                InterviewStatus.EVALUATED
-        );
-
-        interviewRepository.save(
-                interview
-        );
+        interviewRepository.save(interview);
 
         log.info(
                 "Interview {} evaluated successfully: score={}, answered={}, skipped={}",
@@ -653,22 +343,8 @@ public class EvaluationService {
                 result.skippedQuestions
         );
 
-
-        /*
-         * ========================================================
-         * STEP 14 — Return result
-         * ========================================================
-         */
-
         return result;
     }
-
-
-    /*
-     * ============================================================
-     * GET ALL EVALUATIONS
-     * ============================================================
-     */
 
     @Transactional(readOnly = true)
     public List<Evaluation> getInterviewEvaluations(
@@ -680,17 +356,9 @@ public class EvaluationService {
                 );
     }
 
-
-    /*
-     * ============================================================
-     * GET DETAILED EVALUATION RESPONSE
-     * ============================================================
-     */
-
     @Transactional(readOnly = true)
     public List<Evaluationsdtos.EvaluationItemResponse>
-    getInterviewEvaluationDetails(
-            Long interviewId) {
+    getInterviewEvaluationDetails(Long interviewId) {
 
         List<Evaluation> evaluations =
                 evaluationRepository
@@ -698,16 +366,12 @@ public class EvaluationService {
                                 interviewId
                         );
 
-
         List<Evaluationsdtos.EvaluationItemResponse> response =
                 new ArrayList<>();
 
-
         for (Evaluation evaluation : evaluations) {
 
-            Answer answer =
-                    evaluation.getAnswer();
-
+            Answer answer = evaluation.getAnswer();
 
             try {
 
@@ -721,7 +385,6 @@ public class EvaluationService {
                                         )
                         );
 
-
                 List<String> weaknesses =
                         objectMapper.readValue(
                                 evaluation.getWeaknesses(),
@@ -732,7 +395,6 @@ public class EvaluationService {
                                         )
                         );
 
-
                 List<String> recommendations =
                         objectMapper.readValue(
                                 evaluation.getRecommendations(),
@@ -742,7 +404,6 @@ public class EvaluationService {
                                                 String.class
                                         )
                         );
-
 
                 response.add(
                         new Evaluationsdtos.EvaluationItemResponse(
@@ -758,7 +419,6 @@ public class EvaluationService {
                         )
                 );
 
-
             } catch (Exception e) {
 
                 throw new RuntimeException(
@@ -768,24 +428,14 @@ public class EvaluationService {
             }
         }
 
-
         return response;
     }
-
-
-    /*
-     * ============================================================
-     * LIST → JSON
-     * ============================================================
-     */
 
     private String toJson(Object value) {
 
         try {
 
-            return objectMapper.writeValueAsString(
-                    value
-            );
+            return objectMapper.writeValueAsString(value);
 
         } catch (Exception e) {
 

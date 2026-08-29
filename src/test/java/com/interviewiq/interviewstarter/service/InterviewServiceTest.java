@@ -13,10 +13,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,6 +43,11 @@ class InterviewServiceTest {
         user.setName("Test User");
         user.setEmail("test@example.com");
     }
+
+
+    // ============================================================
+    // CREATE
+    // ============================================================
 
     @Test
     void create_shouldCreateInterviewInCreatedState() {
@@ -74,6 +82,7 @@ class InterviewServiceTest {
         verify(interviewRepository).save(any(Interview.class));
     }
 
+
     @Test
     void create_shouldThrowWhenUserDoesNotExist() {
 
@@ -95,6 +104,11 @@ class InterviewServiceTest {
                 .save(any(Interview.class));
     }
 
+
+    // ============================================================
+    // START INTERVIEW
+    // ============================================================
+
     @Test
     void startInterview_shouldMoveCreatedToInProgress() {
 
@@ -106,10 +120,11 @@ class InterviewServiceTest {
         when(interviewRepository.findById(10L))
                 .thenReturn(Optional.of(interview));
 
-        when(interviewRepository.updateStatusIfCurrent(
-                10L,
-                InterviewStatus.CREATED,
-                InterviewStatus.IN_PROGRESS
+        when(interviewRepository.startInterview(
+                eq(10L),
+                eq(InterviewStatus.CREATED),
+                eq(InterviewStatus.IN_PROGRESS),
+                any(LocalDateTime.class)
         )).thenReturn(1);
 
         Interview result =
@@ -120,16 +135,22 @@ class InterviewServiceTest {
                 result.getStatus()
         );
 
+        assertNotNull(
+                result.getStartedAt()
+        );
+
         verify(interviewRepository)
-                .updateStatusIfCurrent(
-                        10L,
-                        InterviewStatus.CREATED,
-                        InterviewStatus.IN_PROGRESS
+                .startInterview(
+                        eq(10L),
+                        eq(InterviewStatus.CREATED),
+                        eq(InterviewStatus.IN_PROGRESS),
+                        any(LocalDateTime.class)
                 );
 
         verify(interviewRepository, never())
                 .save(any(Interview.class));
     }
+
 
     @Test
     void startInterview_shouldRejectNonCreatedInterview() {
@@ -142,10 +163,11 @@ class InterviewServiceTest {
         when(interviewRepository.findById(10L))
                 .thenReturn(Optional.of(interview));
 
-        when(interviewRepository.updateStatusIfCurrent(
-                10L,
-                InterviewStatus.CREATED,
-                InterviewStatus.IN_PROGRESS
+        when(interviewRepository.startInterview(
+                eq(10L),
+                eq(InterviewStatus.CREATED),
+                eq(InterviewStatus.IN_PROGRESS),
+                any(LocalDateTime.class)
         )).thenReturn(0);
 
         assertThrows(
@@ -154,15 +176,21 @@ class InterviewServiceTest {
         );
 
         verify(interviewRepository)
-                .updateStatusIfCurrent(
-                        10L,
-                        InterviewStatus.CREATED,
-                        InterviewStatus.IN_PROGRESS
+                .startInterview(
+                        eq(10L),
+                        eq(InterviewStatus.CREATED),
+                        eq(InterviewStatus.IN_PROGRESS),
+                        any(LocalDateTime.class)
                 );
 
         verify(interviewRepository, never())
                 .save(any(Interview.class));
     }
+
+
+    // ============================================================
+    // FINISH INTERVIEW
+    // ============================================================
 
     @Test
     void finish_shouldMoveInProgressToCompleted() {
@@ -175,10 +203,11 @@ class InterviewServiceTest {
         when(interviewRepository.findById(10L))
                 .thenReturn(Optional.of(interview));
 
-        when(interviewRepository.updateStatusIfCurrent(
-                10L,
-                InterviewStatus.IN_PROGRESS,
-                InterviewStatus.COMPLETED
+        when(interviewRepository.finishInterview(
+                eq(10L),
+                eq(InterviewStatus.IN_PROGRESS),
+                eq(InterviewStatus.COMPLETED),
+                any(LocalDateTime.class)
         )).thenReturn(1);
 
         Interview result =
@@ -189,18 +218,22 @@ class InterviewServiceTest {
                 result.getStatus()
         );
 
-        assertNotNull(result.getCompletedAt());
+        assertNotNull(
+                result.getCompletedAt()
+        );
 
         verify(interviewRepository)
-                .updateStatusIfCurrent(
-                        10L,
-                        InterviewStatus.IN_PROGRESS,
-                        InterviewStatus.COMPLETED
+                .finishInterview(
+                        eq(10L),
+                        eq(InterviewStatus.IN_PROGRESS),
+                        eq(InterviewStatus.COMPLETED),
+                        any(LocalDateTime.class)
                 );
 
         verify(interviewRepository, never())
                 .save(any(Interview.class));
     }
+
 
     @Test
     void finish_shouldRejectNonInProgressInterview() {
@@ -213,10 +246,11 @@ class InterviewServiceTest {
         when(interviewRepository.findById(10L))
                 .thenReturn(Optional.of(interview));
 
-        when(interviewRepository.updateStatusIfCurrent(
-                10L,
-                InterviewStatus.IN_PROGRESS,
-                InterviewStatus.COMPLETED
+        when(interviewRepository.finishInterview(
+                eq(10L),
+                eq(InterviewStatus.IN_PROGRESS),
+                eq(InterviewStatus.COMPLETED),
+                any(LocalDateTime.class)
         )).thenReturn(0);
 
         assertThrows(
@@ -225,15 +259,21 @@ class InterviewServiceTest {
         );
 
         verify(interviewRepository)
-                .updateStatusIfCurrent(
-                        10L,
-                        InterviewStatus.IN_PROGRESS,
-                        InterviewStatus.COMPLETED
+                .finishInterview(
+                        eq(10L),
+                        eq(InterviewStatus.IN_PROGRESS),
+                        eq(InterviewStatus.COMPLETED),
+                        any(LocalDateTime.class)
                 );
 
         verify(interviewRepository, never())
                 .save(any(Interview.class));
     }
+
+
+    // ============================================================
+    // NOT FOUND
+    // ============================================================
 
     @Test
     void startInterview_shouldThrowWhenInterviewDoesNotExist() {
@@ -247,12 +287,18 @@ class InterviewServiceTest {
         );
 
         verify(interviewRepository, never())
-                .updateStatusIfCurrent(
+                .startInterview(
                         anyLong(),
                         any(InterviewStatus.class),
-                        any(InterviewStatus.class)
+                        any(InterviewStatus.class),
+                        any(LocalDateTime.class)
                 );
     }
+
+
+    // ============================================================
+    // HELPER
+    // ============================================================
 
     private Interview interview(
             Long id,

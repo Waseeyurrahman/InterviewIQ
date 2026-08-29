@@ -14,7 +14,6 @@ import org.springframework.web.client.RestTemplate;
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Service
 public class AIService {
 
@@ -24,17 +23,16 @@ public class AIService {
     private static final String GEMINI_BASE_URL =
             "https://generativelanguage.googleapis.com/v1beta/models/";
 
+    private final RestTemplate http;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @Value("${ai.gemini.model}")
     private String model;
 
     @Value("${ai.gemini.api-key:}")
     private String apiKey;
 
-
-    private final RestTemplate http;
-
     public AIService() {
-
         SimpleClientHttpRequestFactory factory =
                 new SimpleClientHttpRequestFactory();
 
@@ -43,65 +41,36 @@ public class AIService {
 
         this.http = new RestTemplate(factory);
     }
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
-
-    // ============================================================
-    // AI EVALUATION RESULT
-    // ============================================================
 
     public static class AIEvaluation {
 
         public int score;
-
         public int fillerWords;
-
         public int confidence;
-
         public String relevance;
-
         public String technicalAccuracy;
 
         public List<String> strengths = new ArrayList<>();
-
         public List<String> weaknesses = new ArrayList<>();
-
         public List<String> recommendations = new ArrayList<>();
     }
-
-
-    // ============================================================
-    // EVALUATE CANDIDATE ANSWER
-    // ============================================================
 
     public AIEvaluation evaluateWithAI(
             String question,
             String answer) {
 
         if (apiKey == null || apiKey.isBlank()) {
-
             log.warn("Gemini API key is missing");
             return null;
         }
 
         try {
-
-            String prompt =
-                    buildEvaluationPrompt(
-                            question,
-                            answer
-                    );
-
-            String aiResponse =
-                    callGemini(prompt);
-
-            AIEvaluation evaluation =
-                    parseEvaluation(aiResponse);
+            String prompt = buildEvaluationPrompt(question, answer);
+            String aiResponse = callGemini(prompt);
+            AIEvaluation evaluation = parseEvaluation(aiResponse);
 
             if (evaluation == null) {
-
                 log.warn("Failed to parse AI evaluation");
-
                 return null;
             }
 
@@ -110,26 +79,17 @@ public class AIService {
             return evaluation;
 
         } catch (Exception e) {
-
             log.warn("AI evaluation failed: {}", e.getMessage());
-
             return null;
         }
     }
-
-
-    // ============================================================
-    // EVALUATE MULTIPLE QUESTION + ANSWER PAIRS
-    // ============================================================
 
     public List<AIEvaluation> evaluateInterviewWithAI(
             List<String> questions,
             List<String> answers) {
 
         if (apiKey == null || apiKey.isBlank()) {
-
             log.warn("Gemini API key is missing");
-
             return null;
         }
 
@@ -138,21 +98,17 @@ public class AIService {
                 questions.size() != answers.size() ||
                 questions.isEmpty()) {
 
-            log.warn("Invalid questions or answers supplied for batch evaluation");
-
+            log.warn(
+                    "Invalid questions or answers supplied for batch evaluation"
+            );
             return null;
         }
 
         try {
-
             String prompt =
-                    buildBatchEvaluationPrompt(
-                            questions,
-                            answers
-                    );
+                    buildBatchEvaluationPrompt(questions, answers);
 
-            String aiResponse =
-                    callGemini(prompt);
+            String aiResponse = callGemini(prompt);
 
             return parseBatchEvaluation(
                     aiResponse,
@@ -160,17 +116,13 @@ public class AIService {
             );
 
         } catch (Exception e) {
-
-            log.warn("Batch AI evaluation failed: {}", e.getMessage());
-
+            log.warn(
+                    "Batch AI evaluation failed: {}",
+                    e.getMessage()
+            );
             return null;
         }
     }
-
-
-    // ============================================================
-    // GENERATE INTERVIEW QUESTIONS
-    // ============================================================
 
     public List<String> generateQuestions(
             String role,
@@ -179,14 +131,11 @@ public class AIService {
             int count) {
 
         if (apiKey == null || apiKey.isBlank()) {
-
             log.warn("Gemini API key is missing");
-
             return null;
         }
 
         try {
-
             String prompt =
                     buildQuestionPrompt(
                             role,
@@ -195,11 +144,8 @@ public class AIService {
                             count
                     );
 
-            String aiResponse =
-                    callGemini(prompt);
-
-            List<String> questions =
-                    parseQuestionList(aiResponse);
+            String aiResponse = callGemini(prompt);
+            List<String> questions = parseQuestionList(aiResponse);
 
             if (questions == null ||
                     questions.size() != count) {
@@ -216,17 +162,13 @@ public class AIService {
             return questions;
 
         } catch (Exception e) {
-
-            log.warn("Question generation failed: {}", e.getMessage());
-
+            log.warn(
+                    "Question generation failed: {}",
+                    e.getMessage()
+            );
             return null;
         }
     }
-
-
-    // ============================================================
-    // EVALUATION PROMPT
-    // ============================================================
 
     private String buildEvaluationPrompt(
             String question,
@@ -362,16 +304,8 @@ public class AIService {
                 Do not return Markdown.
                 Do not return ```json.
                 Do not include explanations outside the JSON.
-                """.formatted(
-                question,
-                answer
-        );
+                """.formatted(question, answer);
     }
-
-
-    // ============================================================
-    // BATCH EVALUATION PROMPT
-    // ============================================================
 
     private String buildBatchEvaluationPrompt(
             List<String> questions,
@@ -380,7 +314,6 @@ public class AIService {
         StringBuilder input = new StringBuilder();
 
         for (int i = 0; i < questions.size(); i++) {
-
             input.append("\nQUESTION ")
                     .append(i + 1)
                     .append(":\n")
@@ -397,136 +330,129 @@ public class AIService {
         }
 
         return """
-            ROLE:
-            You are an expert technical interviewer evaluating
-            a software engineering candidate.
+                ROLE:
+                You are an expert technical interviewer evaluating
+                a software engineering candidate.
 
-            TASK:
-            Evaluate every question and answer pair separately.
+                TASK:
+                Evaluate every question and answer pair separately.
 
-            IMPORTANT:
-            - Evaluation 1 corresponds to Question 1.
-            - Evaluation 2 corresponds to Question 2.
-            - Continue in the same order.
-            - Do not skip any question.
-            - Do not combine multiple answers into one evaluation.
-            - Evaluate only what the candidate actually said.
+                IMPORTANT:
+                - Evaluation 1 corresponds to Question 1.
+                - Evaluation 2 corresponds to Question 2.
+                - Continue in the same order.
+                - Do not skip any question.
+                - Do not combine multiple answers into one evaluation.
+                - Evaluate only what the candidate actually said.
 
-            EVALUATION CRITERIA:
+                EVALUATION CRITERIA:
 
-            1. RELEVANCE
-            Does the answer directly address the question?
+                1. RELEVANCE
+                Does the answer directly address the question?
 
-            2. TECHNICAL ACCURACY
-            Are the technical statements correct?
+                2. TECHNICAL ACCURACY
+                Are the technical statements correct?
 
-            3. CLARITY
-            Is the explanation understandable and logically structured?
+                3. CLARITY
+                Is the explanation understandable and logically structured?
 
-            4. COMPLETENESS
-            Did the candidate address the important parts of the question?
+                4. COMPLETENESS
+                Did the candidate address the important parts of the question?
 
-            5. CONFIDENCE
-            Estimate how confidently the candidate appears to communicate
-            the answer based ONLY on the wording and structure of the answer.
+                5. CONFIDENCE
+                Estimate how confidently the candidate appears to communicate
+                the answer based ONLY on the wording and structure of the answer.
 
-            Do not infer personality or real-world confidence.
+                Do not infer personality or real-world confidence.
 
-            SCORING:
+                SCORING:
 
-            90-100 = Excellent
-            75-89  = Good
-            60-74  = Average
-            40-59  = Weak
-            0-39   = Poor
+                90-100 = Excellent
+                75-89  = Good
+                60-74  = Average
+                40-59  = Weak
+                0-39   = Poor
 
-            CONFIDENCE:
+                CONFIDENCE:
 
-            Return an integer from 0 to 100.
+                Return an integer from 0 to 100.
 
-            90-100 = Very confident
-            75-89  = Confident
-            60-74  = Moderately confident
-            40-59  = Low confidence
-            0-39   = Very low confidence
+                90-100 = Very confident
+                75-89  = Confident
+                60-74  = Moderately confident
+                40-59  = Low confidence
+                0-39   = Very low confidence
 
-            FILLER WORDS:
+                FILLER WORDS:
 
-            Count actual filler-word usage:
+                Count actual filler-word usage:
 
-            um
-            uh
-            er
-            like
-            you know
-            basically
+                um
+                uh
+                er
+                like
+                you know
+                basically
 
-            Only count them when they are used as filler words.
+                Only count them when they are used as filler words.
 
-            RELEVANCE:
+                RELEVANCE:
 
-            Use exactly:
+                Use exactly:
 
-            low
-            medium
-            high
+                low
+                medium
+                high
 
-            TECHNICAL ACCURACY:
+                TECHNICAL ACCURACY:
 
-            Use exactly:
+                Use exactly:
 
-            poor
-            average
-            good
+                poor
+                average
+                good
 
-            STRENGTHS:
+                STRENGTHS:
 
-            Provide 2-4 specific strengths.
+                Provide 2-4 specific strengths.
 
-            WEAKNESSES:
+                WEAKNESSES:
 
-            Provide 1-4 specific weaknesses.
+                Provide 1-4 specific weaknesses.
 
-            RECOMMENDATIONS:
+                RECOMMENDATIONS:
 
-            Provide 1-4 actionable recommendations.
+                Provide 1-4 actionable recommendations.
 
-            QUESTION AND ANSWER PAIRS:
+                QUESTION AND ANSWER PAIRS:
 
-            %s
+                %s
 
-            OUTPUT:
+                OUTPUT:
 
-            Return ONLY a valid JSON array.
+                Return ONLY a valid JSON array.
 
-            [
-              {
-                "score": 75,
-                "fillerWords": 0,
-                "confidence": 75,
-                "relevance": "high",
-                "technicalAccuracy": "good",
-                "strengths": [],
-                "weaknesses": [],
-                "recommendations": []
-              }
-            ]
+                [
+                  {
+                    "score": 75,
+                    "fillerWords": 0,
+                    "confidence": 75,
+                    "relevance": "high",
+                    "technicalAccuracy": "good",
+                    "strengths": [],
+                    "weaknesses": [],
+                    "recommendations": []
+                  }
+                ]
 
-            The number of objects MUST equal the number of
-            question-answer pairs.
+                The number of objects MUST equal the number of
+                question-answer pairs.
 
-            Do not return Markdown.
-            Do not return ```json.
-            Do not include any text outside the JSON array.
-            """.formatted(
-                input
-        );
+                Do not return Markdown.
+                Do not return ```json.
+                Do not include any text outside the JSON array.
+                """.formatted(input);
     }
-
-
-    // ============================================================
-    // QUESTION GENERATION PROMPT
-    // ============================================================
 
     private String buildQuestionPrompt(
             String role,
@@ -585,11 +511,6 @@ public class AIService {
         );
     }
 
-
-    // ============================================================
-    // CALL GEMINI
-    // ============================================================
-
     private String callGemini(String prompt)
             throws Exception {
 
@@ -613,18 +534,11 @@ public class AIService {
                         objectMapper.writeValueAsString(prompt)
                 );
 
-        HttpHeaders headers =
-                new HttpHeaders();
-
-        headers.setContentType(
-                MediaType.APPLICATION_JSON
-        );
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
 
         HttpEntity<String> request =
-                new HttpEntity<>(
-                        body,
-                        headers
-                );
+                new HttpEntity<>(body, headers);
 
         String url =
                 GEMINI_BASE_URL
@@ -639,7 +553,6 @@ public class AIService {
              attempt++) {
 
             try {
-
                 log.debug(
                         "Calling Gemini, attempt {}/{}",
                         attempt,
@@ -663,9 +576,7 @@ public class AIService {
                 }
 
                 JsonNode root =
-                        objectMapper.readTree(
-                                response.getBody()
-                        );
+                        objectMapper.readTree(response.getBody());
 
                 JsonNode textNode =
                         root.path("candidates")
@@ -689,8 +600,7 @@ public class AIService {
 
             } catch (HttpStatusCodeException e) {
 
-                HttpStatusCode status =
-                        e.getStatusCode();
+                HttpStatusCode status = e.getStatusCode();
 
                 boolean retryable =
                         status.value() == 429 ||
@@ -730,25 +640,13 @@ public class AIService {
         );
     }
 
-
-    // ============================================================
-    // PARSE EVALUATION
-    // ============================================================
-
-    private AIEvaluation parseEvaluation(
-            String aiText) {
+    private AIEvaluation parseEvaluation(String aiText) {
 
         try {
+            String clean = cleanJsonResponse(aiText);
+            JsonNode root = objectMapper.readTree(clean);
 
-            String clean =
-                    cleanJsonResponse(aiText);
-
-
-            JsonNode root =
-                    objectMapper.readTree(clean);
-
-            AIEvaluation evaluation =
-                    new AIEvaluation();
+            AIEvaluation evaluation = new AIEvaluation();
 
             evaluation.score =
                     root.path("score").asInt(0);
@@ -760,27 +658,20 @@ public class AIService {
                     root.path("confidence").asInt(0);
 
             evaluation.relevance =
-                    root.path("relevance")
-                            .asText("medium");
+                    root.path("relevance").asText("medium");
 
             evaluation.technicalAccuracy =
                     root.path("technicalAccuracy")
                             .asText("average");
 
             evaluation.strengths =
-                    readStringList(
-                            root.path("strengths")
-                    );
+                    readStringList(root.path("strengths"));
 
             evaluation.weaknesses =
-                    readStringList(
-                            root.path("weaknesses")
-                    );
+                    readStringList(root.path("weaknesses"));
 
             evaluation.recommendations =
-                    readStringList(
-                            root.path("recommendations")
-                    );
+                    readStringList(root.path("recommendations"));
 
             return evaluation;
 
@@ -795,60 +686,33 @@ public class AIService {
         }
     }
 
-
-    // ============================================================
-    // PARSE BATCH EVALUATIONS
-    // ============================================================
-
     private List<AIEvaluation> parseBatchEvaluation(
             String aiText,
             int expectedCount) {
 
         try {
-
-            String clean =
-                    cleanJsonResponse(aiText);
-
-            /*
-             * DEBUGGING:
-             *
-             * This lets us see the EXACT string that Jackson
-             * receives, rather than only the raw Gemini output.
-             */
-
-            JsonNode root =
-                    objectMapper.readTree(clean);
+            String clean = cleanJsonResponse(aiText);
+            JsonNode root = objectMapper.readTree(clean);
 
             if (!root.isArray()) {
-
                 log.warn("Gemini batch response is not an array");
-
                 return null;
             }
 
-            /*
-             * Gemini must return exactly one evaluation
-             * for every question-answer pair.
-             */
-
             if (root.size() != expectedCount) {
-
                 log.warn(
                         "Expected {} evaluations but received {}",
                         expectedCount,
                         root.size()
                 );
-
                 return null;
             }
 
-            List<AIEvaluation> evaluations =
-                    new ArrayList<>();
+            List<AIEvaluation> evaluations = new ArrayList<>();
 
             for (JsonNode node : root) {
 
-                AIEvaluation evaluation =
-                        new AIEvaluation();
+                AIEvaluation evaluation = new AIEvaluation();
 
                 evaluation.score =
                         requireIntField(node, "score");
@@ -869,27 +733,19 @@ public class AIService {
                         );
 
                 evaluation.strengths =
-                        readStringList(
-                                node.path("strengths")
-                        );
+                        readStringList(node.path("strengths"));
 
                 evaluation.weaknesses =
-                        readStringList(
-                                node.path("weaknesses")
-                        );
+                        readStringList(node.path("weaknesses"));
 
                 evaluation.recommendations =
                         readStringList(
                                 node.path("recommendations")
                         );
 
-                validateEvaluation(
-                        evaluation
-                );
+                validateEvaluation(evaluation);
 
-                evaluations.add(
-                        evaluation
-                );
+                evaluations.add(evaluation);
             }
 
             return evaluations.isEmpty()
@@ -907,31 +763,17 @@ public class AIService {
         }
     }
 
-
-    // ============================================================
-    // PARSE QUESTION LIST
-    // ============================================================
-
-    private List<String> parseQuestionList(
-            String aiText) {
+    private List<String> parseQuestionList(String aiText) {
 
         try {
-
-            String clean =
-                    cleanJsonResponse(aiText);
-
-
-
-            JsonNode root =
-                    objectMapper.readTree(clean);
+            String clean = cleanJsonResponse(aiText);
+            JsonNode root = objectMapper.readTree(clean);
 
             if (!root.isArray()) {
-
                 return null;
             }
 
-            List<String> questions =
-                    new ArrayList<>();
+            List<String> questions = new ArrayList<>();
 
             for (JsonNode node : root) {
 
@@ -941,7 +783,6 @@ public class AIService {
                             node.asText().trim();
 
                     if (!question.isBlank()) {
-
                         questions.add(question);
                     }
                 }
@@ -962,19 +803,11 @@ public class AIService {
         }
     }
 
+    private List<String> readStringList(JsonNode node) {
 
-    // ============================================================
-    // READ JSON STRING ARRAY
-    // ============================================================
+        List<String> result = new ArrayList<>();
 
-    private List<String> readStringList(
-            JsonNode node) {
-
-        List<String> result =
-                new ArrayList<>();
-
-        if (node != null &&
-                node.isArray()) {
+        if (node != null && node.isArray()) {
 
             for (JsonNode item : node) {
 
@@ -984,7 +817,6 @@ public class AIService {
                             item.asText().trim();
 
                     if (!value.isBlank()) {
-
                         result.add(value);
                     }
                 }
@@ -994,65 +826,39 @@ public class AIService {
         return result;
     }
 
-
-    // ============================================================
-    // CLEAN AI JSON RESPONSE
-    // ============================================================
-
-    private String cleanJsonResponse(
-            String text) {
+    private String cleanJsonResponse(String text) {
 
         if (text == null) {
-
             throw new IllegalArgumentException(
                     "AI response is null"
             );
         }
 
-        String clean =
-                text.trim();
-
-        /*
-         * Gemini should now return JSON directly because
-         * responseMimeType is application/json.
-         *
-         * We still keep this cleanup as a safety net in case
-         * Markdown fences are returned.
-         */
+        String clean = text.trim();
 
         if (clean.startsWith("```")) {
 
-            clean =
-                    clean.replaceFirst(
-                            "^```(?:json)?\\s*",
-                            ""
-                    );
+            clean = clean.replaceFirst(
+                    "^```(?:json)?\\s*",
+                    ""
+            );
 
-            clean =
-                    clean.replaceFirst(
-                            "\\s*```$",
-                            ""
-                    );
+            clean = clean.replaceFirst(
+                    "\\s*```$",
+                    ""
+            );
         }
 
         return clean.trim();
     }
 
-
-    // ============================================================
-    // VALIDATE AI EVALUATION
-    // ============================================================
-
     private int requireIntField(
             JsonNode node,
             String fieldName) {
 
-        JsonNode field =
-                node.get(fieldName);
+        JsonNode field = node.get(fieldName);
 
-        if (field == null ||
-                !field.isInt()) {
-
+        if (field == null || !field.isInt()) {
             throw new IllegalArgumentException(
                     "Missing or invalid integer field: "
                             + fieldName
@@ -1066,8 +872,7 @@ public class AIService {
             JsonNode node,
             String fieldName) {
 
-        JsonNode field =
-                node.get(fieldName);
+        JsonNode field = node.get(fieldName);
 
         if (field == null ||
                 !field.isTextual() ||

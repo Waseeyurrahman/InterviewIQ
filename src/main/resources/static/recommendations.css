@@ -1,0 +1,157 @@
+.recommendations-page {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+}
+
+.recommendation-panel {
+    background: #ffffff;
+    border: 1px solid #e8e8ef;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 18px rgba(20, 20, 40, 0.04);
+}
+
+.recommendation-panel-header {
+    margin-bottom: 20px;
+}
+
+.recommendation-panel-header h2 {
+    margin: 0 0 6px;
+
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    font-size: 20px;
+    font-weight: 600;
+    color: #252633;
+}
+
+.recommendation-panel-header h2 i {
+    width: 21px;
+    flex-shrink: 0;
+
+    font-size: 18px;
+    text-align: center;
+
+    color: #6c63ff;
+}
+
+.recommendation-panel-header p {
+    margin: 0;
+
+    font-size: 13px;
+    color: #858894;
+}
+
+.recommendation-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.recommendation-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+
+    padding: 14px 16px;
+
+    background: #fafafd;
+    border: 1px solid #eeeeF3;
+    border-radius: 12px;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.recommendation-item:hover {
+    background: #f8f7ff;
+    border-color: #ddd9fa;
+    transform: translateY(-1px);
+}
+
+.recommendation-icon {
+    width: 32px;
+    height: 32px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.recommendation-icon i {
+    font-size: 14px;
+}
+
+.recommendation-icon.weakness {
+    background: #fff0f0;
+    color: #d95353;
+}
+
+.recommendation-icon.recommendation {
+    background: #efedff;
+    color: #655ce9;
+}
+
+.recommendation-icon.strength {
+    background: #eaf8f0;
+    color: #21945e;
+}
+
+.recommendation-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.recommendation-text {
+    color: #50535f;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.recommendation-count {
+    display: inline-block;
+    margin-top: 6px;
+
+    font-size: 10px;
+    color: #999ba6;
+}
+
+.recommendation-empty {
+    padding: 20px;
+
+    text-align: center;
+
+    background: #fafafd;
+    border-radius: 10px;
+
+    color: #999ba6;
+    font-size: 12px;
+}
+
+@media (max-width: 760px) {
+
+    .recommendation-panel {
+        padding: 18px;
+    }
+
+    .recommendation-item {
+        padding: 13px;
+    }
+
+    .recommendation-panel-header h2 {
+        font-size: 18px;
+    }
+}

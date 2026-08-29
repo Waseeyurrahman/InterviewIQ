@@ -1,50 +1,4 @@
-/* ==========================================================================
-   InterviewIQ AI — SHARED STYLESHEET
-   --------------------------------------------------------------------------
-   Theme    : Purple modern UI (brand color #6C63FF)
-   Loaded by: every HTML file under src/main/resources/static/
-   --------------------------------------------------------------------------
-   📑 SECTION INDEX — which CSS block belongs to which HTML page
-   --------------------------------------------------------------------------
-     1.  Global Reset / body / <a>           → ALL pages
-     2.  Navbar (.navbar / .logo / .nav-*)   → landing.html
-     3.  Buttons (.btn family)               → reused on EVERY page
-     4.  Landing page wrapper (.landing-page)→ landing.html
-     5.  Hero section (.hero, .badge, etc.)  → landing.html
-     6.  Stats strip (.stats / .stat-box)    → landing.html
-     7.  Split layout (.split-*)             → login.html + signup.html (base)
-     8.  Auth card (.auth-card / .muted)     → login.html + signup.html
-     9.  Form inputs / .forgot               → login.html + signup.html (base)
-    10.  Divider (.divider)                  → login.html + signup.html
-    11.  Bottom text (.bottom-text)          → login.html + signup.html
-    12.  Auth page overrides (.auth-page .*) → login.html + signup.html (polish)
-    13.  Signup-only tweaks (.signup-page)   → signup.html
-    14.  Dashboard (.dashboard-page, sidebar)→ dashboard.html
-    15.  Shared wizard buttons (.btn-back/.btn-next) → setup-role/experience/difficulty/duration
-    16.  Setup panel multi-step              → setup-role.html
-    17.  Experience cards                    → experience.html
-    18.  Difficulty cards                    → difficulty.html
-    19.  Duration cards                      → duration.html
-    20.  Live interview 3-column             → live-interview.html
-    21.  Submitting page (spinner)           → submitting.html
-    22.  Result page meta pills              → result.html
-   --------------------------------------------------------------------------
-   🎨 Color cheat sheet
-     #6C63FF  → primary brand purple
-     #6366F1  → indigo accent (wizard / dashboard)
-     #111827  → primary text (almost black)
-     #6B7280  → muted secondary text
-     #F9FAFB  → page backgrounds
-     #E5E7EB  → light borders
-   ========================================================================== */
-
-
-/* ==========================================================================
-   1) GLOBAL RESET                                            (ALL pages)
-   --------------------------------------------------------------------------
-   Browsers add their own default margins/padding/fonts. We wipe them so OUR
-   layout behaves the same in every browser. Also sets the base font + bg.
-   ========================================================================== */
+/* Global reset */
 * {
   margin: 0;
   padding: 0;
@@ -64,20 +18,8 @@ a {
   color: inherit;
 }
 
-/* ==========================================================================
-   2) NAVBAR                                                  (landing.html)
-   --------------------------------------------------------------------------
-   The sticky frosted-glass top bar shown only on the landing page.
-   HTML : <nav class="navbar">
-            <div class="logo">Interview<span>IQ</span></div>
-            <ul class="nav-links"> <li><a>...</a></li> ... </ul>
-          </nav>
-   Notes:
-     • position:sticky + top:0 keeps it pinned while scrolling.
-     • backdrop-filter:blur creates the "frosted glass" look behind the bar.
-     • .nav-links .btn-primary forces white text when a nav link uses the
-       primary button styling (otherwise it would inherit nav-link gray).
-   ========================================================================== */
+
+/* Navbar */
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -121,20 +63,8 @@ a {
   color: white;
 }
 
-/* ==========================================================================
-   3) BUTTONS — REUSABLE                                      (ALL pages)
-   --------------------------------------------------------------------------
-   Pattern: combine ".btn" base with a variant class, e.g.
-     <button class="btn btn-primary btn-full">Login</button>
-   --------------------------------------------------------------------------
-   Variants available:
-     .btn-primary  → solid purple gradient (main action: Sign Up, Login...)
-     .btn-outline  → transparent w/ purple border (secondary action)
-     .btn-cta      → big "Get Started" button on landing hero
-     .btn-sm       → smaller padding (used in navbar)
-     .btn-full     → 100% width (used inside auth forms)
-   Hover effect everywhere: 2px lift + bigger shadow for tactile feel.
-   ========================================================================== */
+
+/* Buttons */
 .btn {
   display: inline-block;
   padding: 12px 26px;
@@ -168,7 +98,7 @@ a {
   transform: translateY(-2px);
 }
 
-/* CTA button (Get Started) */
+
 .btn-cta {
   background: linear-gradient(90deg, #6C63FF, #7A70FF);
   color: white;
@@ -196,48 +126,22 @@ a {
   margin-top: 10px;
 }
 
-/* ==========================================================================
-   4) LANDING PAGE WRAPPER                                    (landing.html)
-   --------------------------------------------------------------------------
-   HTML : <body class="landing-page">
-   Goal : Fit the entire landing page in ONE viewport (no scrolling).
-          Uses a column flexbox so the navbar sits on top, hero fills below.
-   ========================================================================== */
+
+/* Landing page */
 .landing-page {
-  height: 100vh;
-  overflow: hidden;
-  background: linear-gradient(135deg, #eef1ff, #f7f8ff);
-  display: flex;
-  flex-direction: column;
+   min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background: linear-gradient(135deg, #eef1ff, #f7f8ff);
+    display: flex;
+    flex-direction: column;
 }
 
-/* ==========================================================================
-   5) HERO SECTION                                            (landing.html)
-   --------------------------------------------------------------------------
-   Two-column area: text on the left, illustration on the right.
-   HTML pattern:
-     <section class="hero">
-       <div class="hero-inner">
-         <div class="hero-left">
-           <span class="badge">AI-Powered</span>
-           <h1>Practice with <span class="gradient-text">AI</span></h1>
-           <p class="subtitle">...</p>
-           <div class="hero-buttons">...</div>
-         </div>
-         <div class="hero-right"><img></div>
-       </div>
-     </section>
-   --------------------------------------------------------------------------
-   Tricks worth pointing:
-     • .hero::before  → decorative purple radial glow (pointer-events:none
-       so clicks pass through).
-     • .gradient-text → uses -webkit-background-clip:text + transparent fill
-       to make text show a gradient instead of a solid color.
-     • flex:1 on .hero  → it stretches to fill remaining height below navbar.
-   ========================================================================== */
+
+/* Hero section */
 .hero {
   position: relative;
-  flex: 1;                 /* fills space below navbar */
+  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -245,7 +149,7 @@ a {
   overflow: hidden;
 }
 
-/* Soft purple glow behind the illustration */
+
 .hero::before {
   content: "";
   position: absolute;
@@ -330,16 +234,8 @@ a {
   transform: scale(1.13);
 }
 
-/* ==========================================================================
-   6) STATS STRIP                                             (landing.html)
-   --------------------------------------------------------------------------
-   The white floating card under the hero showing big numbers (e.g. "10k+").
-   HTML : <div class="stats">
-            <div class="stat-box"><h2>10k+</h2><p>Users</p></div>
-            ...
-          </div>
-   Note: .stat-box:last-child removes the right border on the final box.
-   ========================================================================== */
+
+/* Stats */
 .stats {
   position: relative;
   z-index: 2;
@@ -379,18 +275,8 @@ a {
   font-weight: 500;
 }
 
-/* ==========================================================================
-   7) SPLIT LAYOUT — BASE                                     (login + signup)
-   --------------------------------------------------------------------------
-   Two equal columns side by side filling the screen.
-   HTML : <div class="split-container">
-            <div class="split-left">  ...image...   </div>
-            <div class="split-right"> ...form card... </div>
-          </div>
-   ⚠️ These are the BASE rules. Section 12 (.auth-page .split-*) overrides
-       them with a polished gradient background + custom paddings for the
-       actual login/signup pages.
-   ========================================================================== */
+
+/* Auth layout */
 .split-container {
   display: flex;
   min-height: 100vh;
@@ -416,15 +302,8 @@ a {
   padding: 40px;
 }
 
-/* ==========================================================================
-   8) AUTH CARD — BASE                                        (login + signup)
-   --------------------------------------------------------------------------
-   The white form card sitting inside .split-right.
-   HTML : <div class="auth-card"> <h2>...</h2> <form>...</form> </div>
-   .muted → small grey helper line beneath the heading
-            (e.g. "Welcome back, please login").
-   Again: section 12 refines these for .auth-page.
-   ========================================================================== */
+
+/* Auth card */
 .auth-card {
   background: white;
   padding: 40px;
@@ -446,13 +325,8 @@ a {
   font-size: 14px;
 }
 
-/* ==========================================================================
-   9) FORM INPUTS — BASE                                      (login + signup)
-   --------------------------------------------------------------------------
-   Generic styling for any <form> on the auth pages.
-   .forgot → right-aligned "Forgot password?" link (login only).
-   On focus, the input border turns purple + a soft outer glow appears.
-   ========================================================================== */
+
+/* Form inputs */
 form label {
   display: block;
   margin-top: 14px;
@@ -485,15 +359,8 @@ form input:focus {
   color: #6C63FF;
 }
 
-/* ==========================================================================
-   10) DIVIDER ("or")                                         (login + signup)
-   --------------------------------------------------------------------------
-   The horizontal line with the word "or" centered on it, between the form
-   and the Google button.
-   HTML : <div class="divider"><span>or</span></div>
-   How it works: ::before draws a line on the left, ::after on the right,
-   each 40% wide, sitting at the vertical middle (top:50%).
-   ========================================================================== */
+
+/* Divider */
 .divider {
   text-align: center;
   margin: 18px 0;
@@ -513,13 +380,8 @@ form input:focus {
 .divider::before { left: 0; }
 .divider::after  { right: 0; }
 
-/* ==========================================================================
-   11) BOTTOM TEXT                                            (login + signup)
-   --------------------------------------------------------------------------
-   The "Don't have an account? Sign up" line centered at the bottom of the
-   auth card.
-   HTML : <p class="bottom-text">... <a>Sign up</a></p>
-   ========================================================================== */
+
+/* Auth footer */
 .bottom-text {
   text-align: center;
   margin-top: 18px;
@@ -531,28 +393,8 @@ form input:focus {
   font-weight: 500;
 }
 
-/* ==========================================================================
-   12) AUTH PAGE OVERRIDES                                    (login + signup)
-   --------------------------------------------------------------------------
-   HTML : <body class="auth-page">              ← login
-          <body class="auth-page signup-page">  ← signup
-   --------------------------------------------------------------------------
-   Why these exist:
-     The base rules in sections 7–11 give a generic split-layout look.
-     These ".auth-page .xxx" rules are MORE SPECIFIC selectors so they win,
-     letting us polish the actual login/signup pages without touching the
-     base styles. This is **CSS specificity** in action.
-   What they change:
-     • .split-left  → light gradient background (instead of solid purple)
-                       + drop-shadow on the illustration
-     • .brand-block → top-left corner logo + tagline (absolute positioned)
-     • .split-right → light grey background instead of pure white
-     • .auth-card   → softer shadow, larger radius, max-width 400
-     • inputs       → bigger padding, focus ring
-     • .btn-primary → full-width gradient button (overrides base)
-     • .divider     → only ONE line (cancels the ::after from section 10)
-     • .btn-google  → white "Continue with Google" button
-   ========================================================================== */
+
+/* Auth page */
 .auth-page {
   height: 100vh;
   overflow: hidden;
@@ -565,7 +407,7 @@ form input:focus {
   min-height: unset;
 }
 
-/* ----- LEFT: branded gradient illustration panel ----- */
+
 .auth-page .split-left {
   flex: 1;
   position: relative;
@@ -586,7 +428,7 @@ form input:focus {
   filter: drop-shadow(0 18px 35px rgba(108, 99, 255, 0.18));
 }
 
-/* ----- Top-left brand (logo + tagline) ----- */
+
 .auth-page .brand-block {
   position: absolute;
   top: 40px;
@@ -606,7 +448,7 @@ form input:focus {
   margin-top: 4px;
 }
 
-/* ----- RIGHT: form area ----- */
+
 .auth-page .split-right {
   flex: 1;
   display: flex;
@@ -616,7 +458,7 @@ form input:focus {
   background: #F9FAFB;
 }
 
-/* ----- Auth Card (compact) ----- */
+
 .auth-page .auth-card {
   background: #FFFFFF;
   padding: 40px;
@@ -640,7 +482,7 @@ form input:focus {
   margin-bottom: 20px;
 }
 
-/* ----- Form fields ----- */
+
 .auth-page form label {
   display: block;
   margin-top: 4px;
@@ -667,7 +509,7 @@ form input:focus {
   box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.15);
 }
 
-/* ----- Forgot password ----- */
+
 .auth-page .forgot {
   text-align: right;
   margin-top: -8px;
@@ -679,7 +521,7 @@ form input:focus {
   font-weight: 500;
 }
 
-/* ----- Login button (full width gradient) ----- */
+
 .auth-page .btn-primary {
   background: linear-gradient(90deg, #6C63FF, #7A70FF);
   color: white;
@@ -700,7 +542,7 @@ form input:focus {
   transform: translateY(-2px);
 }
 
-/* ----- Divider ----- */
+
 .auth-page .divider {
   text-align: center;
   margin: 28px 0;
@@ -725,7 +567,7 @@ form input:focus {
 }
 .auth-page .divider::after { content: none; }
 
-/* ----- Google button ----- */
+
 .auth-page .btn-google {
   background: #FFFFFF;
   border: 1px solid #E5E7EB;
@@ -748,7 +590,7 @@ form input:focus {
   transform: translateY(-1px);
 }
 
-/* ----- Bottom text ----- */
+
 .auth-page .bottom-text {
   text-align: center;
   margin-top: 22px;
@@ -760,50 +602,26 @@ form input:focus {
   font-weight: 500;
 }
 
-/* ==========================================================================
-   13) SIGNUP-ONLY OVERRIDES                                  (signup.html)
-   --------------------------------------------------------------------------
-   HTML : <body class="auth-page signup-page">
-   Tiny tweaks layered on top of the shared .auth-page styles to differentiate
-   signup from login (slightly smaller heading, different image alignment).
-   ========================================================================== */
+
+/* Signup page */
 .signup-page .auth-card h2 {
   font-size: 22px;
 }
 
-/* Center signup illustration (no offset like login) */
+
 .signup-page .split-left img {
   margin-left: 0;
 }
 
-/* Consistent spacing for the "Already have an account?" line */
+
 .signup-page .bottom-text {
   margin-top: 20px;
   font-size: 13px;
   color: #6B7280;
 }
 
-/* ==========================================================================
-   14) DASHBOARD                                              (dashboard.html)
-   --------------------------------------------------------------------------
-   Sidebar on the left + main content area on the right.
-   HTML : <body class="dashboard-page">
-            <div class="dash-layout">
-              <aside class="sidebar"> ...menu... </aside>
-              <main class="dash-main"> ...cards... </main>
-            </div>
-          </body>
-   --------------------------------------------------------------------------
-   Pieces:
-     .sidebar          → 220px fixed-width left column
-     .sidebar-logo     → brand at top of the sidebar
-     .sidebar-menu     → vertical list of nav items
-     .menu-item.active → currently selected page (purple highlight)
-     .dash-main        → scrollable main area
-     .dash-header      → row with page title + "Start Interview" button
-     .btn-start        → CTA button (Start a new interview)
-     .dash-card        → reusable white content card
-   ========================================================================== */
+
+/* Dashboard */
 .dashboard-page {
   height: 100vh;
   overflow: hidden;
@@ -816,7 +634,7 @@ form input:focus {
   height: 100vh;
 }
 
-/* ----- Sidebar ----- */
+
 .sidebar {
   width: 220px;
   height: 100vh;
@@ -865,7 +683,7 @@ form input:focus {
   color: #6C63FF;
 }
 
-/* ----- Main content area ----- */
+
 .dash-main {
   flex: 1;
   padding: 32px 40px;
@@ -885,7 +703,7 @@ form input:focus {
   letter-spacing: -0.3px;
 }
 
-/* ----- Start Interview button ----- */
+
 .btn-start {
   background: linear-gradient(90deg, #6C63FF, #7A70FF);
   color: white;
@@ -905,7 +723,7 @@ form input:focus {
   box-shadow: 0 8px 18px rgba(108, 99, 255, 0.35);
 }
 
-/* ----- Welcome card ----- */
+
 .dash-card {
   background: #FFFFFF;
   padding: 24px 28px;
@@ -923,22 +741,8 @@ form input:focus {
   color: #6B7280;
 }
 
-/* ==========================================================================
-   15) SHARED WIZARD BUTTONS                       (setup-role.html,
-                                                    experience.html,
-                                                    difficulty.html,
-                                                    duration.html)
-   --------------------------------------------------------------------------
-   The .btn-back and .btn-next styles below are USED by every page in the
-   multi-step interview wizard.
 
-   The other selectors in this block (.setup-page, .setup-wrapper,
-   .step-indicator, .setup-title, .setup-subtitle, .option-grid,
-   .option-card, .setup-nav) are leftovers from a removed legacy
-   single-page setup ("interview-setup.html" / "questions.html"). They
-   are no longer used by any HTML but kept here as reference styles —
-   safe to delete if you want to slim the file down.
-   ========================================================================== */
+/* Interview setup */
 .setup-page {
   min-height: 100vh;
   background: #F9FAFB;
@@ -956,7 +760,7 @@ form input:focus {
   text-align: center;
 }
 
-/* ----- Step indicator ----- */
+
 .step-indicator {
   display: inline-block;
   background: #EEF2FF;
@@ -968,7 +772,7 @@ form input:focus {
   margin-bottom: 14px;
 }
 
-/* ----- Title + subtitle ----- */
+
 .setup-title {
   font-size: 26px;
   font-weight: 600;
@@ -982,7 +786,7 @@ form input:focus {
   margin-bottom: 24px;
 }
 
-/* ----- Option grid ----- */
+
 .option-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1015,7 +819,7 @@ form input:focus {
   color: #4F46E5;
 }
 
-/* ----- Navigation buttons ----- */
+
 .setup-nav {
   max-width: 700px;
   margin: 20px auto 0;
@@ -1060,47 +864,15 @@ form input:focus {
   box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
 }
 
-/* ----- Responsive ----- */
+
 @media (max-width: 600px) {
   .option-grid,
   .option-grid.three-cols { grid-template-columns: repeat(2, 1fr); }
   .setup-title { font-size: 22px; }
 }
 
-/* ==========================================================================
-   16) SETUP PANEL — MULTI-STEP WIZARD                       (setup-role.html)
-   --------------------------------------------------------------------------
-   Bigger / fancier wizard layout used for the role-selection screen.
-   Has a top header, a numbered step-progress bar, a centered role grid, and
-   a footer with back/next buttons stuck to the bottom.
-   HTML pattern:
-     <body class="setup-panel-page">
-       <div class="main-container">
-         <div class="top-section">
-           <div class="panel-header">...</div>
-           <div class="step-bar">
-             <div class="step done"><div class="step-circle">✓</div><span class="step-label">Role</span></div>
-             <div class="step-line"></div>
-             <div class="step active"><div class="step-circle">2</div><span class="step-label">Experience</span></div>
-             ...
-           </div>
-           <div class="section-heading"><h2>...</h2><p>...</p></div>
-         </div>
-         <div class="role-grid">
-           <div class="role-card selected">
-             <div class="role-icon">💻</div>
-             <div class="role-label">Frontend Developer</div>
-           </div>
-           ...
-         </div>
-         <div class="footer-actions">
-           <button class="btn-back">Back</button>
-           <button class="btn-next">Next</button>
-         </div>
-       </div>
-     </body>
-   Step states:  default = grey circle, .active = purple, .done = light purple.
-   ========================================================================== */
+
+/* Setup panel */
 .setup-panel-page {
   margin: 0;
   height: 100vh;
@@ -1111,7 +883,7 @@ form input:focus {
   font-family: 'Poppins', sans-serif;
 }
 
-/* Main wrapper fills the screen and pushes footer to bottom */
+
 .main-container {
   flex: 1;
   display: flex;
@@ -1124,7 +896,7 @@ form input:focus {
   overflow: hidden;
 }
 
-/* ----- TOP section ----- */
+
 .top-section {
   flex-shrink: 0;
 }
@@ -1143,7 +915,7 @@ form input:focus {
   color: #6B7280;
 }
 
-/* ----- Step Progress Bar ----- */
+
 .step-bar {
   display: flex;
   align-items: center;
@@ -1198,7 +970,7 @@ form input:focus {
   margin: 0 8px 22px;
 }
 
-/* ----- Section Heading ----- */
+
 .section-heading h2 {
   font-size: 18px;
   font-weight: 600;
@@ -1210,7 +982,7 @@ form input:focus {
   color: #6B7280;
 }
 
-/* ----- MIDDLE: Role grid (centered) ----- */
+
 .role-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1252,7 +1024,7 @@ form input:focus {
   font-weight: 600;
 }
 
-/* ----- BOTTOM: Footer actions ----- */
+
 .footer-actions {
   display: flex;
   justify-content: space-between;
@@ -1297,7 +1069,8 @@ form input:focus {
   box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
 }
 
-/* ----- Responsive ----- */
+
+/* Setup wizard responsive */
 @media (max-width: 800px) {
   .setup-panel-page { height: auto; overflow: auto; }
   .main-container { padding: 24px; }
@@ -1306,7 +1079,7 @@ form input:focus {
   .step-line { margin-bottom: 0; }
 }
 
-/* ----- Experience cards (Step 2: two large centered cards) ----- */
+
 .experience-row {
   display: flex;
   justify-content: center;
@@ -1351,13 +1124,13 @@ form input:focus {
   color: #6B7280;
 }
 
-/* Mobile: stack the two cards vertically */
+
 @media (max-width: 600px) {
   .experience-row { flex-direction: column; align-items: center; gap: 16px; }
   .experience-card { width: 100%; max-width: 320px; padding: 22px; }
 }
 
-/* ----- Difficulty cards (Step 3: three colored cards) ----- */
+
 .difficulty-row {
   display: flex;
   justify-content: center;
@@ -1405,13 +1178,13 @@ form input:focus {
   color: #6B7280;
 }
 
-/* Mobile: stack vertically */
+
 @media (max-width: 700px) {
   .difficulty-row { flex-direction: column; align-items: center; gap: 14px; }
   .difficulty-card { width: 100%; max-width: 320px; }
 }
 
-/* ----- Duration cards (Step 4: three cards, middle Recommended) ----- */
+
 .duration-row {
   display: flex;
   justify-content: center;
@@ -1441,7 +1214,7 @@ form input:focus {
   background: #F5F6FF;
 }
 
-/* Recommended highlight (default style for the middle card) */
+
 .duration-card.recommended {
   border-color: #C7D2FE;
   box-shadow: 0 6px 16px rgba(99, 102, 241, 0.08);
@@ -1479,75 +1252,14 @@ form input:focus {
   color: #6B7280;
 }
 
-/* Mobile: stack vertically */
+
 @media (max-width: 700px) {
   .duration-row { flex-direction: column; align-items: center; gap: 18px; }
   .duration-card { width: 100%; max-width: 320px; }
 }
 
-/* ==========================================================================
-   LIVE INTERVIEW — 3-COLUMN LAYOUT                     (live-interview.html)
-   --------------------------------------------------------------------------
-   The most complex page in the app. THREE columns side by side:
-     LEFT   → AI Interviewer panel (avatar + tips)
-     CENTER → Question, answer area (typed or voice), submit button
-     RIGHT  → Progress tracker (Q1, Q2, Q3...)
-   --------------------------------------------------------------------------
-   HTML skeleton:
-     <body class="interview-page">
-       <div class="interview-layout">
-         <aside class="ai-panel">...</aside>
-         <main class="interview-main">
-           <div class="live-bar">
-             <span class="live-indicator"><span class="live-dot"></span>LIVE</span>
-             <span class="live-timer">12:34</span>     ← +.ending when low
-           </div>
-           <div class="question-header">
-             <span class="q-label">Question 1 of 5</span>
-             <span class="q-tag">technical</span>
-             <span class="q-status">Answered</span>
-           </div>
-           <h2 class="question-text">...</h2>
 
-           <div class="answer-tabs">                  ← Type / Voice toggle
-             <button class="tab active">Type</button>
-             <button class="tab">Voice</button>
-           </div>
-
-           <div class="answer-panel">                 ← typed mode
-             <textarea class="answer-input"></textarea>
-           </div>
-
-           <div class="answer-panel hidden">          ← voice mode
-             <div class="voice-card">
-               <button class="big-mic">🎙️</button>   ← +.recording when active
-               <p class="voice-status">Click to start</p>
-               <div class="transcript-box">...</div>
-             </div>
-           </div>
-
-           <div class="interview-actions">
-             <button class="btn-mic">Microphone</button>
-             <button class="btn-submit">Submit Answer</button>
-           </div>
-         </main>
-         <aside class="progress-panel">
-           <ul class="progress-list">
-             <li class="done"><span class="check">✓</span> Q1</li>
-             <li class="active"><span class="check">●</span> Q2</li>
-             <li><span class="check">○</span> Q3</li>
-             ...
-           </ul>
-         </aside>
-       </div>
-     </body>
-   --------------------------------------------------------------------------
-   Animations defined here:
-     @keyframes pulse     → soft breathing glow on .ai-avatar
-     @keyframes liveBlink → pulsing red shadow on .live-dot, .live-timer.ending
-                            and .big-mic.recording
-   Responsive: at <900px the 3 columns stack vertically.
-   ========================================================================== */
+/* Live interview */
 .interview-page {
   margin: 0;
   height: 100vh;
@@ -1561,7 +1273,7 @@ form input:focus {
   height: 100vh;
 }
 
-/* ----- Common panel title ----- */
+
 .panel-title {
   font-size: 14px;
   font-weight: 600;
@@ -1571,7 +1283,7 @@ form input:focus {
   margin-bottom: 18px;
 }
 
-/* ----- LEFT: AI Interviewer panel ----- */
+
 .ai-panel {
   width: 20%;
   min-width: 220px;
@@ -1630,7 +1342,7 @@ form input:focus {
   border-radius: 8px;
 }
 
-/* ----- CENTER: Main interview area ----- */
+
 .interview-main {
   flex: 1;
   padding: 28px 50px 36px;
@@ -1639,7 +1351,7 @@ form input:focus {
   overflow: hidden;
 }
 
-/* Top live bar */
+
 .live-bar {
   display: flex;
   justify-content: space-between;
@@ -1767,7 +1479,7 @@ form input:focus {
   border-color: #D1D5DB;
 }
 
-/* Active recording state */
+
 .btn-mic.recording {
   background: #FEE2E2;
   border-color: #EF4444;
@@ -1775,7 +1487,7 @@ form input:focus {
   animation: liveBlink 1.4s infinite;
 }
 
-/* ----- Answer mode tabs ----- */
+
 .answer-tabs {
   display: flex;
   gap: 8px;
@@ -1804,7 +1516,7 @@ form input:focus {
   box-shadow: 0 2px 6px rgba(0,0,0,0.06);
 }
 
-/* ----- Mode panels ----- */
+
 .answer-panel {
   flex: 1;
   display: flex;
@@ -1814,7 +1526,7 @@ form input:focus {
 }
 .answer-panel.hidden { display: none; }
 
-/* ----- Voice mode card ----- */
+
 .voice-card {
   flex: 1;
   background: #F9FAFB;
@@ -1892,7 +1604,7 @@ form input:focus {
   box-shadow: 0 10px 20px rgba(108, 99, 255, 0.35);
 }
 
-/* ----- RIGHT: Progress tracker ----- */
+
 .progress-panel {
   width: 20%;
   min-width: 220px;
@@ -1929,7 +1641,7 @@ form input:focus {
   color: #9CA3AF;
 }
 
-/* Done item */
+
 .progress-list li.done {
   color: #4F46E5;
   font-weight: 500;
@@ -1938,7 +1650,7 @@ form input:focus {
   color: #10B981;
 }
 
-/* Active item */
+
 .progress-list li.active {
   background: #F5F6FF;
   color: #111827;
@@ -1948,7 +1660,7 @@ form input:focus {
   color: #6366F1;
 }
 
-/* ----- Responsive ----- */
+
 @media (max-width: 900px) {
   .interview-page { height: auto; overflow: auto; }
   .interview-layout { flex-direction: column; height: auto; }
@@ -1958,21 +1670,8 @@ form input:focus {
   .ai-avatar { width: 80px; height: 80px; font-size: 40px; }
 }
 
-/* ==========================================================================
-   SUBMITTING PAGE                                       (submitting.html)
-   --------------------------------------------------------------------------
-   Centered loading spinner shown between the interview and the result page
-   while the AI evaluates the answers.
-   HTML : <body class="submitting-page">
-            <div class="submit-wrapper">
-              <div class="spinner"></div>
-              <h2 class="submit-title">Evaluating your answers...</h2>
-              <p class="submit-subtitle">Hang tight, this takes a few seconds</p>
-            </div>
-          </body>
-   The .spinner is pure CSS: a circle with one purple border edge that
-   rotates forever via @keyframes spin.
-   ========================================================================== */
+
+/* Submitting page */
 .submitting-page {
   margin: 0;
   height: 100vh;
@@ -2013,23 +1712,8 @@ form input:focus {
   color: #6B7280;
 }
 
-/* ==========================================================================
-   RESULT PAGE — META PILLS                              (result.html)
-   --------------------------------------------------------------------------
-   Small colored pills showing relevance / confidence / fillers next to each
-   question on the result page.
-   HTML : <div class="meta-row">
-            <span class="meta-pill rel-high">High relevance</span>
-            <span class="meta-pill rel-medium">Medium relevance</span>
-            <span class="meta-pill rel-low">Low relevance</span>
-            <span class="meta-pill">3 fillers</span>
-          </div>
-   Color modifiers:
-     .rel-high   → green  (good)
-     .rel-medium → amber  (ok)
-     .rel-low    → red    (needs work)
-   Plain .meta-pill (no modifier) = neutral grey, used for filler counts etc.
-   ========================================================================== */
+
+/* Result page */
 .meta-row {
   margin-top: 10px;
   display: flex;
@@ -2137,3 +1821,123 @@ form input:focus {
 .meta-pill.rel-medium { background: #FFFBEB; color: #B45309; border-color: #FDE68A; }
 .meta-pill.rel-low    { background: #FEF2F2; color: #B91C1C; border-color: #FCA5A5; }
 
+
+/* Setup wizard */
+.setup-step {
+    display: none;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+}
+
+.setup-step.active {
+    display: flex;
+}
+
+
+.role-card,
+.experience-card,
+.difficulty-card,
+.duration-card {
+    font-family: inherit;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+}
+
+
+.role-card:focus-visible,
+.experience-card:focus-visible,
+.difficulty-card:focus-visible,
+.duration-card:focus-visible {
+    outline: 3px solid rgba(108, 99, 255, 0.25);
+    outline-offset: 3px;
+}
+
+
+.role-card.selected,
+.experience-card.selected,
+.difficulty-card.selected,
+.duration-card.selected {
+    border-color: #6C63FF;
+    box-shadow:
+        0 0 0 2px rgba(108, 99, 255, 0.12),
+        0 10px 24px rgba(108, 99, 255, 0.10);
+    transform: translateY(-2px);
+}
+
+
+.setup-error {
+    min-height: 0;
+    margin: 8px 0 0;
+    padding: 0 14px;
+    border-radius: 10px;
+
+    color: #B91C1C;
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+
+    font-size: 12.5px;
+    line-height: 1.5;
+
+    opacity: 0;
+    transform: translateY(-4px);
+
+    transition:
+        opacity .2s ease,
+        transform .2s ease,
+        padding .2s ease,
+        margin .2s ease;
+}
+
+.setup-error.visible {
+    opacity: 1;
+    transform: translateY(0);
+    padding: 9px 14px;
+    margin: 8px 0 0;
+}
+
+
+.btn-next:disabled,
+.btn-back:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+
+@media (max-width: 800px) {
+
+    .setup-step {
+        overflow-y: auto;
+        padding-right: 4px;
+    }
+
+    .setup-step .role-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .experience-row {
+        flex-wrap: wrap;
+    }
+
+    .difficulty-row,
+    .duration-row {
+        flex-wrap: wrap;
+    }
+
+}
+
+
+@media (max-width: 520px) {
+
+    .setup-step .role-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .experience-row,
+    .difficulty-row,
+    .duration-row {
+        flex-direction: column;
+    }
+
+}

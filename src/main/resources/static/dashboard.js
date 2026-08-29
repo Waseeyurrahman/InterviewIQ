@@ -1,76 +1,54 @@
-/* ============================================
-   Dashboard logic
-   --------------------------------------------
-   Fetches /api/dashboard and renders:
-   - Stats
-   - Score trend
-   - AI-generated weaknesses
-   - Recent interviews
-   - AI-generated strengths
-   ============================================ */
-
 const $ = id => document.getElementById(id);
 
-const esc = s =>
-    String(s ?? "").replace(
+const esc = value =>
+    String(value ?? "").replace(
         /[&<>"']/g,
-        c => ({
+        char => ({
             "&": "&amp;",
             "<": "&lt;",
             ">": "&gt;",
             '"': "&quot;",
             "'": "&#39;"
-        }[c])
+        }[char])
     );
 
-const fmt = (iso, opt) => {
-    const d = new Date(iso);
+const fmt = (iso, options) => {
+    const date = new Date(iso);
 
-    return isNaN(d)
+    return isNaN(date)
         ? (iso || "—")
-        : d.toLocaleDateString("en-US", opt);
+        : date.toLocaleDateString("en-US", options);
 };
 
-const show = state =>
-    ["loadingState:loading", "errorState:error", "dashboardData:ready"]
-        .forEach(pair => {
-
-            const [id, s] = pair.split(":");
-
-            $(id).classList.toggle(
-                "hidden",
-                state !== s
-            );
-        });
-
+const show = state => {
+    [
+        ["loadingState", "loading"],
+        ["errorState", "error"],
+        ["dashboardData", "ready"]
+    ].forEach(([id, expectedState]) => {
+        $(id).classList.toggle(
+            "hidden",
+            state !== expectedState
+        );
+    });
+};
 
 document.addEventListener("DOMContentLoaded", load);
 
-
-/* ============================================
-   LOAD DASHBOARD
-   ============================================ */
-
+// Load dashboard data
 function load() {
 
     show("loading");
 
-    // Get JWT stored during login
     const token = localStorage.getItem("token");
 
-    // No token → user is not logged in
     if (!token) {
-
-        alert("Please login first.");
-
-        window.location.href = "login.html";
-
+        window.location.replace("login.html");
         return;
     }
 
     fetch("/api/dashboard", {
         method: "GET",
-
         headers: {
             "Authorization": "Bearer " + token,
             "Content-Type": "application/json"
@@ -78,23 +56,13 @@ function load() {
     })
         .then(response => {
 
-            /*
-             * If JWT is expired/invalid,
-             * Spring Security returns 401.
-             */
             if (response.status === 401) {
-
                 localStorage.removeItem("token");
-
-                alert("Your session has expired. Please login again.");
-
-                window.location.href = "login.html";
-
+                window.location.replace("login.html");
                 return null;
             }
 
             if (!response.ok) {
-
                 throw new Error(
                     "HTTP " + response.status
                 );
@@ -104,7 +72,6 @@ function load() {
         })
         .then(data => {
 
-            // If we already redirected because of 401
             if (!data) {
                 return;
             }
@@ -115,7 +82,6 @@ function load() {
             );
 
             render(data);
-
             show("ready");
         })
         .catch(error => {
@@ -133,11 +99,7 @@ function load() {
         });
 }
 
-
-/* ============================================
-   RENDER DASHBOARD
-   ============================================ */
-
+// Render dashboard
 function render(data) {
 
     $("statTotal").textContent =
@@ -152,29 +114,13 @@ function render(data) {
     $("statTime").textContent =
         data.totalPracticeTime || "0m";
 
-
-    lineChart(
-        data.scoreTrend || []
-    );
-
-    weaknesses(
-        data.weakAreas || []
-    );
-
-    table(
-        data.recentInterviews || []
-    );
-
-    strengths(
-        data.strengths || []
-    );
+    lineChart(data.scoreTrend || []);
+    weaknesses(data.weakAreas || []);
+    table(data.recentInterviews || []);
+    strengths(data.strengths || []);
 }
 
-
-/* ============================================
-   SCORE TREND
-   ============================================ */
-
+// Render score trend
 function lineChart(trend) {
 
     const wrap = $("lineChart");
@@ -204,18 +150,16 @@ function lineChart(trend) {
             : 0;
 
     const pts = trend.map((point, index) => ({
-
         x: pX + step * index,
 
         y:
             pY +
             (1 - (point.score || 0) / 100) * ih,
 
-        label:
-            fmt(point.date, {
-                month: "short",
-                day: "numeric"
-            }),
+        label: fmt(point.date, {
+            month: "short",
+            day: "numeric"
+        }),
 
         score: point.score
     }));
@@ -240,8 +184,8 @@ function lineChart(trend) {
 
     const dots =
         pts
-            .map(point =>
-                `<circle
+            .map(point => `
+                <circle
                     cx="${point.x}"
                     cy="${point.y}"
                     r="4.5"
@@ -251,22 +195,22 @@ function lineChart(trend) {
                     <title>
                         ${esc(point.label)}: ${point.score}%
                     </title>
-                </circle>`
-            )
+                </circle>
+            `)
             .join("");
 
     const labels =
         pts
-            .map(point =>
-                `<text
+            .map(point => `
+                <text
                     x="${point.x}"
                     y="${H - 5}"
                     fill="#9CA3AF"
                     font-size="11"
                     text-anchor="middle">
                     ${esc(point.label)}
-                </text>`
-            )
+                </text>
+            `)
             .join("");
 
     wrap.innerHTML = `
@@ -276,7 +220,6 @@ function lineChart(trend) {
             aria-label="Interview score trend">
 
             <defs>
-
                 <linearGradient
                     id="areaGrad"
                     x1="0"
@@ -295,9 +238,7 @@ function lineChart(trend) {
                         stop-opacity="0"/>
 
                 </linearGradient>
-
             </defs>
-
 
             <g stroke="#F1F2F6">
 
@@ -321,12 +262,10 @@ function lineChart(trend) {
 
             </g>
 
-
             <path
                 d="${area}"
                 fill="url(#areaGrad)"
                 opacity="0.35"/>
-
 
             <polyline
                 points="${poly}"
@@ -336,11 +275,9 @@ function lineChart(trend) {
                 stroke-linecap="round"
                 stroke-linejoin="round"/>
 
-
             <g>
                 ${dots}
             </g>
-
 
             <g font-family="Poppins">
                 ${labels}
@@ -350,11 +287,7 @@ function lineChart(trend) {
     `;
 }
 
-
-/* ============================================
-   AI-GENERATED WEAKNESSES
-   ============================================ */
-
+// Render weaknesses
 function weaknesses(items) {
 
     const container = $("weaknessList");
@@ -392,16 +325,11 @@ function weaknesses(items) {
 
                     </div>
                 `;
-
             })
             .join("");
 }
 
-
-/* ============================================
-   RECENT INTERVIEWS
-   ============================================ */
-
+// Render recent interviews
 function table(rows) {
 
     const tbody = $("recentTbody");
@@ -411,7 +339,7 @@ function table(rows) {
         tbody.innerHTML = `
             <tr>
                 <td
-                    colspan="5"
+                    colspan="6"
                     style="
                         text-align:center;
                         color:#9CA3AF;
@@ -426,7 +354,6 @@ function table(rows) {
         return;
     }
 
-
     const badge = status => {
 
         if (status === "Completed") {
@@ -440,70 +367,98 @@ function table(rows) {
         return "purple";
     };
 
-
     tbody.innerHTML =
         rows
-            .map(row => `
-                <tr>
+            .map(row => {
 
-                    <td>
-                        ${esc(row.role)}
-                    </td>
+                const interviewId =
+                    row.interviewId;
 
-                    <td>
-                        ${esc(row.level)}
-                    </td>
+                return `
+                    <tr
+                        class="interview-row"
+                        ${interviewId
+                            ? `onclick="viewInterview(${interviewId})"`
+                            : ""
+                        }>
 
-                    <td>
-                        ${fmt(row.date, {
-                            month: "short",
-                            day: "2-digit"
-                        })}
-                    </td>
+                        <td>
+                            ${esc(row.role)}
+                        </td>
 
-                    <td>
-                        <b>${row.score}%</b>
-                    </td>
+                        <td>
+                            ${esc(
+                                row.experienceLevel ||
+                                "Not specified"
+                            )}
+                        </td>
 
-                    <td>
-                        <span
-                            class="badge ${badge(row.status)}">
-                            ${esc(row.status)}
-                        </span>
-                    </td>
+                        <td>
+                            <span class="difficulty-badge">
+                                ${esc(
+                                    row.difficulty ||
+                                    "Not specified"
+                                )}
+                            </span>
+                        </td>
 
-                </tr>
-            `)
+                        <td>
+                            ${fmt(row.date, {
+                                month: "short",
+                                day: "2-digit"
+                            })}
+                        </td>
+
+                        <td>
+                            <b>${row.score}%</b>
+                        </td>
+
+                        <td>
+                            <span class="badge ${badge(row.status)}">
+                                ${esc(row.status)}
+                            </span>
+                        </td>
+
+                    </tr>
+                `;
+            })
             .join("");
 }
 
+// Open interview result
+function viewInterview(interviewId) {
 
-/* ============================================
-   AI-GENERATED STRENGTHS
-   ============================================ */
+    if (!interviewId) {
+        return;
+    }
 
+    window.location.href =
+        "result.html?interviewId=" +
+        encodeURIComponent(interviewId);
+}
+
+// Render strengths
 function strengths(items) {
 
     const list = $("strengthList");
 
     if (!items.length) {
 
-        list.innerHTML =
-            `<p style="
+        list.innerHTML = `
+            <p style="
                 color:#9CA3AF;
                 font-size:12px;
             ">
                 No strengths data yet.
-            </p>`;
+            </p>
+        `;
 
         return;
     }
 
-
     list.innerHTML =
         items
             .map(item => `
-
                 <div class="strength-row">
 
                     <div class="top">
@@ -518,7 +473,6 @@ function strengths(items) {
 
                     </div>
 
-
                     <div class="strength-track">
 
                         <div
@@ -529,10 +483,8 @@ function strengths(items) {
                     </div>
 
                 </div>
-
             `)
             .join("");
-
 
     requestAnimationFrame(() => {
 
@@ -546,8 +498,6 @@ function strengths(items) {
                         element.dataset.w + "%";
 
                 }, 120 + index * 100);
-
             });
-
     });
 }

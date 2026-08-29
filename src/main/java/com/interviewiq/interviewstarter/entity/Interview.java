@@ -37,6 +37,8 @@ public class Interview {
 
     private Integer finalScore;
 
+    private LocalDateTime startedAt;
+
     private LocalDateTime completedAt;
 
     @Enumerated(EnumType.STRING)

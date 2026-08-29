@@ -13,9 +13,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-
-import java.util.List;
-
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
@@ -26,20 +23,10 @@ public class SecurityConfig {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
-
-    // =========================================================
-    // PASSWORD ENCODER
-    // =========================================================
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
-
-    // =========================================================
-    // AUTHENTICATION MANAGER
-    // =========================================================
 
     @Bean
     public AuthenticationManager authenticationManager(
@@ -48,46 +35,20 @@ public class SecurityConfig {
         return configuration.getAuthenticationManager();
     }
 
-
-    // =========================================================
-    // SECURITY FILTER CHAIN
-    // =========================================================
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http)
             throws Exception {
 
         http
-
-
-                // -------------------------------------------------
-                // CSRF
-                // -------------------------------------------------
-                // Disabled because we are using JWT authentication
-                // instead of session-based authentication.
-                // -------------------------------------------------
                 .csrf(csrf -> csrf.disable())
 
-
-                // -------------------------------------------------
-                // SESSION MANAGEMENT
-                // -------------------------------------------------
-                // JWT authentication is stateless.
-                // The server does not maintain login sessions.
-                // -------------------------------------------------
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
                         )
                 )
 
-
-                // -------------------------------------------------
-                // EXCEPTION HANDLING
-                // -------------------------------------------------
                 .exceptionHandling(exception -> exception
-
-                        // User is not authenticated
                         .authenticationEntryPoint(
                                 (request, response, authException) -> {
 
@@ -107,10 +68,6 @@ public class SecurityConfig {
                                             """);
                                 }
                         )
-
-
-                        // User is authenticated but does not
-                        // have permission to access the resource
                         .accessDeniedHandler(
                                 (request, response, accessDeniedException) -> {
 
@@ -132,48 +89,51 @@ public class SecurityConfig {
                         )
                 )
 
-
-                // -------------------------------------------------
-                // AUTHORIZATION RULES
-                // -------------------------------------------------
                 .authorizeHttpRequests(auth -> auth
+
+                        // Public pages and static resources
                         .requestMatchers(
                                 "/",
                                 "/index.html",
                                 "/login.html",
                                 "/signup.html",
                                 "/dashboard.html",
-                                "/setup-role.html",
-                                "/experience.html",
-                                "/difficulty.html",
-                                "/duration.html",
+                                "/my-interviews.html",
+                                "/setup-interview.html",
+                                "/recommendations.html",
                                 "/live-interview.html",
                                 "/submitting.html",
                                 "/result.html",
+                                "/profile.html",
 
                                 "/style.css",
+                                "/landing.css",
+                                "/index.css",
                                 "/dashboard.css",
-                                "/dashboard.js",
-                                "/api.js"
-                        ).permitAll()
+                                "/recommendations.css",
+                                "/profile.css",
 
+                                "/api.js",
+                                "/auth.js",
+                                "/auth-guard.js",
+                                "/dashboard.js",
+                                "/my-interviews.js",
+                                "/recommendations.js",
+                                "/profile.js"
+                        )
+                        .permitAll()
+
+                        // Authentication endpoints
                         .requestMatchers("/auth/**").permitAll()
 
+                        // Protected endpoints
                         .anyRequest().authenticated()
                 )
 
-
-                // -------------------------------------------------
-                // JWT FILTER
-                // -------------------------------------------------
-                // Our JWT filter runs before Spring Security's
-                // UsernamePasswordAuthenticationFilter.
-                // -------------------------------------------------
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
                 );
-
 
         return http.build();
     }

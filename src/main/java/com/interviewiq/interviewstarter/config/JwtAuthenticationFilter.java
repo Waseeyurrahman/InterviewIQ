@@ -20,11 +20,11 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
-    private final CustomUserDetailsService userDetailsService;
-
     private static final Logger log =
             LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
+    private final JwtService jwtService;
+    private final CustomUserDetailsService userDetailsService;
 
     public JwtAuthenticationFilter(
             JwtService jwtService,
@@ -43,7 +43,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        // No JWT → continue request
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -52,19 +51,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
 
         try {
-
-            // Extract email from JWT
             String email = jwtService.extractEmail(token);
 
-            // Don't overwrite existing authentication
             if (email != null &&
                     SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                // Load user from database
                 UserDetails userDetails =
                         userDetailsService.loadUserByUsername(email);
 
-                // Validate JWT
                 if (jwtService.isTokenValid(
                         token,
                         userDetails.getUsername())) {
@@ -81,7 +75,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     .buildDetails(request)
                     );
 
-                    // Store authenticated user
                     SecurityContextHolder
                             .getContext()
                             .setAuthentication(authentication);
@@ -89,16 +82,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
         } catch (Exception e) {
-
-            // Invalid/expired JWT.
-            // Do not authenticate the request.
-            log.debug(
-                    "JWT authentication failed: {}",
-                    e.getMessage()
-            );
+            log.debug("JWT authentication failed: {}", e.getMessage());
         }
 
-        // Continue to Spring Security
         filterChain.doFilter(request, response);
     }
 }

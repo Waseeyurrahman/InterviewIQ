@@ -1,719 +1,2552 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <title>Live Interview | InterviewIQ AI</title>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <script src="api.js"></script>
-  <style>
-    /* ============================================
-       Live Interview — clean layout + participants
-       ============================================ */
-    html, body { height: 100%; overflow: hidden; background: #f8f9fc; font-family: 'Poppins', sans-serif; }
-    .interview-page { height: 100vh; overflow: hidden; }
 
-    .interview-layout {
-      display: grid;
-      grid-template-columns: 240px 1fr 280px;
-      height: 100vh;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    /* ---------- LEFT: AI tips panel ---------- */
-    .ai-panel,
-    .progress-panel {
-      background: white;
-      border-right: 1px solid #F1F2F6;
-      padding: 22px 18px;
-      display: flex; flex-direction: column;
-      overflow-y: auto;
-    }
-    .progress-panel { border-right: none; border-left: 1px solid #F1F2F6; }
+    <title>Live Interview | InterviewIQ AI</title>
 
-    .panel-title {
-      font-size: 13px; font-weight: 600; color: #6B7280;
-      text-transform: uppercase; letter-spacing: 0.5px;
-      margin-bottom: 14px;
-    }
+    <link rel="stylesheet" href="style.css">
 
-    .ai-avatar-big {
-      width: 80px; height: 80px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #6C63FF, #8A7CFF);
-      color: white; font-size: 38px;
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 10px;
-      box-shadow: 0 8px 20px rgba(108,99,255,0.25);
-    }
-    .ai-tagline { text-align: center; font-size: 12.5px; color: #6B7280; margin-bottom: 18px; }
+    <!-- Font Awesome -->
+    <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
 
-    .tips-block h4 {
-      font-size: 11.5px; font-weight: 600; color: #6B7280;
-      text-transform: uppercase; letter-spacing: 0.5px;
-      margin-bottom: 10px;
-    }
-    .tips-list {
-      list-style: none; padding: 0; margin: 0;
-      display: flex; flex-direction: column; gap: 8px;
-      font-size: 12.5px; color: #374151;
-    }
+    <!-- Poppins -->
+    <link
+            href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+            rel="stylesheet"
+    >
 
-    /* ---------- CENTER: question + answer ---------- */
-    .interview-main {
-      display: flex; flex-direction: column;
-      height: 100vh; overflow: hidden;
-      padding: 16px 26px;
-    }
+    <!-- Centralized API client -->
+    <script src="api.js"></script>
 
-    .live-bar {
-      flex-shrink: 0;
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 10px 14px;
-      background: white;
-      border: 1px solid #F1F2F6;
-      border-radius: 10px;
-      margin-bottom: 16px;
-    }
-    .live-indicator {
-      display: inline-flex; align-items: center; gap: 8px;
-      font-size: 12.5px; font-weight: 600; color: #EF4444;
-    }
-    .live-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: #EF4444;
-      animation: livedot 1.4s ease-in-out infinite;
-    }
-    @keyframes livedot {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68, 0.6); }
-      50%      { box-shadow: 0 0 0 6px rgba(239,68,68, 0); }
-    }
-    .live-timer {
-      font-size: 14px; font-weight: 600; color: #111827;
-      font-variant-numeric: tabular-nums;
-    }
-    .live-timer.ending { color: #EF4444; }
 
-    .question-header {
-      display: flex; align-items: center; gap: 10px;
-      font-size: 12px; color: #6B7280;
-      margin-bottom: 10px;
-    }
-    .q-tag {
-      background: #EEF2FF; color: #6C63FF;
-      padding: 3px 10px; border-radius: 999px;
-      font-weight: 600; font-size: 11px;
-    }
-    .q-status { color: #22c55e; font-weight: 600; }
+    <style>
 
-    .question-text {
-      font-size: 22px; font-weight: 600; color: #111827;
-      line-height: 1.4;
-      margin: 6px 0 18px;
-    }
 
-    .answer-input {
-      flex: 1; min-height: 0;
-      width: 100%;
-      font-family: 'Poppins', sans-serif;
-      font-size: 14px; color: #111827;
-      background: white;
-      border: 1px solid #E5E7EB;
-      border-radius: 12px;
-      padding: 14px 16px;
-      resize: none;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-    .answer-input:focus {
-      outline: none; border-color: #6C63FF;
-      box-shadow: 0 0 0 3px rgba(108,99,255,0.12);
-    }
+        html,
+        body {
 
-    .interview-actions {
-      flex-shrink: 0;
-      display: flex; justify-content: flex-end; gap: 10px;
-      margin-top: 14px;
-    }
-    .btn-mic, .btn-submit {
-      font-family: 'Poppins', sans-serif;
-      font-size: 13.5px; font-weight: 500;
-      padding: 10px 18px; border-radius: 10px;
-      cursor: pointer;
-      display: inline-flex; align-items: center; gap: 6px;
-      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-    }
-    .btn-mic {
-      background: white; color: #374151;
-      border: 1px solid #E5E7EB;
-    }
-    .btn-mic:hover { background: #F3F4F6; border-color: #D1D5DB; }
-    .btn-mic.recording {
-      background: #FEF2F2; color: #EF4444; border-color: #FCA5A5;
-      animation: micPulse 1.2s ease-in-out infinite;
-    }
-    @keyframes micPulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
-      50%      { box-shadow: 0 0 0 6px rgba(239,68,68,0);   }
-    }
-    .btn-submit {
-      background: linear-gradient(135deg, #6C63FF, #8A7CFF);
-      color: white; border: none;
-      box-shadow: 0 4px 12px rgba(108,99,255,0.28);
-    }
-    .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(108,99,255,0.38); }
+            height: 100%;
+            overflow: hidden;
 
-    /* ============================================
-       RIGHT: Participants panel (NEW)
-       ============================================ */
-    .participants-wrapper {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 22px;
-    }
-    .participants-container {
-      display: flex;
-      gap: 16px;
-      justify-content: center;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    .participant-card {
-      width: 120px;
-      padding: 16px;
-      border-radius: 12px;
-      background: white;
-      text-align: center;
-      border: 2px solid transparent;
-      transition: all 0.3s ease;
-    }
-    .participant-avatar {
-      width: 48px; height: 48px;
-      border-radius: 50%;
-      margin: 0 auto 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px;
-      background: linear-gradient(135deg, #6C63FF, #8A7CFF);
-      color: white;
-      box-shadow: 0 4px 12px rgba(108,99,255,0.25);
-    }
-    .participant-card.user .participant-avatar {
-      background: linear-gradient(135deg, #22c55e, #16a34a);
-      box-shadow: 0 4px 12px rgba(34,197,94,0.25);
-    }
-    .participant-name {
-      font-size: 12px; font-weight: 600; color: #111827;
-      margin-top: 2px;
-    }
-    .participant-status {
-      font-size: 10.5px; color: #6B7280;
-      margin-top: 4px; min-height: 14px;
-      font-weight: 500;
-    }
+            background: #f8f9fc;
 
-    /* Active / inactive states */
-    .ai-active {
-      border: 2px solid #6d5dfc;
-      box-shadow: 0 0 12px rgba(109, 93, 252, 0.5);
-    }
-    .ai-active .participant-status { color: #6C63FF; }
+            font-family: 'Poppins', sans-serif;
+        }
 
-    .user-active {
-      border: 2px solid #22c55e;
-      box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
-    }
-    .user-active .participant-status { color: #16a34a; }
 
-    .dim { opacity: 0.5; }
+        .interview-page {
 
-    @media (max-width: 1100px) {
-      .interview-layout { grid-template-columns: 200px 1fr 240px; }
-    }
-    @media (max-width: 800px) {
-      html, body, .interview-page { height: auto; overflow: auto; }
-      .interview-layout { grid-template-columns: 1fr; height: auto; }
-      .ai-panel, .progress-panel { border: none; }
-      .interview-main { height: auto; }
-    }
-  </style>
+            height: 100vh;
+            overflow: hidden;
+        }
+
+
+        .interview-layout {
+
+            display: grid;
+
+            grid-template-columns:
+                240px 1fr 280px;
+
+            height: 100vh;
+        }
+
+
+
+
+        .ai-panel,
+        .progress-panel {
+
+            background: white;
+
+            padding: 22px 18px;
+
+            display: flex;
+            flex-direction: column;
+
+            overflow-y: auto;
+
+            border-right:
+                1px solid #F1F2F6;
+        }
+
+
+        .progress-panel {
+
+            border-right: none;
+
+            border-left:
+                1px solid #F1F2F6;
+        }
+
+
+        .panel-title {
+
+            font-size: 13px;
+
+            font-weight: 600;
+
+            color: #6B7280;
+
+            text-transform: uppercase;
+
+            letter-spacing: 0.5px;
+
+            margin-bottom: 14px;
+        }
+
+
+
+        .ai-avatar-big {
+
+            width: 80px;
+            height: 80px;
+
+            border-radius: 50%;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #6C63FF,
+                    #8A7CFF
+                );
+
+            color: white;
+
+            font-size: 32px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            margin: 0 auto 10px;
+
+            box-shadow:
+                0 8px 20px
+                rgba(108,99,255,0.25);
+        }
+
+
+        .ai-tagline {
+
+            text-align: center;
+
+            font-size: 12.5px;
+
+            color: #6B7280;
+
+            margin-bottom: 18px;
+        }
+
+
+
+
+        .tips-block h4 {
+
+            font-size: 11.5px;
+
+            font-weight: 600;
+
+            color: #6B7280;
+
+            text-transform: uppercase;
+
+            letter-spacing: 0.5px;
+
+            margin-bottom: 10px;
+        }
+
+
+        .tips-list {
+
+            list-style: none;
+
+            padding: 0;
+            margin: 0;
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 9px;
+
+            font-size: 12px;
+
+            color: #374151;
+        }
+
+
+        .tips-list li {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 9px;
+
+            padding: 8px 9px;
+
+            border-radius: 8px;
+
+            background: #fafafd;
+
+            border: 1px solid #eeeeF3;
+        }
+
+
+        .tips-list i {
+
+            width: 17px;
+
+            text-align: center;
+
+            color: #6C63FF;
+
+            font-size: 12px;
+        }
+
+
+
+
+        .interview-main {
+
+            display: flex;
+
+            flex-direction: column;
+
+            height: 100vh;
+
+            overflow: hidden;
+
+            padding: 16px 26px;
+        }
+
+
+
+
+        .live-bar {
+
+            flex-shrink: 0;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            padding: 10px 14px;
+
+            background: white;
+
+            border:
+                1px solid #F1F2F6;
+
+            border-radius: 10px;
+
+            margin-bottom: 16px;
+        }
+
+
+        .live-indicator {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            font-size: 12.5px;
+
+            font-weight: 600;
+
+            color: #EF4444;
+        }
+
+
+        .live-dot {
+
+            width: 8px;
+            height: 8px;
+
+            border-radius: 50%;
+
+            background: #EF4444;
+
+            animation:
+                liveDot 1.4s
+                ease-in-out infinite;
+        }
+
+
+        @keyframes liveDot {
+
+            0%,
+            100% {
+
+                box-shadow:
+                    0 0 0 0
+                    rgba(239,68,68,0.6);
+            }
+
+            50% {
+
+                box-shadow:
+                    0 0 0 6px
+                    rgba(239,68,68,0);
+            }
+        }
+
+
+        .live-timer {
+
+            font-size: 14px;
+
+            font-weight: 600;
+
+            color: #111827;
+
+            font-variant-numeric:
+                tabular-nums;
+        }
+
+
+        .live-timer.ending {
+
+            color: #EF4444;
+        }
+
+
+
+
+        .question-header {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 9px;
+
+            font-size: 12px;
+
+            color: #6B7280;
+
+            margin-bottom: 10px;
+
+            flex-wrap: wrap;
+        }
+
+
+        .q-tag {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 5px;
+
+            background: #EEF2FF;
+
+            color: #6C63FF;
+
+            padding: 4px 10px;
+
+            border-radius: 999px;
+
+            font-weight: 600;
+
+            font-size: 11px;
+        }
+
+
+        .q-status {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 5px;
+
+            color: #22c55e;
+
+            font-weight: 600;
+        }
+
+
+        .q-status i {
+
+            font-size: 6px;
+        }
+
+
+        .question-text {
+
+            font-size: 22px;
+
+            font-weight: 600;
+
+            color: #111827;
+
+            line-height: 1.4;
+
+            margin: 6px 0 18px;
+        }
+
+
+
+        .answer-input {
+
+            flex: 1;
+
+            min-height: 0;
+
+            width: 100%;
+
+            box-sizing: border-box;
+
+            font-family: 'Poppins', sans-serif;
+
+            font-size: 14px;
+
+            color: #111827;
+
+            background: white;
+
+            border:
+                1px solid #E5E7EB;
+
+            border-radius: 12px;
+
+            padding: 14px 16px;
+
+            resize: none;
+
+            transition:
+                border-color 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+
+        .answer-input:focus {
+
+            outline: none;
+
+            border-color: #6C63FF;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(108,99,255,0.12);
+        }
+
+
+        .answer-input::placeholder {
+
+            color: #9CA3AF;
+        }
+
+
+
+
+        .interview-actions {
+
+            flex-shrink: 0;
+
+            display: flex;
+
+            justify-content: flex-end;
+
+            gap: 10px;
+
+            margin-top: 14px;
+        }
+
+
+        .btn-mic,
+        .btn-submit {
+
+            font-family: 'Poppins', sans-serif;
+
+            font-size: 13.5px;
+
+            font-weight: 500;
+
+            padding: 10px 18px;
+
+            border-radius: 10px;
+
+            cursor: pointer;
+
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 7px;
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease,
+                background 0.2s ease;
+        }
+
+
+        .btn-mic {
+
+            background: white;
+
+            color: #374151;
+
+            border:
+                1px solid #E5E7EB;
+        }
+
+
+        .btn-mic i {
+
+            font-size: 13px;
+
+            color: #6C63FF;
+        }
+
+
+        .btn-mic:hover {
+
+            background: #F3F4F6;
+
+            border-color: #D1D5DB;
+        }
+
+
+        .btn-mic.recording {
+
+            background: #FEF2F2;
+
+            color: #EF4444;
+
+            border-color: #FCA5A5;
+
+            animation:
+                micPulse 1.2s
+                ease-in-out infinite;
+        }
+
+
+        .btn-mic.recording i {
+
+            color: #EF4444;
+        }
+
+
+        @keyframes micPulse {
+
+            0%,
+            100% {
+
+                box-shadow:
+                    0 0 0 0
+                    rgba(239,68,68,0.4);
+            }
+
+            50% {
+
+                box-shadow:
+                    0 0 0 6px
+                    rgba(239,68,68,0);
+            }
+        }
+
+
+        .btn-submit {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #6C63FF,
+                    #8A7CFF
+                );
+
+            color: white;
+
+            border: none;
+
+            box-shadow:
+                0 4px 12px
+                rgba(108,99,255,0.28);
+        }
+
+
+        .btn-submit i {
+
+            font-size: 11px;
+        }
+
+
+        .btn-submit:hover {
+
+            transform:
+                translateY(-1px);
+
+            box-shadow:
+                0 6px 16px
+                rgba(108,99,255,0.38);
+        }
+
+
+        .btn-submit:disabled,
+        .btn-mic:disabled {
+
+            opacity: 0.6;
+
+            cursor: not-allowed;
+
+            transform: none;
+        }
+
+
+
+
+        .participants-wrapper {
+
+            display: flex;
+
+            justify-content: center;
+
+            margin-bottom: 22px;
+        }
+
+
+        .participants-container {
+
+            display: flex;
+
+            gap: 16px;
+
+            justify-content: center;
+
+            align-items: center;
+
+            flex-wrap: wrap;
+        }
+
+
+        .participant-card {
+
+            width: 120px;
+
+            padding: 16px;
+
+            border-radius: 12px;
+
+            background: white;
+
+            text-align: center;
+
+            border:
+                2px solid transparent;
+
+            transition:
+                all 0.3s ease;
+        }
+
+
+        .participant-avatar {
+
+            width: 48px;
+            height: 48px;
+
+            border-radius: 50%;
+
+            margin: 0 auto 8px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            font-size: 19px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #6C63FF,
+                    #8A7CFF
+                );
+
+            color: white;
+
+            box-shadow:
+                0 4px 12px
+                rgba(108,99,255,0.25);
+        }
+
+
+        .participant-card.user
+        .participant-avatar {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #22c55e,
+                    #16a34a
+                );
+
+            box-shadow:
+                0 4px 12px
+                rgba(34,197,94,0.25);
+        }
+
+
+        .participant-name {
+
+            font-size: 12px;
+
+            font-weight: 600;
+
+            color: #111827;
+
+            margin-top: 2px;
+        }
+
+
+        .participant-status {
+
+            font-size: 10.5px;
+
+            color: #6B7280;
+
+            margin-top: 4px;
+
+            min-height: 14px;
+
+            font-weight: 500;
+        }
+
+
+        .ai-active {
+
+            border:
+                2px solid #6d5dfc;
+
+            box-shadow:
+                0 0 12px
+                rgba(109,93,252,0.5);
+        }
+
+
+        .ai-active
+        .participant-status {
+
+            color: #6C63FF;
+        }
+
+
+        .user-active {
+
+            border:
+                2px solid #22c55e;
+
+            box-shadow:
+                0 0 12px
+                rgba(34,197,94,0.5);
+        }
+
+
+        .user-active
+        .participant-status {
+
+            color: #16a34a;
+        }
+
+
+        .dim {
+
+            opacity: 0.5;
+        }
+
+
+
+
+        .save-status {
+
+            min-height: 18px;
+
+            margin-top: 7px;
+
+            text-align: right;
+
+            font-size: 11px;
+
+            color: #6B7280;
+        }
+
+
+        .save-status.saving {
+
+            color: #6C63FF;
+        }
+
+
+        .save-status.saved {
+
+            color: #16a34a;
+        }
+
+
+        .save-status.error {
+
+            color: #EF4444;
+        }
+
+
+
+        @media (max-width: 1100px) {
+
+            .interview-layout {
+
+                grid-template-columns:
+                    200px 1fr 240px;
+            }
+        }
+
+
+        @media (max-width: 800px) {
+
+            html,
+            body,
+            .interview-page {
+
+                height: auto;
+
+                overflow: auto;
+            }
+
+
+            .interview-layout {
+
+                grid-template-columns: 1fr;
+
+                height: auto;
+            }
+
+
+            .ai-panel,
+            .progress-panel {
+
+                border: none;
+            }
+
+
+            .interview-main {
+
+                height: auto;
+
+                min-height: 70vh;
+            }
+
+        }
+
+    </style>
+
 </head>
+
+
 <body class="interview-page">
-  <div class="interview-layout">
 
-    <!-- ===== LEFT: AI Interviewer info ===== -->
+
+<div class="interview-layout">
+
+
+
+
     <aside class="ai-panel">
-      <h3 class="panel-title">AI Interviewer</h3>
-      <div class="ai-avatar-big">🤖</div>
-      <p class="ai-tagline">Your AI mock interviewer</p>
 
-      <div class="tips-block">
-        <h4>Tips</h4>
-        <ul class="tips-list">
-          <li>💬 Speak clearly</li>
-          <li>⏱ Take your time</li>
-          <li>💪 Stay confident</li>
-          <li>🧠 Think before answering</li>
-        </ul>
-      </div>
+        <h3 class="panel-title">
+            AI Interviewer
+        </h3>
+
+
+        <div class="ai-avatar-big">
+
+            <i class="fa-solid fa-robot"></i>
+
+        </div>
+
+
+        <p class="ai-tagline">
+            Your AI mock interviewer
+        </p>
+
+
+        <div class="tips-block">
+
+            <h4>
+                Tips
+            </h4>
+
+
+            <ul class="tips-list">
+
+                <li>
+
+                    <i class="fa-solid fa-comment"></i>
+
+                    <span>
+                        Speak clearly
+                    </span>
+
+                </li>
+
+
+                <li>
+
+                    <i class="fa-regular fa-clock"></i>
+
+                    <span>
+                        Take your time
+                    </span>
+
+                </li>
+
+
+                <li>
+
+                    <i class="fa-solid fa-bolt"></i>
+
+                    <span>
+                        Stay confident
+                    </span>
+
+                </li>
+
+
+                <li>
+
+                    <i class="fa-solid fa-brain"></i>
+
+                    <span>
+                        Think before answering
+                    </span>
+
+                </li>
+
+            </ul>
+
+        </div>
+
     </aside>
 
-    <!-- ===== CENTER: Question + Answer ===== -->
+
+
     <main class="interview-main">
 
-      <div class="live-bar">
-        <span class="live-indicator">
-          <span class="live-dot"></span> Live Interview
-        </span>
-        <span class="live-timer" id="timer">00:00</span>
-      </div>
 
-      <div class="question-header">
-        Question <b id="qNum">1</b> of <b id="qTotal">5</b>
-        <span class="q-tag" id="qTag">Technical</span>
-        <span class="q-status">● Active</span>
-      </div>
+        <div class="live-bar">
 
-      <h2 class="question-text" id="questionText">Loading question...</h2>
+            <span class="live-indicator">
 
-      <textarea
-        id="answerInput"
-        class="answer-input"
-        placeholder="Type your answer here..."></textarea>
+                <span class="live-dot"></span>
 
-      <div class="interview-actions">
-        <button class="btn-mic" id="micBtn" onclick="onStartSpeaking()">
-          🎤 <span id="micLabel">Start Speaking</span>
-        </button>
-        <button class="btn-submit" onclick="submitAnswer()">
-          Submit Answer →
-        </button>
-      </div>
+                Live Interview
+
+            </span>
+
+
+            <span
+                    class="live-timer"
+                    id="timer">
+
+                00:00
+
+            </span>
+
+        </div>
+
+
+        <div class="question-header">
+
+            <span>
+                Question
+            </span>
+
+            <b id="qNum">
+                1
+            </b>
+
+            <span>
+                of
+            </span>
+
+            <b id="qTotal">
+                0
+            </b>
+
+
+            <span
+                    class="q-tag"
+                    id="qTag">
+
+                <i class="fa-solid fa-circle-question"></i>
+
+                Interview Question
+
+            </span>
+
+
+            <span class="q-status">
+
+                <i class="fa-solid fa-circle"></i>
+
+                Active
+
+            </span>
+
+        </div>
+
+
+        <h2
+                class="question-text"
+                id="questionText">
+
+            Loading question...
+
+        </h2>
+
+
+        <textarea
+                id="answerInput"
+                class="answer-input"
+                placeholder="Type your answer here..."
+        ></textarea>
+
+
+        <div
+                id="saveStatus"
+                class="save-status">
+        </div>
+
+
+        <div class="interview-actions">
+
+
+            <button
+                    class="btn-mic"
+                    id="micBtn"
+                    type="button"
+                    onclick="onStartSpeaking()">
+
+                <i class="fa-solid fa-microphone"></i>
+
+                <span id="micLabel">
+                    Start Speaking
+                </span>
+
+            </button>
+
+
+            <button
+                    class="btn-submit"
+                    id="submitAnswerBtn"
+                    type="button"
+                    onclick="submitAnswer()">
+
+                <span>
+                    Submit Answer
+                </span>
+
+                <i class="fa-solid fa-arrow-right"></i>
+
+            </button>
+
+        </div>
+
     </main>
 
-    <!-- ===== RIGHT: Participants + Progress ===== -->
+
+
+
     <aside class="progress-panel">
-      <h3 class="panel-title">Participants</h3>
 
-      <div class="participants-wrapper">
-        <div class="participants-container">
-          <div class="participant-card ai ai-active" id="aiCard">
-            <div class="participant-avatar">🤖</div>
-            <div class="participant-name">AI Interviewer</div>
-            <div class="participant-status" id="aiStatus">Speaking...</div>
-          </div>
-          <div class="participant-card user dim" id="userCard">
-            <div class="participant-avatar">👤</div>
-            <div class="participant-name">You (Candidate)</div>
-            <div class="participant-status" id="userStatus">Listening...</div>
-          </div>
+
+        <h3 class="panel-title">
+            Participants
+        </h3>
+
+
+        <div class="participants-wrapper">
+
+            <div class="participants-container">
+
+
+                <!-- AI -->
+
+                <div
+                        class="participant-card ai ai-active"
+                        id="aiCard">
+
+                    <div class="participant-avatar">
+
+                        <i class="fa-solid fa-robot"></i>
+
+                    </div>
+
+                    <div class="participant-name">
+                        AI Interviewer
+                    </div>
+
+                    <div
+                            class="participant-status"
+                            id="aiStatus">
+
+                        Speaking...
+
+                    </div>
+
+                </div>
+
+
+                <!-- USER -->
+
+                <div
+                        class="participant-card user dim"
+                        id="userCard">
+
+                    <div class="participant-avatar">
+
+                        <i class="fa-solid fa-user"></i>
+
+                    </div>
+
+                    <div class="participant-name">
+                        You (Candidate)
+                    </div>
+
+                    <div
+                            class="participant-status"
+                            id="userStatus">
+
+                        Listening...
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
         </div>
-      </div>
-    </aside>
-  </div>
 
-  <script>
-    /* ===================================================================
-     *  LIVE INTERVIEW
-     * ===================================================================
-     *
-     *  WHAT THIS PAGE DOES
-     *  -------------------
-     *  1. Reads the user's choices (role / experience / etc.) from
-     *     localStorage (saved by the wizard pages).
-     *  2. Asks the backend for AI-generated questions for THIS interview.
-     *  3. Shows ONE question at a time. User answers by typing OR speaking
-     *     (Web Speech API). Each Submit stores the answer in a JS array.
-     *  4. On the LAST question's Submit, saves all answers to localStorage
-     *     and redirects to submitting.html (where the AI scores them).
-     *  5. Side effects: a countdown timer, a "who is speaking" visual
-     *     (AI card vs User card highlight), and a progress list.
-     *
-     *  KEY VARIABLES YOU'LL SEE
-     *  ------------------------
-     *    userSelection  → object with role, experience, difficulty, duration
-     *    questions      → array of {id, question} from the backend
-     *    currentIndex   → which question we're on (0-based)
-     *    answers        → growing array of {questionId, question, answer}
-     *    recognition    → Web Speech API object (mic → text)
-     *    isRecording    → true while the mic is actively listening
-     *    baselineText   → text already in the textarea when mic starts,
-     *                     so live transcription appends to it instead of
-     *                     wiping it
-     * ===================================================================
+    </aside>
+
+</div>
+
+
+<script>
+    if (!localStorage.getItem("token")) {
+        window.location.replace("login.html");
+    }
+</script>
+
+<script>
+
+
+
+
+    try {
+
+        getToken();
+
+    }
+
+    catch (error) {
+
+        alert(
+            "Your session has expired. Please login again."
+        );
+
+        window.location.href =
+            "login.html";
+
+        throw error;
+    }
+
+
+
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
+
+
+    const interviewId =
+        params.get("interviewId");
+
+
+    if (!interviewId) {
+
+        alert(
+            "No interview was selected."
+        );
+
+        window.location.href =
+            "setup-interview.html";
+
+        throw new Error(
+            "Missing interviewId"
+        );
+    }
+
+
+    if (!/^\d+$/.test(interviewId)) {
+
+        alert(
+            "Invalid interview."
+        );
+
+        window.location.href =
+            "dashboard.html";
+
+        throw new Error(
+            "Invalid interviewId"
+        );
+    }
+
+
      */
 
-    /* -------------------------------------------------------------------
-     * 1) Read the user's wizard choices from localStorage.
-     *    The "|| 'default'" parts protect us if the user lands on this
-     *    page directly without going through the wizard.
-     * ------------------------------------------------------------------- */
-    const token = localStorage.getItem("token");
+    let interviewData = null;
 
-const userSelection = {
-  role: localStorage.getItem("role"),
-  experience: localStorage.getItem("experience"),
-  difficulty: localStorage.getItem("difficulty"),
-  duration: localStorage.getItem("duration")
-};
+    let questions = [];
 
-if (!token) {
-  alert("Your session has expired. Please login again.");
-  window.location.href = "login.html";
-}
+    let currentIndex = 0;
 
-if (!userSelection.role) {
-  window.location.href = "setup-role.html";
-}
+    let isSubmitting = false;
 
-if (!userSelection.experience) {
-  window.location.href = "experience.html";
-}
-
-if (!userSelection.difficulty) {
-  window.location.href = "difficulty.html";
-}
-
-if (!userSelection.duration) {
-  window.location.href = "duration.html";
-}
-
-    /* -------------------------------------------------------------------
-     * 2) Page-level state.
-     *    `let` for things that change. `const` for the answers array
-     *    (we never reassign it — we only push() into it).
-     * ------------------------------------------------------------------- */
-    let questions = [];      // filled in by init() below
-    let currentIndex = 0;    // which question is on screen
-    const answers = [];      // collected as user submits
-
-    // Set the browser tab title based on the chosen role.
-    document.title = userSelection.role + " Interview | InterviewIQ AI";
+    let isInitializing = true;
 
 
-    /* ===================================================================
-     *  ACTIVE SPEAKER HIGHLIGHT  (Google-Meet style)
-     * ===================================================================
-     *  Two cards on the right panel: the AI card and the User card.
-     *  We highlight whichever one is "currently speaking":
-     *    setSpeaker("ai")    → AI lit, user dimmed   (question shown)
-     *    setSpeaker("user")  → user lit, AI dimmed   (answering)
-     *    setSpeaker(null)    → both dimmed           (idle / done)
-     * =================================================================== */
-    function setSpeaker(who) {
-      // Grab the four DOM elements we'll be tweaking.
-      const ai         = document.getElementById("aiCard");
-      const user       = document.getElementById("userCard");
-      const aiStatus   = document.getElementById("aiStatus");
-      const userStatus = document.getElementById("userStatus");
-
-      // Clear any previous state so we start from a blank slate.
-      ai.classList.remove("ai-active", "dim");
-      user.classList.remove("user-active", "dim");
-
-      // Apply the new state based on who is speaking.
-      if (who === "ai") {
-        ai.classList.add("ai-active");          // purple glow on AI card
-        user.classList.add("dim");              // fade the user card
-        aiStatus.textContent   = "Speaking...";
-        userStatus.textContent = "Listening...";
-      } else if (who === "user") {
-        user.classList.add("user-active");      // green glow on user card
-        ai.classList.add("dim");                // fade the AI card
-        aiStatus.textContent   = "Listening...";
-        userStatus.textContent = "Speaking...";
-      } else {
-        // null / "idle" — both dimmed, e.g. after the final submit
-        ai.classList.add("dim");
-        user.classList.add("dim");
-        aiStatus.textContent   = "Idle";
-        userStatus.textContent = "Idle";
-      }
-    }
+    /*
+     * Stores answers that have already been
+     * successfully saved to the database.
+     *
+     * key   = question ID
+     * value = answer text
+     */
+    const savedAnswers =
+        new Map();
 
 
-    /* ===================================================================
-     *  RENDER THE CURRENT QUESTION
-     * ===================================================================
-     *  Called whenever we need to display a question:
-     *    - on page load (i = 0)
-     *    - after the user submits and we move to the next one
-     * =================================================================== */
-    function showQuestion(i) {
-      const q = questions[i];                                       // pick from our array
 
-      // Update the small header above the question
-      document.getElementById("qNum").textContent  = i + 1;         // "Question 3 of 5"
-      document.getElementById("qTag").textContent  = userSelection.role;
+    function showQuestion(index) {
 
-      // Replace the big question text
-      document.getElementById("questionText").textContent = q.question;
+        const question =
+            questions[index];
 
-      // Wipe the textarea so the previous answer doesn't carry over
-      document.getElementById("answerInput").value = "";
-      baselineText = "";   // also reset the voice baseline (see voice section)
 
-      // AI is asking → light up the AI card
-      setSpeaker("ai");
+        if (!question) {
+            return;
+        }
+
+
+        currentIndex =
+            index;
+
+
+        document.getElementById(
+            "qNum"
+        ).textContent =
+            index + 1;
+
+
+        document.getElementById(
+            "qTotal"
+        ).textContent =
+            questions.length;
+
+
+        document.getElementById(
+            "qTag"
+        ).innerHTML = `
+            <i class="fa-solid fa-circle-question"></i>
+            Interview Question
+        `;
+
+
+        document.getElementById(
+            "questionText"
+        ).textContent =
+            question.question;
+
+
+        /*
+         * Restore the saved answer for this question.
+         *
+         * This is important when the user:
+         * - refreshes
+         * - resumes an interview
+         * - moves through questions
+         */
+        const saved =
+            savedAnswers.get(
+                Number(question.id)
+            );
+
+
+        document.getElementById(
+            "answerInput"
+        ).value =
+            saved || "";
+
+
+        if (saved) {
+
+            setSaveStatus(
+                "Answer saved",
+                "saved"
+            );
+
+        }
+
+        else {
+
+            setSaveStatus(
+                "",
+                ""
+            );
+        }
+
+
+        baselineText =
+            saved || "";
+
+
+        setSpeaker("ai");
     }
 
 
 
+    function setSaveStatus(
+        message,
+        type
+    ) {
 
-    /* ===================================================================
-     *  MIC BUTTON CLICK
-     * ===================================================================
-     *  Two things happen:
-     *    1. Visually flip the active speaker to the user (green glow).
-     *    2. Toggle the actual speech recognition on/off.
-     * =================================================================== */
-    function onStartSpeaking() {
-      setSpeaker("user");
-      toggleMic();
+        const element =
+            document.getElementById(
+                "saveStatus"
+            );
+
+
+        element.textContent =
+            message || "";
+
+
+        element.className =
+            "save-status";
+
+
+        if (type) {
+
+            element.classList.add(type);
+
+        }
     }
 
 
-    /* ===================================================================
-     *  TYPING ALSO COUNTS AS "USER SPEAKING"
-     * ===================================================================
-     *  Without this, the AI card stays glowing while the user types,
-     *  which looks weird. The IIFE (immediately-invoked function) runs
-     *  once when the page loads and hooks two events on the textarea:
-     *    focus → user clicked into the box   → flip to user
-     *    input → user typed a character      → flip to user
-     * =================================================================== */
+
     (function wireAnswerInput() {
-      const input = document.getElementById("answerInput");
-      const activate = () => setSpeaker("user");
-      input.addEventListener("focus", activate);
-      input.addEventListener("input", activate);
+
+        const input =
+            document.getElementById(
+                "answerInput"
+            );
+
+
+        const activate =
+            () => {
+
+                setSpeaker("user");
+
+            };
+
+
+        input.addEventListener(
+            "focus",
+            activate
+        );
+
+
+        input.addEventListener(
+            "input",
+            activate
+        );
+
     })();
 
 
-    /* ===================================================================
-     *  SUBMIT BUTTON
-     * ===================================================================
-     *  Validates → records the answer → either:
-     *    • shows the next question, OR
-     *    • (last question) saves to localStorage and goes to submitting.html
-     * =================================================================== */
-    function submitAnswer() {
-      // Get the answer from EITHER the typed textarea OR the spoken transcript.
-      // typed wins if both are present (user might tweak the transcript).
-      const typed  = document.getElementById("answerInput").value.trim();
-      const spoken = (baselineText || "").trim();
-      const userAnswer = typed || spoken;
 
-      // Guard: don't let user submit an empty answer.
-      if (!userAnswer) {
-        alert("Please type or speak an answer before submitting.");
-        return;
-      }
 
-      // Record what they answered. We keep three fields so the next page
-      // (submitting.html) has everything it needs to send to the AI.
-      const currentQuestion = questions[currentIndex];
-      answers.push({
-        questionId: currentQuestion.id,        // backend's question row id
-        question:   currentQuestion.question,  // the question text (for AI prompt)
-        answer:     userAnswer                 // what the user said
-      });
-      console.log("Saved answer for Q" + currentQuestion.id, userAnswer);
+    async function saveCurrentAnswer() {
 
-      // If the mic happens to still be running, stop it so it doesn't keep
-      // appending text from the previous question into the next one.
-      if (isRecording && recognition) recognition.stop();
+        const input =
+            document.getElementById(
+                "answerInput"
+            );
 
-      // Are there more questions? If yes, show next. If no, we're done.
-      if (currentIndex < questions.length - 1) {
-        currentIndex++;
-        showQuestion(currentIndex);   // also flips back to AI (inside showQuestion)
-      } else {
-        // LAST question — persist and redirect.
-        // localStorage only stores strings, so we JSON.stringify the array.
-        localStorage.setItem("answers", JSON.stringify(answers));
-        setSpeaker(null);   // both cards dim while we leave the page
-        window.location.href = "submitting.html";
-      }
+
+        const typed =
+            input.value.trim();
+
+
+        if (!typed) {
+
+            throw new Error(
+                "Please type or speak an answer before submitting."
+            );
+        }
+
+
+        const currentQuestion =
+            questions[currentIndex];
+
+
+        if (!currentQuestion) {
+
+            throw new Error(
+                "Current question is unavailable."
+            );
+        }
+
+
+        setSaveStatus(
+            "Saving answer...",
+            "saving"
+        );
+
+
+        /*
+         * THIS IS THE IMPORTANT DATABASE CALL.
+         *
+         * api.js:
+         * POST /answers/{questionId}
+         */
+        await saveAnswerToServer(
+            currentQuestion.id,
+            typed
+        );
+
+
+        /*
+         * Only update local state AFTER
+         * the server confirms successful save.
+         */
+        savedAnswers.set(
+            Number(currentQuestion.id),
+            typed
+        );
+
+
+        setSaveStatus(
+            "Answer saved",
+            "saved"
+        );
+
+
+        console.log(
+            "[interview] Answer saved:",
+            currentQuestion.id
+        );
+
+
+        return typed;
     }
 
 
-    /* ===================================================================
-     *  VOICE INPUT  (Web Speech API)
-     * ===================================================================
-     *  Most modern browsers (Chrome, Edge) ship with built-in speech
-     *  recognition. We tap into it so the mic button can transcribe speech
-     *  into the textarea — no backend / no third-party API.
-     *
-     *  Safari/Firefox may NOT support it — we feature-detect and show a
-     *  friendly alert if missing.
-     * =================================================================== */
 
-    // Browser compatibility: Chrome exposes "webkitSpeechRecognition",
-    // standards say "SpeechRecognition". Use whichever is available.
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    async function submitAnswer() {
 
-    let recognition  = null;   // the SpeechRecognition instance (or null if unsupported)
-    let isRecording  = false;  // are we currently listening?
-    let baselineText = "";     // text already in the box when recording started
+        if (isSubmitting) {
+            return;
+        }
 
-    /* Start/stop recording when the mic button is clicked. */
+
+        const submitButton =
+            document.getElementById(
+                "submitAnswerBtn"
+            );
+
+
+        /*
+         * Stop speech recognition before
+         * reading/saving the answer.
+         */
+        if (
+            isRecording &&
+            recognition
+        ) {
+
+            recognition.stop();
+        }
+
+
+        isSubmitting =
+            true;
+
+
+        submitButton.disabled =
+            true;
+
+
+        submitButton.innerHTML = `
+            <span>Saving...</span>
+        `;
+
+
+        try {
+
+            /*
+             * STEP 1
+             *
+             * Save the current answer to DB.
+             *
+             * We DO NOT move to the next
+             * question until this succeeds.
+             */
+            await saveCurrentAnswer();
+
+
+            /*
+             * STEP 2
+             *
+             * Move to the next question.
+             */
+            if (
+                currentIndex <
+                questions.length - 1
+            ) {
+
+                currentIndex++;
+
+                showQuestion(
+                    currentIndex
+                );
+
+
+                submitButton.disabled =
+                    false;
+
+
+                submitButton.innerHTML = `
+                    <span>Submit Answer</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                `;
+
+
+                isSubmitting =
+                    false;
+
+
+                return;
+            }
+
+
+            /*
+             * STEP 3
+             *
+             * All questions answered.
+             *
+             * The final answer has ALREADY
+             * been saved above.
+             */
+            await completeInterview();
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "[interview] Answer save failed:",
+                error
+            );
+
+
+            setSaveStatus(
+                "Failed to save answer",
+                "error"
+            );
+
+
+            alert(
+                error.message ||
+                "Unable to save your answer."
+            );
+
+
+            submitButton.disabled =
+                false;
+
+
+            submitButton.innerHTML = `
+                <span>Submit Answer</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            `;
+
+
+            isSubmitting =
+                false;
+        }
+    }
+
+
+
+    async function completeInterview() {
+
+        /*
+         * isSubmitting is already true when
+         * called from submitAnswer().
+         */
+
+
+        const submitButton =
+            document.getElementById(
+                "submitAnswerBtn"
+            );
+
+
+        submitButton.disabled =
+            true;
+
+
+        submitButton.innerHTML = `
+            <span>Finishing...</span>
+            <i class="fa-solid fa-spinner fa-spin"></i>
+        `;
+
+
+        try {
+
+            /*
+             * At this point every submitted answer
+             * has already been persisted individually.
+             */
+            await finishInterview(
+                interviewId
+            );
+
+
+            /*
+             * Go to evaluation/submitting page.
+             */
+            window.location.href =
+                "submitting.html?interviewId=" +
+                encodeURIComponent(
+                    interviewId
+                );
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "[interview] Finish failed:",
+                error
+            );
+
+
+            alert(
+                error.message ||
+                "Unable to finish the interview."
+            );
+
+
+            submitButton.disabled =
+                false;
+
+
+            submitButton.innerHTML = `
+                <span>Submit Answer</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            `;
+
+
+            isSubmitting =
+                false;
+        }
+    }
+
+
+    //voice input
+    const SpeechRecognition =
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition;
+
+
+    let recognition = null;
+
+    let isRecording = false;
+
+    let baselineText = "";
+
+
+    function onStartSpeaking() {
+
+        setSpeaker("user");
+
+        toggleMic();
+    }
+
+
     function toggleMic() {
-      if (!recognition) {
-        alert("Voice input isn't supported in this browser. Try Chrome or Edge.");
-        return;
-      }
-      if (isRecording) {
-        // Already recording → stop it. onend handler will reset UI.
-        recognition.stop();
-      } else {
-        // About to start → remember what's already typed so we can append
-        // the transcription on top of it, not overwrite it.
-        baselineText = document.getElementById("answerInput").value;
-        try { recognition.start(); }
-        catch (e) { console.error("Could not start recognition:", e); }
-      }
+
+        if (!recognition) {
+
+            alert(
+                "Voice input isn't supported in this browser. Try Chrome or Edge."
+            );
+
+            return;
+        }
+
+
+        if (isRecording) {
+
+            recognition.stop();
+
+            return;
+        }
+
+
+        baselineText =
+            document.getElementById(
+                "answerInput"
+            ).value;
+
+
+        try {
+
+            recognition.start();
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Could not start speech recognition:",
+                error
+            );
+        }
     }
 
-    // Only configure recognition if the browser actually supports it.
+
     if (SpeechRecognition) {
-      recognition = new SpeechRecognition();
-      recognition.continuous     = true;     // keep listening across pauses
-      recognition.interimResults = true;     // give us partial words as they arrive
-      recognition.lang           = "en-US";  // language model
 
-      // Cache DOM references once (faster than querying inside callbacks).
-      const micBtn   = document.getElementById("micBtn");
-      const micLabel = document.getElementById("micLabel");
-      const input    = document.getElementById("answerInput");
+        recognition =
+            new SpeechRecognition();
 
-      /* Fires when recognition successfully begins. */
-      recognition.onstart = () => {
-        isRecording = true;
-        micBtn.classList.add("recording");      // CSS: red pulsing button
-        micLabel.textContent = "Stop Recording";
-        setSpeaker("user");                     // flip glow to user card
-      };
 
-      /* Fires every time the engine emits a new chunk of words.
-       * results array can contain both FINAL words (confirmed) and
-       * INTERIM words (still being decided). We append final words to
-       * baselineText, and only show interim words temporarily on screen. */
-      recognition.onresult = (event) => {
-        let finalText   = "";
-        let interimText = "";
+        recognition.continuous =
+            true;
 
-        // event.resultIndex tells us where new results start in the array.
-        // We iterate just the NEW ones to avoid re-processing old chunks.
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) finalText  += transcript + " ";
-          else                          interimText += transcript;
-        }
 
-        // Commit final words to the baseline (they won't change anymore).
-        if (finalText) baselineText += finalText;
+        recognition.interimResults =
+            true;
 
-        // Compose what to show: confirmed text + still-being-decided text.
-        // The regex collapses runs of whitespace and trims the leading space.
-        const fullText = (baselineText + interimText).replace(/\s+/g, " ").trimStart();
-        input.value = fullText;
-      };
 
-      /* Fires on errors (no mic permission, no internet, etc.) */
-      recognition.onerror = (e) => {
-        console.error("Speech recognition error:", e.error);
-        if (e.error === "not-allowed" || e.error === "service-not-allowed") {
-          alert("Please allow microphone access to use voice input.");
-        }
-      };
+        recognition.lang =
+            "en-US";
 
-      /* Fires when recognition fully stops (either we called .stop() or
-       * the browser ended it). Always reset UI here. */
-      recognition.onend = () => {
-        isRecording = false;
-        micBtn.classList.remove("recording");
-        micLabel.textContent = "Start Speaking";
-      };
+
+        const micBtn =
+            document.getElementById(
+                "micBtn"
+            );
+
+
+        const micLabel =
+            document.getElementById(
+                "micLabel"
+            );
+
+
+        const input =
+            document.getElementById(
+                "answerInput"
+            );
+
+
+        recognition.onstart =
+            () => {
+
+                isRecording =
+                    true;
+
+
+                micBtn.classList.add(
+                    "recording"
+                );
+
+
+                micLabel.textContent =
+                    "Stop Recording";
+
+
+                setSpeaker("user");
+            };
+
+
+        recognition.onresult =
+            event => {
+
+                let finalText =
+                    "";
+
+
+                let interimText =
+                    "";
+
+
+                for (
+                    let i =
+                        event.resultIndex;
+
+                    i <
+                        event.results.length;
+
+                    i++
+                ) {
+
+                    const transcript =
+                        event.results[i][0]
+                            .transcript;
+
+
+                    if (
+                        event.results[i]
+                            .isFinal
+                    ) {
+
+                        finalText +=
+                            transcript + " ";
+
+                    }
+
+                    else {
+
+                        interimText +=
+                            transcript;
+                    }
+                }
+
+
+                if (finalText) {
+
+                    baselineText +=
+                        finalText;
+                }
+
+
+                input.value =
+                    (
+                        baselineText +
+                        interimText
+                    )
+                    .replace(
+                        /\s+/g,
+                        " "
+                    )
+                    .trimStart();
+
+
+                setSpeaker("user");
+            };
+
+
+        recognition.onerror =
+            event => {
+
+                console.error(
+                    "Speech recognition error:",
+                    event.error
+                );
+
+
+                if (
+                    event.error ===
+                        "not-allowed" ||
+
+                    event.error ===
+                        "service-not-allowed"
+                ) {
+
+                    alert(
+                        "Please allow microphone access to use voice input."
+                    );
+                }
+            };
+
+
+        recognition.onend =
+            () => {
+
+                isRecording =
+                    false;
+
+
+                micBtn.classList.remove(
+                    "recording"
+                );
+
+
+                micLabel.textContent =
+                    "Start Speaking";
+            };
     }
 
 
-    /* ===================================================================
-     *  PAGE BOOT
-     * ===================================================================
-     *  Self-running async function (IIFE). Runs ONCE on page load:
-     *    1. Fetch the questions from the backend.
-     *    2. Show the first question.
-     *    3. Start the countdown timer.
-     *  If anything fails (backend down, no questions), show a friendly
-     *  error in the question slot instead of crashing.
-     * =================================================================== */
-    (async function init() {
-      try {
-       await startInterview();
-        // generateInterview() lives in api.js. It does GET /questions/{id}
-        // and returns an array of {id, question} objects.
-        questions = await generateInterview();
-        if (!questions.length) throw new Error("Backend returned no questions");
+   //active speaker
+    function setSpeaker(who) {
 
-        document.getElementById("qTotal").textContent = questions.length;
-        showQuestion(0);     // render the first question; AI card lights up
-        startTimer();        // begin the countdown clock
-      } catch (err) {
-        console.error(err);
-        document.getElementById("questionText").textContent =
-          "⚠️ Could not load questions from the server. Is the backend running?";
-        setSpeaker(null);    // both cards dim — nothing to do
-      }
-    })();
+        const ai =
+            document.getElementById(
+                "aiCard"
+            );
 
 
-    /* ===================================================================
-     *  COUNTDOWN TIMER
-     * ===================================================================
-     *  The wizard saves duration as "10 Minutes" (a string). parseInt
-     *  reads digits until a non-digit, so "10 Minutes" → 10. Multiply by
-     *  60 to get total seconds.
-     *
-     *  Every second:
-     *    - decrement
-     *    - re-render mm:ss
-     *    - if < 60s left, turn the clock red (CSS class "ending")
-     *    - if 0, save whatever answers we have and auto-submit
-     * =================================================================== */
-    let totalSeconds = parseInt(userSelection.duration) * 60;
+        const user =
+            document.getElementById(
+                "userCard"
+            );
 
-    /* Format totalSeconds as "mm:ss" and paint it. */
+
+        const aiStatus =
+            document.getElementById(
+                "aiStatus"
+            );
+
+
+        const userStatus =
+            document.getElementById(
+                "userStatus"
+            );
+
+
+        ai.classList.remove(
+            "ai-active",
+            "dim"
+        );
+
+
+        user.classList.remove(
+            "user-active",
+            "dim"
+        );
+
+
+        if (who === "ai") {
+
+            ai.classList.add(
+                "ai-active"
+            );
+
+
+            user.classList.add(
+                "dim"
+            );
+
+
+            aiStatus.textContent =
+                "Speaking...";
+
+
+            userStatus.textContent =
+                "Listening...";
+
+        }
+
+        else if (who === "user") {
+
+            user.classList.add(
+                "user-active"
+            );
+
+
+            ai.classList.add(
+                "dim"
+            );
+
+
+            aiStatus.textContent =
+                "Listening...";
+
+
+            userStatus.textContent =
+                "Speaking...";
+
+        }
+
+        else {
+
+            ai.classList.add(
+                "dim"
+            );
+
+
+            user.classList.add(
+                "dim"
+            );
+
+
+            aiStatus.textContent =
+                "Idle";
+
+
+            userStatus.textContent =
+                "Idle";
+        }
+    }
+
+
+   //server authoratative timer
+    let totalSeconds = 0;
+
+    let timerInterval = null;
+
+
     function renderTimer() {
-      const mins = Math.floor(totalSeconds / 60);
-      const secs = totalSeconds % 60;
-      // padStart(2, '0') turns "5" into "05" so the timer doesn't jitter.
-      document.getElementById("timer").innerText =
-        String(mins).padStart(2, '0') + ":" + String(secs).padStart(2, '0');
+
+        const mins =
+            Math.floor(
+                totalSeconds / 60
+            );
+
+
+        const secs =
+            totalSeconds % 60;
+
+
+        document.getElementById(
+            "timer"
+        ).textContent =
+
+            String(mins)
+                .padStart(2, "0")
+
+            + ":" +
+
+            String(secs)
+                .padStart(2, "0");
     }
+
 
     function startTimer() {
-      renderTimer();   // show the starting value immediately
 
-      // setInterval fires our callback every 1000ms.
-      // We keep the returned id so we can clearInterval() when time runs out.
-      const timer = setInterval(() => {
-        totalSeconds--;
-        renderTimer();
+        if (!interviewData) {
 
-        // Last minute warning — CSS turns the digits red.
-        if (totalSeconds <= 60) document.getElementById("timer").classList.add("ending");
-
-        // Time's up: stop the tick, persist what we have, redirect.
-        if (totalSeconds <= 0) {
-          clearInterval(timer);
-          localStorage.setItem("answers", JSON.stringify(answers));
-          alert("Interview time is over");
-          window.location.href = "submitting.html";
+            throw new Error(
+                "Interview data is not available."
+            );
         }
-      }, 1000);
+
+
+        if (!interviewData.startedAt) {
+
+            throw new Error(
+                "Interview start time is not available."
+            );
+        }
+
+
+        const startedAt =
+            new Date(
+                interviewData.startedAt
+            );
+
+
+        if (
+            Number.isNaN(
+                startedAt.getTime()
+            )
+        ) {
+
+            throw new Error(
+                "Invalid interview start time."
+            );
+        }
+
+
+        const durationMs =
+            interviewData.duration *
+            60 *
+            1000;
+
+
+        const deadline =
+            startedAt.getTime() +
+            durationMs;
+
+
+        function updateTimer() {
+
+            const remainingMs =
+                Math.max(
+                    0,
+                    deadline -
+                    Date.now()
+                );
+
+
+            totalSeconds =
+                Math.ceil(
+                    remainingMs / 1000
+                );
+
+
+            renderTimer();
+
+
+            if (
+                totalSeconds <= 60
+            ) {
+
+                document
+                    .getElementById(
+                        "timer"
+                    )
+                    .classList.add(
+                        "ending"
+                    );
+            }
+
+
+            if (
+                remainingMs <= 0
+            ) {
+
+                clearInterval(
+                    timerInterval
+                );
+
+
+                saveAndFinishOnTimeout();
+            }
+        }
+
+
+        updateTimer();
+
+
+        timerInterval =
+            setInterval(
+                updateTimer,
+                1000
+            );
     }
-  </script>
+
+
+  //save = finish timeout
+
+    async function saveAndFinishOnTimeout() {
+
+        if (isSubmitting) {
+            return;
+        }
+
+
+        isSubmitting =
+            true;
+
+
+        const submitButton =
+            document.getElementById(
+                "submitAnswerBtn"
+            );
+
+
+        submitButton.disabled =
+            true;
+
+
+        submitButton.innerHTML = `
+            <span>Time's Up...</span>
+            <i class="fa-solid fa-spinner fa-spin"></i>
+        `;
+
+
+        try {
+
+            /*
+             * Save whatever is currently typed
+             * for the current question.
+             */
+            const input =
+                document.getElementById(
+                    "answerInput"
+                );
+
+
+            const typed =
+                input.value.trim();
+
+
+            const currentQuestion =
+                questions[currentIndex];
+
+
+            if (
+                typed &&
+                currentQuestion
+            ) {
+
+                await saveAnswerToServer(
+                    currentQuestion.id,
+                    typed
+                );
+
+
+                savedAnswers.set(
+                    Number(currentQuestion.id),
+                    typed
+                );
+
+
+                console.log(
+                    "[interview] Timeout answer saved:",
+                    currentQuestion.id
+                );
+            }
+
+
+            /*
+             * Finish only after the current answer
+             * has been saved successfully.
+             */
+            await finishInterview(
+                interviewId
+            );
+
+
+            window.location.href =
+                "submitting.html?interviewId=" +
+                encodeURIComponent(
+                    interviewId
+                );
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "[interview] Timeout finish failed:",
+                error
+            );
+
+
+            alert(
+                error.message ||
+                "Your interview time ended, but we could not finish the interview."
+            );
+
+
+            submitButton.disabled =
+                false;
+
+
+            submitButton.innerHTML = `
+                <span>Submit Answer</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            `;
+
+
+            isSubmitting =
+                false;
+        }
+    }
+
+
+    /* ============================================================
+       LOAD SAVED ANSWERS
+       ============================================================ */
+
+    async function loadSavedAnswers() {
+
+        savedAnswers.clear();
+
+
+        const saved =
+            await getAnswers(
+                interviewId
+            );
+
+
+        if (!Array.isArray(saved)) {
+
+            return;
+        }
+
+
+        saved.forEach(answer => {
+
+            const questionId =
+                Number(
+                    answer.questionId
+                );
+
+
+            if (
+                Number.isFinite(questionId) &&
+                answer.answerText
+            ) {
+
+                savedAnswers.set(
+                    questionId,
+                    answer.answerText
+                );
+            }
+
+        });
+
+
+        console.log(
+            "[interview] Restored saved answers:",
+            savedAnswers.size
+        );
+    }
+
+
+    /* ============================================================
+       FIND RESUME QUESTION
+       ============================================================ */
+
+    function findResumeIndex() {
+
+        /*
+         * Find the first question that does
+         * NOT have a saved answer.
+         */
+        for (
+            let i = 0;
+            i < questions.length;
+            i++
+        ) {
+
+            const questionId =
+                Number(
+                    questions[i].id
+                );
+
+
+            if (
+                !savedAnswers.has(
+                    questionId
+                )
+            ) {
+
+                return i;
+            }
+        }
+
+
+        /*
+         * If everything has already been answered,
+         * show the last question.
+         */
+        return questions.length - 1;
+    }
+
+
+
+    async function initInterview() {
+
+        try {
+
+            isInitializing =
+                true;
+
+
+            /*
+             * 1. Load interview.
+             */
+            interviewData =
+                await getInterview(
+                    interviewId
+                );
+
+
+            /*
+             * 2. If this is a newly-created
+             * interview, start it.
+             */
+            if (
+                interviewData.status ===
+                "CREATED"
+            ) {
+
+                await startInterview(
+                    interviewId
+                );
+
+
+                interviewData =
+                    await getInterview(
+                        interviewId
+                    );
+            }
+
+
+            /*
+             * 3. Interview must be in progress.
+             */
+            if (
+                interviewData.status !==
+                "IN_PROGRESS"
+            ) {
+
+                throw new Error(
+                    "This interview is not available to start."
+                );
+            }
+
+
+            /*
+             * 4. Load questions.
+             */
+            questions =
+                await getQuestions(
+                    interviewId
+                );
+
+
+            if (
+                !Array.isArray(
+                    questions
+                ) ||
+                questions.length === 0
+            ) {
+
+                throw new Error(
+                    "The server returned no questions."
+                );
+            }
+
+
+            document.getElementById(
+                "qTotal"
+            ).textContent =
+                questions.length;
+
+
+            /*
+             * 5. CRITICAL STEP
+             *
+             * Load answers from DATABASE
+             * before deciding which question
+             * to display.
+             */
+            await loadSavedAnswers();
+
+
+            /*
+             * 6. Resume from first unanswered.
+             */
+            currentIndex =
+                findResumeIndex();
+
+
+            /*
+             * 7. Display that question.
+             *
+             * If the user had answered Q1-Q4,
+             * currentIndex will be 4.
+             */
+            showQuestion(
+                currentIndex
+            );
+
+
+            /*
+             * 8. Start timer using server's
+             * startedAt value.
+             */
+            startTimer();
+
+
+            isInitializing =
+                false;
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "[interview] Initialization failed:",
+                error
+            );
+
+
+            document.getElementById(
+                "questionText"
+            ).textContent =
+                "Unable to start this interview.";
+
+
+            document.getElementById(
+                "answerInput"
+            ).disabled =
+                true;
+
+
+            document.getElementById(
+                "submitAnswerBtn"
+            ).disabled =
+                true;
+
+
+            setSpeaker(null);
+
+
+            alert(
+                error.message ||
+                "Unable to start the interview."
+            );
+        }
+    }
+
+
+    /* ============================================================
+       PREVENT ACCIDENTAL DOUBLE SUBMISSION
+       ============================================================ */
+
+    window.addEventListener(
+        "beforeunload",
+        () => {
+
+            /*
+             * We deliberately DO NOT attempt an API
+             * request here.
+             *
+             * Browser unload is unreliable for normal
+             * fetch requests.
+             *
+             * Answers are persisted when the user
+             * clicks Submit Answer.
+             */
+        }
+    );
+
+
+    /* ============================================================
+       START
+       ============================================================ */
+
+    initInterview();
+
+</script>
+
 </body>
 </html>
-
-
-
-

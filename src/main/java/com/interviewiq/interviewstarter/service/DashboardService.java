@@ -8,6 +8,8 @@ import com.interviewiq.interviewstarter.entity.Interview;
 import com.interviewiq.interviewstarter.repository.AnswerRepository;
 import com.interviewiq.interviewstarter.repository.EvaluationRepository;
 import com.interviewiq.interviewstarter.repository.InterviewRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.DateTimeException;
@@ -20,6 +22,10 @@ import java.util.stream.Stream;
 
 @Service
 public class DashboardService {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(DashboardService.class);
+
     private final InterviewRepository interviewRepository;
     private final EvaluationRepository evaluationRepository;
     private final ObjectMapper objectMapper;
@@ -143,9 +149,9 @@ public class DashboardService {
 
         } catch (Exception e) {
 
-            System.err.println(
-                    "[DashboardService] Failed to parse weaknesses: "
-                            + e.getMessage()
+            log.warn(
+                    "Failed to parse stored weakness data: {}",
+                    e.getMessage()
             );
 
             return Stream.empty();
@@ -155,27 +161,73 @@ public class DashboardService {
 
 
 
-    private List<DashboardResponse.RecentInterviews> buildRecent(List<Interview> finished){
-        return finished.stream()
-                .sorted(Comparator.comparingLong(Interview::getId).reversed())
-                .limit(5)
-                .map(iv->{
-                            int score = iv.getFinalScore();
-                            String status = score>=70? "Completed"
-                                    :score>=40? "Needs Review"
-                                    :"Practiced";
-                            LocalDate when = iv.getCompletedAt()!=null
-                                    ?iv.getCompletedAt().toLocalDate():LocalDate.now();
+    private List<DashboardResponse.RecentInterviews> buildRecent(
+            List<Interview> finished) {
 
-                            return DashboardResponse.RecentInterviews.builder()
-                                    .role(iv.getRole()==null ?"GeneralRole":iv.getRole())
-                                    .level(iv.getDifficulty()==null? "Medium": iv.getDifficulty())
-                                    .date(when.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
-                                    .score(score)
-                                    .status(status)
-                                    .build();
-                        }
-                        ).toList();
+        return finished.stream()
+                .sorted(
+                        Comparator.comparingLong(
+                                Interview::getId
+                        ).reversed()
+                )
+                .limit(5)
+                .map(iv -> {
+
+                    int score =
+                            iv.getFinalScore();
+
+                    String status =
+                            score >= 70
+                                    ? "Completed"
+                                    : score >= 40
+                                    ? "Needs Review"
+                                    : "Practiced";
+
+                    LocalDate when =
+                            iv.getCompletedAt() != null
+                                    ? iv.getCompletedAt().toLocalDate()
+                                    : LocalDate.now();
+
+                    return DashboardResponse.RecentInterviews
+                            .builder()
+
+                            .interviewId(
+                                    iv.getId()
+                            )
+
+                            .role(
+                                    iv.getRole() == null
+                                            ? "General Role"
+                                            : iv.getRole()
+                            )
+
+                            .experienceLevel(
+                                    iv.getExperienceLevel() == null
+                                            ? "Not specified"
+                                            : iv.getExperienceLevel()
+                            )
+
+                            .difficulty(
+                                    iv.getDifficulty() == null
+                                            ? "Not specified"
+                                            : iv.getDifficulty()
+                            )
+
+                            .date(
+                                    when.format(
+                                            DateTimeFormatter.ofPattern(
+                                                    "yyyy-MM-dd"
+                                            )
+                                    )
+                            )
+
+                            .score(score)
+
+                            .status(status)
+
+                            .build();
+                })
+                .toList();
     }
 
 

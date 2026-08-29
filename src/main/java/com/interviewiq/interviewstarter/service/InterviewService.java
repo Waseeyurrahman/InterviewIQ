@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class InterviewService {
@@ -30,9 +31,7 @@ public class InterviewService {
         this.userRepository = userRepository;
     }
 
-    // ============================================================
-    // CREATE INTERVIEW
-    // ============================================================
+
 
     public Interview create(
             String role,
@@ -73,10 +72,6 @@ public class InterviewService {
     }
 
 
-    // ============================================================
-    // START INTERVIEW
-    // CREATED → IN_PROGRESS
-    // ============================================================
 
     @Transactional
     public Interview startInterview(Long interviewId) {
@@ -88,10 +83,13 @@ public class InterviewService {
                                 "Interview not found: " + interviewId
                         ));
 
-        int updated = interviewRepository.updateStatusIfCurrent(
+        LocalDateTime startedAt = LocalDateTime.now();
+
+        int updated = interviewRepository.startInterview(
                 interviewId,
                 InterviewStatus.CREATED,
-                InterviewStatus.IN_PROGRESS
+                InterviewStatus.IN_PROGRESS,
+                startedAt
         );
 
         if (updated == 0) {
@@ -102,13 +100,26 @@ public class InterviewService {
         }
 
         interview.setStatus(InterviewStatus.IN_PROGRESS);
+        interview.setStartedAt(startedAt);
 
         log.info(
-                "Interview {} started",
-                interviewId
+                "Interview {} starte at {}",
+                interviewId,
+                startedAt
         );
 
         return interview;
+    }
+
+    @Transactional(readOnly = true)
+    public Interview getInterview(Long interviewId) {
+
+        return interviewRepository
+                .findById(interviewId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Interview not found: " + interviewId
+                        ));
     }
 
 
@@ -122,10 +133,13 @@ public class InterviewService {
                                 "Interview not found: " + interviewId
                         ));
 
-        int updated = interviewRepository.updateStatusIfCurrent(
+        LocalDateTime completedAt = LocalDateTime.now();
+
+        int updated = interviewRepository.finishInterview(
                 interviewId,
                 InterviewStatus.IN_PROGRESS,
-                InterviewStatus.COMPLETED
+                InterviewStatus.COMPLETED,
+                completedAt
         );
 
         if (updated == 0) {
@@ -135,19 +149,27 @@ public class InterviewService {
             );
         }
 
-        interview.setCompletedAt(
-                LocalDateTime.now()
-        );
-
         interview.setStatus(
                 InterviewStatus.COMPLETED
         );
 
+        interview.setCompletedAt(
+                completedAt
+        );
+
+
         log.info(
-                "Interview {} finished",
-                interviewId
+                "Interview {} finished at {}",
+                interviewId,
+                completedAt
         );
 
         return interview;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Interview> getInterviewsForUser(Long userId) {
+
+        return interviewRepository.findByUserId(userId);
     }
 }

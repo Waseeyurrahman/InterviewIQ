@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <title>My Interviews - InterviewIQ AI</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="dashboard.css">
+
+    <link
+            href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+            rel="stylesheet"
+    >
+
+    <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    >
+</head>
+
+<body class="dashboard-page">
+
+<div class="dash-layout">
+
+    <!-- ================= SIDEBAR ================= -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-logo">
+            InterviewIQ <span>AI</span>
+        </div>
+
+        <nav class="sidebar-menu">
+
+            <a href="dashboard.html" class="menu-item">
+                <i class="fa-solid fa-table-cells-large"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="my-interviews.html" class="menu-item active">
+                <i class="fa-solid fa-microphone"></i>
+                <span>My Interviews</span>
+            </a>
+
+            <a href="recommendations.html" class="menu-item">
+                <i class="fa-solid fa-lightbulb"></i>
+                <span>Recommendations</span>
+
+            </a>
+
+            <a href="profile.html" class="menu-item">
+                <i class="fa-solid fa-user"></i>
+                <span>Profile</span>
+            </a>
+
+            <a href="#" class="menu-item logout" onclick="logout(event)">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Logout</span>
+            </a>
+
+        </nav>
+
+    </aside>
+
+
+    <!-- ================= MAIN ================= -->
+
+    <main class="dash-main">
+
+        <header class="dash-header">
+
+            <div class="header-text">
+
+                <h1>My Interviews</h1>
+
+                <p class="dash-subtitle">
+                    Review your previous interview sessions and track your progress.
+                </p>
+
+            </div>
+
+            <button
+                    class="btn-start"
+                    onclick="location.href='setup-interview.html'">
+                <span>Start Interview</span>
+
+            </button>
+        </header>
+
+
+        <!-- ================= CONTENT ================= -->
+
+        <div class="dashboard-content">
+
+
+            <!-- Loading -->
+
+            <div
+                    id="loadingState"
+                    class="state-box">
+
+                <div class="spinner"></div>
+
+                <p>Loading your interviews...</p>
+
+            </div>
+
+
+            <!-- Error -->
+
+            <div
+                    id="errorState"
+                    class="state-box hidden">
+
+                <div class="state-icon">
+                    <i data-lucide="triangle-alert"></i>
+                </div>
+
+                <h3>
+                    Couldn't load your interviews
+                </h3>
+
+                <p id="errorMsg">
+                    Please check your connection and try again.
+                </p>
+
+                <button
+                        class="btn-start"
+                        onclick="loadInterviews()">
+
+                    Retry
+
+                </button>
+
+            </div>
+
+
+            <!-- Empty -->
+
+            <div
+                    id="emptyState"
+                    class="state-box hidden">
+
+                <div class="state-icon">
+                    <i data-lucide="mic-2"></i>
+                </div>
+
+                <h3>
+                    No interviews yet
+                </h3>
+
+                <p>
+                    Start your first interview and your history will appear here.
+                </p>
+
+                <button
+                        class="btn-start"
+                        onclick="location.href='setup-interview.html'">
+
+                    Start Your First Interview
+
+                </button>
+
+            </div>
+
+
+            <!-- Interview list -->
+
+            <div
+                    id="interviewsData"
+                    class="hidden">
+
+                <div
+                        id="interviewsList"
+                        class="my-interviews-list">
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<script src="auth-guard.js"></script>
+<script src="auth.js"></script>
+<script src="my-interviews.js"></script>
+
+
+</body>
+
+</html>
