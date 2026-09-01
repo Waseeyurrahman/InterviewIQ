@@ -105,8 +105,10 @@ class EvaluationServiceTest {
     // AI UNAVAILABLE
     // ============================================================
 
+
+
     @Test
-    void shouldFailWhenAIIsUnavailable() {
+    void shouldUseFallbackWhenAIIsUnavailable() {
 
         Interview interview =
                 createInterview(
@@ -136,25 +138,59 @@ class EvaluationServiceTest {
                 .findByQuestionInterviewIdOrderByIdAsc(24L))
                 .thenReturn(answers);
 
+        // Gemini unavailable
         when(aiService.evaluateInterviewWithAI(
                 anyList(),
                 anyList()
         )).thenReturn(null);
 
+        // Fallback evaluation for every answer
+        when(aiService.evaluateWithFallback(
+                anyString(),
+                anyString()
+        )).thenReturn(
+                createEvaluation(60, 1, 70)
+        );
+
+        when(evaluationRepository.findByAnswerId(anyLong()))
+                .thenReturn(Optional.empty());
+
         EvaluationService.OverallResult result =
                 evaluationService.evaluateInterview(24L);
 
+        // AI itself was unavailable
         assertFalse(result.aiAvailable);
+
         assertEquals(5, result.totalQuestions);
         assertEquals(3, result.answeredQuestions);
         assertEquals(2, result.skippedQuestions);
-        assertEquals(InterviewStatus.FAILED, interview.getStatus());
 
-        verify(aiService)
-                .evaluateInterviewWithAI(
-                        anyList(),
-                        anyList()
+        // Fallback evaluations were used
+        assertEquals(60, result.score);
+        assertEquals(70, result.confidence);
+        assertEquals(3, result.fillerWords);
+
+        // Interview should still be successfully evaluated
+        assertEquals(
+                InterviewStatus.EVALUATED,
+                interview.getStatus()
+        );
+
+        assertEquals(
+                60,
+                interview.getFinalScore()
+        );
+
+        // Fallback called once for each answered question
+        verify(aiService, times(3))
+                .evaluateWithFallback(
+                        anyString(),
+                        anyString()
                 );
+
+        // Three evaluation records should be saved
+        verify(evaluationRepository, times(3))
+                .save(any(Evaluation.class));
     }
 
 
@@ -163,7 +199,7 @@ class EvaluationServiceTest {
     // ============================================================
 
     @Test
-    void shouldFailWhenAIReturnsWrongNumberOfEvaluations() {
+    void shouldUseFallbackWhenAIReturnsWrongNumberOfEvaluations() {
 
         Interview interview =
                 createInterview(
@@ -193,6 +229,8 @@ class EvaluationServiceTest {
                 .findByQuestionInterviewIdOrderByIdAsc(24L))
                 .thenReturn(answers);
 
+        // Gemini incorrectly returns only 2 evaluations
+        // when 3 are required.
         when(aiService.evaluateInterviewWithAI(
                 anyList(),
                 anyList()
@@ -203,13 +241,48 @@ class EvaluationServiceTest {
                 )
         );
 
+        // Fallback handles the failure
+        when(aiService.evaluateWithFallback(
+                anyString(),
+                anyString()
+        )).thenReturn(
+                createEvaluation(60, 1, 70)
+        );
+
+        when(evaluationRepository.findByAnswerId(anyLong()))
+                .thenReturn(Optional.empty());
+
         EvaluationService.OverallResult result =
                 evaluationService.evaluateInterview(24L);
 
+        // Gemini was not successfully used
         assertFalse(result.aiAvailable);
-        assertEquals(InterviewStatus.FAILED, interview.getStatus());
 
-        verify(evaluationRepository, never())
+        // Fallback was used
+        assertEquals(60, result.score);
+        assertEquals(70, result.confidence);
+        assertEquals(3, result.fillerWords);
+
+        // Interview should still be evaluated
+        assertEquals(
+                InterviewStatus.EVALUATED,
+                interview.getStatus()
+        );
+
+        assertEquals(
+                60,
+                interview.getFinalScore()
+        );
+
+        // Fallback once per answer
+        verify(aiService, times(3))
+                .evaluateWithFallback(
+                        anyString(),
+                        anyString()
+                );
+
+        // All three answers receive evaluations
+        verify(evaluationRepository, times(3))
                 .save(any(Evaluation.class));
     }
 

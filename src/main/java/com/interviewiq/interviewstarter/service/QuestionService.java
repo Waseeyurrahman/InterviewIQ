@@ -21,16 +21,16 @@ public class QuestionService {
     private static final int DEFAULT_QUESTION_COUNT = 5;
 
     private static final List<String> FALLBACK_QUESTIONS = List.of(
-            "Tell me about yourself and your background.",
-            "Describe a challenging project you worked on recently.",
-            "What are your biggest strengths and weaknesses?",
-            "Why are you interested in this role?",
-            "Where do you see yourself in 5 years?",
-            "Explain a difficult technical problem you solved.",
-            "How do you handle tight deadlines and pressure?",
-            "How do you approach debugging a difficult issue?",
-            "Describe a situation where you had to learn something quickly.",
-            "Where do you see yourself growing professionally?"
+            "Tell me about yourself and your background as a {role}.",
+            "Describe a challenging project you worked on as a {role}.",
+            "What are your biggest strengths and weaknesses as a {role}?",
+            "Why are you interested in working as a {role}?",
+            "Where do you see yourself growing as a {role}?",
+            "Explain a difficult technical problem you solved while working as a {role}.",
+            "How do you handle tight deadlines and pressure as a {role}?",
+            "How do you approach debugging a difficult problem in {role} development?",
+            "Describe a situation where you had to learn something quickly as a {role}.",
+            "What technical skills do you think are most important for a successful {role}?"
     );
 
     private final QuestionRepository questionRepository;
@@ -94,10 +94,10 @@ public class QuestionService {
                     interviewId
             );
 
-            texts = FALLBACK_QUESTIONS
-                    .stream()
-                    .limit(questionCount)
-                    .toList();
+            texts = generateFallbackQuestions(
+                    interview.getRole(),
+                    questionCount
+            );
         }
 
         if (texts.size() > questionCount) {
@@ -121,6 +121,22 @@ public class QuestionService {
         }
 
         return questionRepository.saveAll(toSave);
+    }
+
+    private List<String> generateFallbackQuestions(
+            String role,
+            int count) {
+
+        String safeRole =
+                role == null || role.isBlank()
+                        ? "software professional"
+                        : role.trim();
+
+        return FALLBACK_QUESTIONS.stream()
+                .map(question ->
+                        question.replace("{role}", safeRole))
+                .limit(count)
+                .toList();
     }
 
     /**

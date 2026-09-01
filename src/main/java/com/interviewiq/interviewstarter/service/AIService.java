@@ -608,13 +608,11 @@ public class AIService {
                                 status.value() == 502 ||
                                 status.value() == 503;
 
-                log.warn(
-                        "Gemini request failed with HTTP {} on attempt {}/{}",
+                log.error(
+                        "Gemini request failed. HTTP {}. Response: {}",
                         status.value(),
-                        attempt,
-                        maxAttempts
+                        e.getResponseBodyAsString()
                 );
-
                 if (!retryable ||
                         attempt == maxAttempts) {
 
@@ -945,5 +943,188 @@ public class AIService {
                             + evaluation.technicalAccuracy
             );
         }
+    }
+
+    public AIEvaluation evaluateWithFallback(
+            String question,
+            String answer) {
+
+        AIEvaluation evaluation = new AIEvaluation();
+
+        if (answer == null || answer.isBlank()) {
+
+            evaluation.score = 0;
+            evaluation.fillerWords = 0;
+            evaluation.confidence = 0;
+            evaluation.relevance = "low";
+            evaluation.technicalAccuracy = "average";
+
+            evaluation.strengths.add(
+                    "No answer was provided."
+            );
+
+            evaluation.weaknesses.add(
+                    "The question was not answered."
+            );
+
+            evaluation.recommendations.add(
+                    "Try to provide an answer, even if it is concise."
+            );
+
+            return evaluation;
+        }
+
+        String cleanAnswer = answer.trim();
+
+        int wordCount =
+                cleanAnswer.split("\\s+").length;
+
+        int fillerWords =
+                countFallbackFillerWords(cleanAnswer);
+
+        /*
+         * Conservative fallback scoring.
+         *
+         * This is NOT intended to replace Gemini.
+         * It only provides a basic evaluation when
+         * AI evaluation is unavailable.
+         */
+
+        int score;
+
+        if (wordCount < 10) {
+            score = 40;
+        } else if (wordCount < 30) {
+            score = 60;
+        } else if (wordCount < 60) {
+            score = 70;
+        } else {
+            score = 75;
+        }
+
+        if (fillerWords >= 5) {
+            score -= 5;
+        }
+
+        score = Math.max(
+                0,
+                Math.min(100, score)
+        );
+
+        evaluation.score = score;
+
+        evaluation.fillerWords = fillerWords;
+
+        evaluation.confidence =
+                calculateFallbackConfidence(
+                        cleanAnswer,
+                        fillerWords
+                );
+
+        /*
+         * We deliberately do not claim that we can
+         * determine technical correctness without AI.
+         */
+        evaluation.relevance = "medium";
+        evaluation.technicalAccuracy = "average";
+
+        evaluation.strengths.add(
+                "The candidate provided a response to the question."
+        );
+
+        if (wordCount >= 30) {
+
+            evaluation.strengths.add(
+                    "The answer provides a reasonable amount of explanation."
+            );
+        }
+
+        if (fillerWords == 0) {
+
+            evaluation.strengths.add(
+                    "The response contains no obvious filler-word usage."
+            );
+        }
+
+        if (wordCount < 20) {
+
+            evaluation.weaknesses.add(
+                    "The answer is relatively brief and may lack sufficient detail."
+            );
+        }
+
+        if (fillerWords > 0) {
+
+            evaluation.weaknesses.add(
+                    "The response contains filler-word usage."
+            );
+        }
+
+        evaluation.recommendations.add(
+                "Provide specific examples or explain your reasoning when appropriate."
+        );
+
+        if (wordCount < 30) {
+
+            evaluation.recommendations.add(
+                    "Expand your answer with relevant technical details or examples."
+            );
+        }
+
+        return evaluation;
+    }
+
+    private int countFallbackFillerWords(String answer) {
+
+        String normalized =
+                answer.toLowerCase();
+
+        int count = 0;
+
+        String[] fillers = {
+                "\\bum\\b",
+                "\\buh\\b",
+                "\\ber\\b",
+                "\\baa\\b",
+                "\\bmm\\b",
+                "\\blike\\b",
+                "\\byou\\s+know\\b",
+                "\\bbasically\\b"
+        };
+
+        for (String filler : fillers) {
+
+            java.util.regex.Pattern pattern =
+                    java.util.regex.Pattern.compile(filler);
+
+            java.util.regex.Matcher matcher =
+                    pattern.matcher(normalized);
+
+            while (matcher.find()) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private int calculateFallbackConfidence(
+            String answer,
+            int fillerWords) {
+
+        int confidence = 70;
+
+        if (answer.length() < 50) {
+            confidence -= 10;
+        }
+
+        if (fillerWords >= 3) {
+            confidence -= 10;
+        }
+
+        return Math.max(
+                0,
+                Math.min(100, confidence)
+        );
     }
 }

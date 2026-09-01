@@ -105,6 +105,7 @@ public class SecurityConfig {
                                 "/submitting.html",
                                 "/result.html",
                                 "/profile.html",
+                                "/favicon.ico",
 
                                 "/style.css",
                                 "/landing.css",

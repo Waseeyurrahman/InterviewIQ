@@ -198,22 +198,32 @@ public class EvaluationService {
         if (!aiAvailable) {
 
             log.warn(
-                    "AI evaluation unavailable for interview {}",
+                    "AI evaluation unavailable for interview {}; using fallback evaluation",
                     interviewId
             );
 
+            result.aiAvailable = false;
+
             result.weaknesses.add(
-                    "AI evaluation is currently unavailable."
+                    "AI evaluation was unavailable, so a basic fallback evaluation was used."
             );
 
             result.recommendations.add(
-                    "Please try evaluating the interview again later."
+                    "AI-powered evaluation provides more detailed technical feedback when available."
             );
 
-            interview.setStatus(InterviewStatus.FAILED);
-            interviewRepository.save(interview);
+            evaluations = new ArrayList<>();
 
-            return result;
+            for (Answer answer : answers) {
+
+                AIService.AIEvaluation fallbackEvaluation =
+                        aiService.evaluateWithFallback(
+                                answer.getQuestion().getQuestionText(),
+                                answer.getAnswerText()
+                        );
+
+                evaluations.add(fallbackEvaluation);
+            }
         }
 
         int totalScore = 0;
