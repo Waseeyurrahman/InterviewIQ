@@ -84,84 +84,32 @@ Reverse Proxy      Nginx
 HTTPS              Let's Encrypt
 
 ------------------------------------------------------------------------
+## Application Screenshots
+
+##landing-page
+<img width="1920" height="866" alt="Screenshot 2026-09-02 131108" src="https://github.com/user-attachments/assets/cf6ecda6-3388-4b6a-ab48-f74925f6e768" />
+
+##Dashboard
+<img width="1920" height="849" alt="Screenshot 2026-09-02 131159" src="https://github.com/user-attachments/assets/9b5561fe-cc1b-4687-aa54-794bfade951c" />
+
+##Interview-setup
+<img width="1920" height="851" alt="Screenshot 2026-09-02 131232" src="https://github.com/user-attachments/assets/261c182e-796a-4f87-9c0d-40bd6e7fcd0d" />
+<img width="1920" height="877" alt="Screenshot 2026-09-02 131212" src="https://github.com/user-attachments/assets/c2e4b8c6-26bf-4e31-ba9d-97fe86fdd966" />
+
+##Live-interview
+<img width="1920" height="849" alt="Screenshot 2026-09-02 131257" src="https://github.com/user-attachments/assets/22448619-0ec8-4dde-a197-ea923fb728ea" />
+
+##AI-Evaluation<img width="1920" height="870" alt="Screenshot 2026-09-02 131715" src="https://github.com/user-attachments/assets/cdac82a8-b290-45b1-94e0-e708a3b4a0af" />
+
+
+
 
 ## Architecture
 
-### High-Level Architecture
-
-``` text
-┌─────────────────────────────────────────────────────────────┐
-│                         Browser                             │
-│                  HTML / CSS / JavaScript                    │
-└──────────────────────────┬──────────────────────────────────┘
-                           │ HTTPS
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│                         AWS EC2                             │
-│                                                             │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │                       Nginx                           │  │
-│  │             Reverse Proxy / HTTPS                     │  │
-│  │                   Port 80 / 443                       │  │
-│  └──────────────────────────┬────────────────────────────┘  │
-│                             │                               │
-│                             │ 127.0.0.1:8080                │
-│                             ▼                               │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │                 Docker Container                      │  │
-│  │                                                       │  │
-│  │              Spring Boot Application                  │  │
-│  │                     Port 8080                         │  │
-│  └──────────────────────┬────────────────────────────────┘  │
-└─────────────────────────┼───────────────────────────────────┘
-                          │
-              ┌───────────┴────────────┐
-              │                        │
-              ▼                        ▼
-┌──────────────────────────┐  ┌──────────────────────────────┐
-│       AWS RDS            │  │       Google Gemini API      │
-│         MySQL            │  │      AI Evaluation Service   │
-│        Port 3306         │  │                              │
-└──────────────────────────┘  └──────────────────────────────┘
-```
-
 ### Backend Architecture
 
-``` text
-┌─────────────────────────────────────────────────────────────┐
-│                    Spring Boot Application                  │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │                  Security Layer                       │  │
-│  │        SecurityConfig + JWT Filter + JWT Service      │  │
-│  └──────────────────────────┬────────────────────────────┘  │
-│                             ▼                               │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │                  Controller Layer                     │  │
-│  │ Auth | Interview | Question | Answer | Evaluation     │  │
-│  │ Profile | Dashboard | Recommendation                  │  │
-│  └──────────────────────────┬────────────────────────────┘  │
-│                             ▼                               │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │                    Service Layer                      │  │
-│  │ Auth | Interview | Question | Answer | Evaluation     │  │
-│  │ Dashboard | Profile | Recommendation | AI             │  │
-│  └──────────────────────────┬────────────────────────────┘  │
-│                             ▼                               │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │                  Repository Layer                     │  │
-│  │                Spring Data JPA                        │  │
-│  └──────────────────────────┬────────────────────────────┘  │
-│                             ▼                               │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │                  Entity / Database                    │  │
-│  │        User | Interview | Question | Answer           │  │
-│  │                  | Evaluation                         │  │
-│  └───────────────────────────────────────────────────────┘  │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
+<img width="1018" height="811" alt="Screenshot 2026-09-02 141115" src="https://github.com/user-attachments/assets/b468fbf4-72fa-43c0-95ef-9b3a189280d9" />
+
 
 **Design:** - Controller → Service → Repository layered architecture -
 DTOs used for request/response data transfer - Spring Data JPA and
